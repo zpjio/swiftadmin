@@ -1,0 +1,67 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: swiftadmin
+  profiles:
+    active: dev
+  aop:
+    proxy-target-class: true
+
+# 日志配置
+logging:
+  level:
+    cn.swiftadmin: debug
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Springdoc OpenAPI 配置
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+
+# Actuator 配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+# MyBatis-Flex 配置
+mybatis-flex:
+  configuration:
+    map-underscore-to-camel-case: true
+
+# 认证安全配置
+auth:
+  security:
+    # 账号密码登录配置
+    max-login-fail-count: 5          # 最大登录失败次数
+    lock-minutes: 15                  # 账户锁定时间（分钟）
+    
+    # Token 配置
+    refresh-interval-seconds: 5       # Token 刷新最小间隔（秒）
+    max-refresh-count-per-day: 50     # 每日最大 Token 刷新次数
+    state-expire-minutes: 10          # OAuth State 有效期（分钟）
+    temp-token-expire-minutes: 10     # 临时 Token 有效期（分钟）
+    
+    # 短信验证码配置
+    code-expire-minutes: 5            # 验证码有效期（分钟）
+    send-interval-seconds: 60         # 单手机号发送间隔（秒）
+    max-send-per-hour: 5              # 单手机号 1 小时最大发送次数
+    max-ip-send-per-hour: 10          # 同一 IP 1 小时最大发送次数
+    captcha-trigger-threshold: 3      # 触发图形验证码的 IP 发送阈值
+    max-verify-fail-count: 3          # 验证码错误次数上限
+    verify-lock-minutes: 15           # 验证错误锁定时间（分钟）
+    
+    # 缓存配置
+    user-cache-expire-minutes: 30     # 用户信息缓存有效期（分钟）
+    
+    # 社交 Token 配置
+    refresh-threshold-hours: 24       # 社交 Token 刷新阈值（小时）
+    bind-lock-timeout-seconds: 30     # 社交账号绑定锁超时时间（秒）

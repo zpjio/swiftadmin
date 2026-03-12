@@ -1,0 +1,26 @@
+{
+  "name": "swiftadmin-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SwiftAdmin Frontend Monorepo",
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter admin-web dev",
+    "build": "pnpm --filter admin-web build",
+    "preview": "pnpm --filter admin-web preview",
+    "lint": "pnpm --filter admin-web lint",
+    "type-check": "pnpm --filter admin-web type-check",
+    "dev:c-end": "pnpm --filter c-end-h5 dev",
+    "build:c-end": "pnpm --filter c-end-h5 build",
+    "clean": "pnpm -r exec rm -rf node_modules dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "vite": "^6.0.0",
+    "vue": "^3.5.13"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}

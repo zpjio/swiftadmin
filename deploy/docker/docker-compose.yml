@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  # MySQL 数据库
+  mysql:
+    image: mysql:8.0
+    container_name: swiftadmin-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: swiftadmin
+      MYSQL_USER: swiftadmin
+      MYSQL_PASSWORD: swiftadmin123
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    networks:
+      - swiftadmin-network
+    restart: unless-stopped
+
+  # Redis 缓存（可选）
+  redis:
+    image: redis:7-alpine
+    container_name: swiftadmin-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - swiftadmin-network
+    restart: unless-stopped
+
+  # 后端服务
+  backend:
+    build:
+      context: ../../backend
+      dockerfile: ../deploy/docker/backend/Dockerfile
+    container_name: swiftadmin-backend
+    depends_on:
+      - mysql
+      - redis
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: swiftadmin
+      DB_USER: swiftadmin
+      DB_PASSWORD: swiftadmin123
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: your-production-secret-key-change-me
+    ports:
+      - "8080:8080"
+    networks:
+      - swiftadmin-network
+    restart: unless-stopped
+
+  # 前端服务（Nginx）
+  frontend:
+    build:
+      context: ../../frontend/apps/admin-web
+      dockerfile: ../../../deploy/docker/frontend/Dockerfile
+    container_name: swiftadmin-frontend
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./frontend/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - swiftadmin-network
+    restart: unless-stopped
+
+volumes:
+  mysql-data:
+  redis-data:
+
+networks:
+  swiftadmin-network:
+    driver: bridge
