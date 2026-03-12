@@ -52,7 +52,7 @@ public class PermissionPackageServiceImpl extends ServiceImpl<SysPermissionPacka
                 .and(SYS_PERMISSION_PACKAGE.STATUS.eq(query.getStatus(), query.getStatus() != null))
                 .orderBy(SYS_PERMISSION_PACKAGE.SORT_ORDER.asc(), SYS_PERMISSION_PACKAGE.CREATE_TIME.desc());
 
-        return getMapper().paginateAs(PageHelper.of(query.getPage(), query.getPageSize()), queryWrapper, PermissionPackageVO.class);
+        return mapper.paginateAs(PageHelper.of(query.getPage(), query.getPageSize()), queryWrapper, PermissionPackageVO.class);
     }
 
     @Override
@@ -149,7 +149,7 @@ public class PermissionPackageServiceImpl extends ServiceImpl<SysPermissionPacka
     @Transactional(rollbackFor = Exception.class)
     public void delete(List<Long> ids) {
         if (!CollectionUtils.isEmpty(ids)) {
-            getMapper().deleteBatchByIds(ids);
+            mapper.deleteBatchByIds(ids);
             packageMenuMapper.deleteByQuery(QueryWrapper.create()
                     .where(SYS_PERMISSION_PACKAGE_MENU.PACKAGE_ID.in(ids)));
         }
@@ -185,7 +185,7 @@ public class PermissionPackageServiceImpl extends ServiceImpl<SysPermissionPacka
             queryWrapper.and(SYS_PERMISSION_PACKAGE.ID.ne(excludeId));
         }
 
-        return getMapper().selectCountByQuery(queryWrapper) > 0;
+        return mapper.selectCountByQuery(queryWrapper) > 0;
     }
 
     /**

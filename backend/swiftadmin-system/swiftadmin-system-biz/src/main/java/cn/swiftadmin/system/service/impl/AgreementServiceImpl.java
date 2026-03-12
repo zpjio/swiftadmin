@@ -131,7 +131,7 @@ public class AgreementServiceImpl extends ServiceImpl<SysAgreementMapper, SysAgr
     @Transactional(rollbackFor = Exception.class)
     public void delete(List<Long> ids) {
         if (ids != null && !ids.isEmpty()) {
-            getMapper().deleteBatchByIds(ids);
+            mapper.deleteBatchByIds(ids);
             log.info("删除协议版本: ids={}", ids);
         }
     }
@@ -197,7 +197,7 @@ public class AgreementServiceImpl extends ServiceImpl<SysAgreementMapper, SysAgr
             queryWrapper.and(SYS_AGREEMENT.ID.ne(excludeId));
         }
 
-        return getMapper().selectCountByQuery(queryWrapper) > 0;
+        return mapper.selectCountByQuery(queryWrapper) > 0;
     }
 
 }

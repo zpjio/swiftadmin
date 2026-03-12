@@ -109,7 +109,7 @@ public class ConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig> i
                 .and(SYS_CONFIG.CONFIG_TYPE.eq(query.getConfigType(), query.getConfigType() != null))
                 .orderBy(SYS_CONFIG.CONFIG_KEY.asc());
 
-        return getMapper().paginateAs(PageHelper.of(query.getPage(), query.getPageSize()), queryWrapper, ConfigVO.class);
+        return mapper.paginateAs(PageHelper.of(query.getPage(), query.getPageSize()), queryWrapper, ConfigVO.class);
     }
 
     @Override
@@ -216,7 +216,7 @@ public class ConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig> i
         configs.forEach(config -> evictCache(config.getConfigKey()));
 
         // 删除数据库记录
-        getMapper().deleteBatchByIds(ids);
+        mapper.deleteBatchByIds(ids);
 
         log.info("配置已删除: ids={}", ids);
     }
@@ -251,7 +251,7 @@ public class ConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig> i
             queryWrapper.and(SYS_CONFIG.ID.ne(excludeId));
         }
 
-        return getMapper().selectCountByQuery(queryWrapper) > 0;
+        return mapper.selectCountByQuery(queryWrapper) > 0;
     }
 
     // ==================== 私有方法 ====================

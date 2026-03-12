@@ -5,7 +5,6 @@ import cn.swiftadmin.auth.api.service.LoginLogService;
 import cn.swiftadmin.auth.mapper.SysLoginLogMapper;
 import cn.swiftadmin.common.core.enums.LogStatus;
 import com.mybatisflex.core.paginate.Page;
-import cn.swiftadmin.common.mybatis.util.PageHelper;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -28,8 +27,6 @@ import static cn.swiftadmin.auth.api.entity.table.SysLoginLogTableDef.SYS_LOGIN_
 @Slf4j
 @Service
 public class LoginLogServiceImpl extends ServiceImpl<SysLoginLogMapper, SysLoginLog> implements LoginLogService {
-
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     /**
      * 异步记录登录日志
@@ -75,7 +72,7 @@ public class LoginLogServiceImpl extends ServiceImpl<SysLoginLogMapper, SysLogin
         }
         queryWrapper.orderBy(SYS_LOGIN_LOG.LOGIN_TIME.desc());
 
-        return getMapper().paginate(page, pageSize, queryWrapper);
+        return mapper.paginate(page, pageSize, queryWrapper);
     }
 
     @Override
@@ -85,7 +82,7 @@ public class LoginLogServiceImpl extends ServiceImpl<SysLoginLogMapper, SysLogin
 
     @Override
     public void clearAll() {
-        getMapper().deleteByQuery(QueryWrapper.create());
+        mapper.deleteByQuery(QueryWrapper.create());
     }
 
 }

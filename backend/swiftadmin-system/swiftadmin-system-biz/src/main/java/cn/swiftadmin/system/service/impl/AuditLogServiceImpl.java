@@ -40,7 +40,7 @@ public class AuditLogServiceImpl extends ServiceImpl<SysAuditLogMapper, SysAudit
                 .and(SYS_AUDIT_LOG.OPER_TIME.le(query.getEndTime(), query.getEndTime() != null))
                 .orderBy(SYS_AUDIT_LOG.OPER_TIME.desc());
 
-        return getMapper().paginate(PageHelper.of(query.getPage(), query.getPageSize()), queryWrapper);
+        return mapper.paginate(PageHelper.of(query.getPage(), query.getPageSize()), queryWrapper);
     }
 
     @Override
@@ -59,21 +59,21 @@ public class AuditLogServiceImpl extends ServiceImpl<SysAuditLogMapper, SysAudit
     @Override
     public void deleteByIds(List<Long> ids) {
         if (ids != null && !ids.isEmpty()) {
-            getMapper().deleteBatchByIds(ids);
+            mapper.deleteBatchByIds(ids);
         }
     }
 
     @Override
     public void clearBeforeDays(int beforeDays) {
         LocalDateTime threshold = LocalDateTime.now().minusDays(beforeDays);
-        getMapper().deleteByQuery(QueryWrapper.create()
+        mapper.deleteByQuery(QueryWrapper.create()
                 .where(SYS_AUDIT_LOG.OPER_TIME.lt(threshold)));
         log.info("已清理 {} 天前的审计日志", beforeDays);
     }
 
     @Override
     public List<String> listModules() {
-        return getMapper().selectListByQuery(
+        return mapper.selectListByQuery(
                         QueryWrapper.create()
                                 .select(distinct(SYS_AUDIT_LOG.MODULE)))
                 .stream()

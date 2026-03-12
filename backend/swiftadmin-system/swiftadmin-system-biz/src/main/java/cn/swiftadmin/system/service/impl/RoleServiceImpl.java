@@ -57,7 +57,7 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
                 .and(SYS_ROLE.STATUS.eq(query.getStatus(), query.getStatus() != null))
                 .orderBy(SYS_ROLE.CREATE_TIME.desc());
 
-        return getMapper().paginateAs(PageHelper.of(query.getPage(), query.getPageSize()), queryWrapper, RoleVO.class);
+        return mapper.paginateAs(PageHelper.of(query.getPage(), query.getPageSize()), queryWrapper, RoleVO.class);
     }
 
     @Override
@@ -158,7 +158,7 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
     @Transactional(rollbackFor = Exception.class)
     public void delete(List<Long> ids) {
         if (!CollectionUtils.isEmpty(ids)) {
-            getMapper().deleteBatchByIds(ids);
+            mapper.deleteBatchByIds(ids);
             roleMenuMapper.deleteByQuery(QueryWrapper.create().where(SYS_ROLE_MENU.ROLE_ID.in(ids)));
         }
     }
@@ -178,7 +178,7 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
 
     @Override
     public List<SysRole> getRolesByUserId(Long userId) {
-        return getMapper().selectListByQuery(
+        return mapper.selectListByQuery(
                 QueryWrapper.create()
                         .select(SYS_ROLE.ALL_COLUMNS)
                         .from(SYS_ROLE)
@@ -197,7 +197,7 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
             queryWrapper.and(SYS_ROLE.ID.ne(excludeId));
         }
 
-        return getMapper().selectCountByQuery(queryWrapper) > 0;
+        return mapper.selectCountByQuery(queryWrapper) > 0;
     }
 
     @Override

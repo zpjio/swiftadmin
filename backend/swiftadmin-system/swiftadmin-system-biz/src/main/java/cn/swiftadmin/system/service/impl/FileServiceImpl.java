@@ -48,7 +48,7 @@ public class FileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impleme
                 .and(SYS_FILE.STATUS.eq(query.getStatus(), query.getStatus() != null))
                 .orderBy(SYS_FILE.CREATE_TIME.desc());
 
-        return getMapper().paginateAs(PageHelper.of(query.getPage(), query.getPageSize()), queryWrapper, FileVO.class);
+        return mapper.paginateAs(PageHelper.of(query.getPage(), query.getPageSize()), queryWrapper, FileVO.class);
     }
 
     @Override
@@ -135,7 +135,7 @@ public class FileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impleme
             byte[] bytes = fileUploadService.getBytes(file.getStorageName(), file.getStorageType());
 
             // 更新下载次数
-            getMapper().updateByQuery(
+            mapper.updateByQuery(
                     SysFile.builder().downloadCount(file.getDownloadCount() + 1).build(),
                     QueryWrapper.create().where(SYS_FILE.ID.eq(id))
             );

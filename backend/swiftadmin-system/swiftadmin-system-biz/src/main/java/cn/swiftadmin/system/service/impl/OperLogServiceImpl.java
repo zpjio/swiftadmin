@@ -41,19 +41,19 @@ public class OperLogServiceImpl extends ServiceImpl<SysOperLogMapper, SysOperLog
                 .and(SYS_OPER_LOG.OPER_TIME.le(query.getEndTime(), query.getEndTime() != null))
                 .orderBy(SYS_OPER_LOG.OPER_TIME.desc());
 
-        return getMapper().paginate(PageHelper.of(query.getPage(), query.getPageSize()), queryWrapper);
+        return mapper.paginate(PageHelper.of(query.getPage(), query.getPageSize()), queryWrapper);
     }
 
     @Override
     public void deleteByIds(List<Long> ids) {
         if (ids != null && !ids.isEmpty()) {
-            getMapper().deleteBatchByIds(ids);
+            mapper.deleteBatchByIds(ids);
         }
     }
 
     @Override
     public void clearAll() {
-        getMapper().deleteByQuery(QueryWrapper.create());
+        mapper.deleteByQuery(QueryWrapper.create());
     }
 
 }

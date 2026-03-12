@@ -69,7 +69,7 @@ public class UserManageServiceImpl extends ServiceImpl<SysUserMapper, SysUser> i
                 .orderBy(SYS_USER.CREATE_TIME.desc());
 
         // 使用 paginateAs 直接映射到 UserVO，解决关联字段映射问题
-        return getMapper()
+        return mapper
                 .paginateAs(PageHelper.of(query.getPage(), query.getPageSize()), queryWrapper, UserVO.class);
     }
 
@@ -83,7 +83,7 @@ public class UserManageServiceImpl extends ServiceImpl<SysUserMapper, SysUser> i
         UserVO vo = BeanCopyUtils.copy(user, UserVO::new);
 
         // 获取用户角色
-        List<SysRole> roles = getMapper().selectListByQueryAs(
+        List<SysRole> roles = mapper.selectListByQueryAs(
                 QueryWrapper.create()
                         .select(SYS_ROLE.ID, SYS_ROLE.NAME)
                         .from(SYS_ROLE)
@@ -183,7 +183,7 @@ public class UserManageServiceImpl extends ServiceImpl<SysUserMapper, SysUser> i
         // 检查是否包含超级管理员
         checkSuperAdminProtection(ids);
 
-        getMapper().deleteBatchByIds(ids);
+        mapper.deleteBatchByIds(ids);
         userRoleMapper.deleteByQuery(QueryWrapper.create().where(SYS_USER_ROLE.USER_ID.in(ids)));
     }
 

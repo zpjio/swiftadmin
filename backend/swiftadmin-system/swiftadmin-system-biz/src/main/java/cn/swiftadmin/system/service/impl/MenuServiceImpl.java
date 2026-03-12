@@ -152,12 +152,12 @@ public class MenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impleme
                 .and(SYS_MENU.STATUS.eq(1))
                 .orderBy(SYS_MENU.SORT_ORDER.asc());
 
-        return getMapper().selectListByQuery(queryWrapper);
+        return mapper.selectListByQuery(queryWrapper);
     }
 
     @Override
     public List<Long> getMenuIdsByRoleId(Long roleId) {
-        return getMapper().selectListByQueryAs(
+        return mapper.selectListByQueryAs(
                 QueryWrapper.create()
                         .select(SYS_ROLE_MENU.MENU_ID)
                         .from(SYS_ROLE_MENU)
