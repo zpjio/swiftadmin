@@ -32,7 +32,7 @@ export interface ConfigDTO {
  */
 export interface ConfigQuery {
   page?: number
-  size?: number
+  pageSize?: number
   configName?: string
   configKey?: string
   configType?: string

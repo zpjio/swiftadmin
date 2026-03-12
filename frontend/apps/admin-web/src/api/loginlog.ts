@@ -19,7 +19,7 @@ export interface LoginLogVO {
  */
 export interface LoginLogQuery {
   page?: number
-  size?: number
+  pageSize?: number
   username?: string
   ip?: string
   status?: number

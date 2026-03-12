@@ -3,24 +3,10 @@
  */
 export interface PageResult<T = any> {
   records: T[]
-  total: number
-  size: number
-  current: number
-  pages: number
-  searchCount: boolean
-  optimizeCountSql: boolean
-  hitCount: boolean
-  countId: string | null
-  maxLimit: number | null
-  orders: OrderItem[]
-}
-
-/**
- * 排序项
- */
-export interface OrderItem {
-  column: string
-  asc: boolean
+  totalRow: number
+  pageSize: number
+  pageNumber: number
+  totalPage: number
 }
 
 /**

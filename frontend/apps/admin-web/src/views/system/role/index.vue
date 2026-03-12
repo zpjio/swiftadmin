@@ -167,7 +167,7 @@ const tableData = ref<RoleVO[]>([])
 const selectedRowKeys = ref<number[]>([])
 const queryForm = reactive<RoleQuery>({
   page: 1,
-  size: 10,
+  pageSize: 10,
 })
 
 const pagination = reactive({
@@ -185,7 +185,7 @@ const pagination = reactive({
     pagination.pageSize = pageSize
     pagination.page = 1
     queryForm.page = 1
-    queryForm.size = pageSize
+    queryForm.pageSize = pageSize
     loadData()
   },
 })
@@ -373,9 +373,9 @@ const loadData = async () => {
   try {
     const res = await getRolePageApi(queryForm)
     tableData.value = res.records
-    pagination.page = res.current
-    pagination.pageSize = res.size
-    pagination.itemCount = res.total
+    pagination.page = res.pageNumber
+    pagination.pageSize = res.pageSize
+    pagination.itemCount = res.totalRow
   } catch (error) {
     console.error('加载数据失败:', error)
   } finally {

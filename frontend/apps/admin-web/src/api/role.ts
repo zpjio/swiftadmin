@@ -6,7 +6,7 @@ import type { PageResult } from '@/types'
  */
 export interface RoleQuery {
   page?: number
-  size?: number
+  pageSize?: number
   name?: string
   code?: string
   status?: number

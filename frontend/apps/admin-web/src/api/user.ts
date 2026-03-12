@@ -6,7 +6,7 @@ import type { PageResult } from '@/types'
  */
 export interface UserQuery {
   page?: number
-  size?: number
+  pageSize?: number
   username?: string
   phone?: string
   email?: string

@@ -24,7 +24,7 @@ export interface OnlineUserVO {
  */
 export interface OnlineUserQuery {
   page?: number
-  size?: number
+  pageSize?: number
   username?: string
   ip?: string
 }

@@ -100,7 +100,7 @@ const selectedRowKeys = ref<number[]>([])
 
 const queryForm = reactive<LoginLogQuery & { dateRange?: [number, number] }>({
   page: 1,
-  size: 10,
+  pageSize: 10,
   username: '',
   ip: '',
   status: undefined,
@@ -122,7 +122,7 @@ const pagination = reactive({
   },
   onUpdatePageSize: (pageSize: number) => {
     pagination.pageSize = pageSize
-    queryForm.size = pageSize
+    queryForm.pageSize = pageSize
     pagination.page = 1
     queryForm.page = 1
     loadData()
@@ -164,7 +164,7 @@ const loadData = async () => {
   try {
     const res = await getLoginLogPageApi(queryForm)
     tableData.value = res.records || []
-    pagination.itemCount = res.total || 0
+    pagination.itemCount = res.totalRow || 0
   } catch (error: any) {
     message.error(error.message || '加载失败')
   } finally {

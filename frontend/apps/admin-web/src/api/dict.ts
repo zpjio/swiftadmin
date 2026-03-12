@@ -37,7 +37,7 @@ export interface DictDataVO {
  */
 export interface DictTypeQuery {
   page?: number
-  size?: number
+  pageSize?: number
   dictName?: string
   dictType?: string
   status?: number
@@ -48,7 +48,7 @@ export interface DictTypeQuery {
  */
 export interface DictDataQuery {
   page?: number
-  size?: number
+  pageSize?: number
   dictType?: string
   dictLabel?: string
   status?: number

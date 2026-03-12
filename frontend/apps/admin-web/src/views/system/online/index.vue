@@ -55,7 +55,7 @@ const loading = ref(false)
 const tableData = ref<OnlineUserVO[]>([])
 const queryForm = reactive<OnlineUserQuery>({
   page: 1,
-  size: 10,
+  pageSize: 10,
 })
 
 const pagination = reactive({
@@ -73,7 +73,7 @@ const pagination = reactive({
     pagination.pageSize = pageSize
     pagination.page = 1
     queryForm.page = 1
-    queryForm.size = pageSize
+    queryForm.pageSize = pageSize
     loadData()
   },
 })
@@ -163,9 +163,9 @@ const loadData = async () => {
   try {
     const res = await getOnlineUserPageApi(queryForm)
     tableData.value = res.records || []
-    pagination.page = res.current || 1
-    pagination.pageSize = res.size || 10
-    pagination.itemCount = res.total || 0
+    pagination.page = res.pageNumber || 1
+    pagination.pageSize = res.pageSize || 10
+    pagination.itemCount = res.totalRow || 0
   } catch (error) {
     console.error('加载数据失败:', error)
   } finally {

@@ -125,7 +125,7 @@ const { options: configTypeOptions, getLabel: getConfigTypeLabel } = useDict('sy
 
 const queryForm = reactive({
   page: 1,
-  size: 10,
+  pageSize: 10,
   configName: undefined as string | undefined,
   configKey: undefined as string | undefined,
   configType: undefined as string | undefined,
@@ -144,7 +144,7 @@ const pagination = reactive({
   },
   onUpdatePageSize: (pageSize: number) => {
     pagination.pageSize = pageSize
-    queryForm.size = pageSize
+    queryForm.pageSize = pageSize
     pagination.page = 1
     queryForm.page = 1
     loadData()
@@ -197,7 +197,7 @@ const loadData = async () => {
   try {
     const res = await getConfigPageApi(queryForm)
     tableData.value = res.records || []
-    pagination.itemCount = res.total || 0
+    pagination.itemCount = res.totalRow || 0
   } catch (error: any) {
     message.error(error.message || '加载失败')
   } finally {

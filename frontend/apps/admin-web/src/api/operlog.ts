@@ -29,7 +29,7 @@ export interface OperLogVO {
  */
 export interface OperLogQuery {
   page?: number
-  size?: number
+  pageSize?: number
   title?: string
   operName?: string
   businessType?: number

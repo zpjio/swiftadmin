@@ -23,7 +23,7 @@ export interface FileVO {
  */
 export interface FileQuery {
   page?: number
-  size?: number
+  pageSize?: number
   fileName?: string
   fileType?: string
   bizType?: string

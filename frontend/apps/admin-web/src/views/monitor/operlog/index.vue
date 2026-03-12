@@ -158,7 +158,7 @@ const currentDetail = ref<OperLogVO | null>(null)
 
 const queryForm = reactive<OperLogQuery & { dateRange?: [number, number] }>({
   page: 1,
-  size: 10,
+  pageSize: 10,
   title: '',
   operName: '',
   businessType: undefined,
@@ -181,7 +181,7 @@ const pagination = reactive({
   },
   onUpdatePageSize: (pageSize: number) => {
     pagination.pageSize = pageSize
-    queryForm.size = pageSize
+    queryForm.pageSize = pageSize
     pagination.page = 1
     queryForm.page = 1
     loadData()
@@ -306,7 +306,7 @@ const loadData = async () => {
   try {
     const res = await getOperLogPageApi(queryForm)
     tableData.value = res.records || []
-    pagination.itemCount = res.total || 0
+    pagination.itemCount = res.totalRow || 0
   } catch (error: any) {
     message.error(error.message || '加载失败')
   } finally {

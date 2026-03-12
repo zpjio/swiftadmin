@@ -60,10 +60,10 @@
             </div>
           </NScrollbar>
         </NSpin>
-        <div class="mt-4 flex justify-center" v-if="typePagination.itemCount > typeQueryForm.size">
+        <div class="mt-4 flex justify-center" v-if="typePagination.itemCount > (typeQueryForm.pageSize || 20)">
           <NPagination
             v-model:page="typeQueryForm.page"
-            :page-size="typeQueryForm.size"
+            :page-size="typeQueryForm.pageSize || 20"
             :item-count="typePagination.itemCount"
             simple
             @update:page="loadTypeList"
@@ -203,7 +203,7 @@ const showTypeModal = ref(false)
 const typeSaving = ref(false)
 const isEditType = ref(false)
 const typeModalTitle = ref('')
-const typeQueryForm = reactive<DictTypeQuery>({ page: 1, size: 20, dictName: undefined })
+const typeQueryForm = reactive<DictTypeQuery>({ page: 1, pageSize: 20, dictName: undefined })
 
 const typePagination = reactive({
   itemCount: 0,
@@ -217,7 +217,7 @@ const showDataModal = ref(false)
 const dataSaving = ref(false)
 const isEditData = ref(false)
 const dataModalTitle = ref('')
-const dataQueryForm = reactive<DictDataQuery>({ page: 1, size: 10, dictLabel: undefined })
+const dataQueryForm = reactive<DictDataQuery>({ page: 1, pageSize: 10, dictLabel: undefined })
 
 const dataPagination = reactive({
   page: 1,
@@ -291,7 +291,7 @@ const loadTypeList = async () => {
   try {
     const res = await getDictTypePageApi(typeQueryForm)
     typeList.value = res.records || []
-    typePagination.itemCount = res.total || 0
+    typePagination.itemCount = res.totalRow || 0
   } catch (error: any) {
     message.error(error.message || '加载失败')
   } finally {
@@ -308,7 +308,7 @@ const loadDataList = async () => {
     dataQueryForm.dictType = selectedType.value.dictType
     const res = await getDictDataPageApi(dataQueryForm)
     dataList.value = res.records || []
-    dataPagination.itemCount = res.total || 0
+    dataPagination.itemCount = res.totalRow || 0
   } catch (error: any) {
     message.error(error.message || '加载失败')
   } finally {
