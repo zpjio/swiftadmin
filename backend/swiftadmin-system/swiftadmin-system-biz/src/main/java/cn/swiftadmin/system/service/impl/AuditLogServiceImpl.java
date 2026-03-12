@@ -1,7 +1,8 @@
 package cn.swiftadmin.system.service.impl;
 
-import cn.swiftadmin.common.core.result.Page;
+import com.mybatisflex.core.paginate.Page;
 import cn.swiftadmin.common.mybatis.util.PageHelper;
+import cn.swiftadmin.system.api.dto.AuditLogQueryDTO;
 import cn.swiftadmin.system.api.entity.SysAuditLog;
 import cn.swiftadmin.system.api.service.AuditLogService;
 import cn.swiftadmin.system.mapper.SysAuditLogMapper;
@@ -12,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,25 +29,18 @@ import static com.mybatisflex.core.query.QueryMethods.distinct;
 @Service
 public class AuditLogServiceImpl extends ServiceImpl<SysAuditLogMapper, SysAuditLog> implements AuditLogService {
 
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
     @Override
-    public Page<SysAuditLog> page(String module, String operation, String operUserName,
-                                   String tableName, String beginTime, String endTime,
-                                   Integer page, Integer pageSize) {
+    public Page<SysAuditLog> page(AuditLogQueryDTO query) {
         QueryWrapper queryWrapper = QueryWrapper.create()
-                .where(SYS_AUDIT_LOG.MODULE.eq(module, module != null && !module.isEmpty()))
-                .and(SYS_AUDIT_LOG.OPERATION.eq(operation, operation != null && !operation.isEmpty()))
-                .and(SYS_AUDIT_LOG.OPER_USER_NAME.like(PageHelper.likeIfPresent(operUserName)))
-                .and(SYS_AUDIT_LOG.TABLE_NAME.eq(tableName, tableName != null && !tableName.isEmpty()))
-                .and(SYS_AUDIT_LOG.OPER_TIME.ge(parseTime(beginTime), beginTime != null && !beginTime.isEmpty()))
-                .and(SYS_AUDIT_LOG.OPER_TIME.le(parseTime(endTime), endTime != null && !endTime.isEmpty()))
+                .where(SYS_AUDIT_LOG.MODULE.eq(query.getModule(), query.getModule() != null && !query.getModule().isEmpty()))
+                .and(SYS_AUDIT_LOG.OPERATION.eq(query.getOperation(), query.getOperation() != null && !query.getOperation().isEmpty()))
+                .and(SYS_AUDIT_LOG.OPER_USER_NAME.like(PageHelper.likeIfPresent(query.getOperUserName())))
+                .and(SYS_AUDIT_LOG.TABLE_NAME.eq(query.getTableName(), query.getTableName() != null && !query.getTableName().isEmpty()))
+                .and(SYS_AUDIT_LOG.OPER_TIME.ge(query.getBeginTime(), query.getBeginTime() != null))
+                .and(SYS_AUDIT_LOG.OPER_TIME.le(query.getEndTime(), query.getEndTime() != null))
                 .orderBy(SYS_AUDIT_LOG.OPER_TIME.desc());
 
-        return PageHelper.convert(
-                getMapper().paginate(PageHelper.of(page, pageSize), queryWrapper),
-                log -> log
-        );
+        return getMapper().paginate(PageHelper.of(query.getPage(), query.getPageSize()), queryWrapper);
     }
 
     @Override
@@ -87,17 +80,6 @@ public class AuditLogServiceImpl extends ServiceImpl<SysAuditLogMapper, SysAudit
                 .map(SysAuditLog::getModule)
                 .filter(m -> m != null && !m.isEmpty())
                 .collect(Collectors.toList());
-    }
-
-    private LocalDateTime parseTime(String time) {
-        if (time == null || time.isEmpty()) {
-            return null;
-        }
-        try {
-            return LocalDateTime.parse(time, DATE_FORMATTER);
-        } catch (Exception e) {
-            return null;
-        }
     }
 
 }

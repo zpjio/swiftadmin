@@ -1,6 +1,11 @@
 package cn.swiftadmin.system.api.dto;
 
+import cn.swiftadmin.common.core.result.PageQuery;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import java.time.LocalDateTime;
 
 /**
  * 用户查询 DTO
@@ -9,13 +14,8 @@ import lombok.Data;
  * @since 2026-03-10
  */
 @Data
-public class UserQueryDTO {
-
-    /** 当前页码 */
-    private Integer page = 1;
-
-    /** 每页大小 */
-    private Integer pageSize = 10;
+@EqualsAndHashCode(callSuper = true)
+public class UserQueryDTO extends PageQuery {
 
     /** 用户名 */
     private String username;
@@ -33,9 +33,11 @@ public class UserQueryDTO {
     private Long deptId;
 
     /** 创建时间开始 */
-    private String createTimeBegin;
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime createTimeBegin;
 
     /** 创建时间结束 */
-    private String createTimeEnd;
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime createTimeEnd;
 
 }

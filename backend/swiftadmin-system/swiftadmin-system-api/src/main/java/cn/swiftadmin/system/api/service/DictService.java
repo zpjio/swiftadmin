@@ -1,6 +1,8 @@
 package cn.swiftadmin.system.api.service;
 
-import cn.swiftadmin.common.core.result.Page;
+import com.mybatisflex.core.paginate.Page;
+import cn.swiftadmin.system.api.dto.DictDataQueryDTO;
+import cn.swiftadmin.system.api.dto.DictTypeQueryDTO;
 import cn.swiftadmin.system.api.entity.SysDictData;
 import cn.swiftadmin.system.api.entity.SysDictType;
 import cn.swiftadmin.system.api.vo.DictDataVO;
@@ -21,7 +23,7 @@ public interface DictService {
     /**
      * 分页查询字典类型
      */
-    Page<SysDictType> pageDictType(String dictName, String dictType, Integer status, Integer page, Integer pageSize);
+    Page<SysDictType> pageDictType(DictTypeQueryDTO query);
 
     /**
      * 根据 ID 获取字典类型
@@ -48,7 +50,7 @@ public interface DictService {
     /**
      * 分页查询字典数据
      */
-    Page<SysDictData> pageDictData(String dictType, String dictLabel, Integer status, Integer page, Integer pageSize);
+    Page<SysDictData> pageDictData(DictDataQueryDTO query);
 
     /**
      * 根据 ID 获取字典数据

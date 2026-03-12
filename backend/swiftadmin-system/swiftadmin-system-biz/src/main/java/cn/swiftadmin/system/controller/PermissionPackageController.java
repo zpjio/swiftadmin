@@ -1,9 +1,10 @@
 package cn.swiftadmin.system.controller;
 
-import cn.swiftadmin.common.core.result.Page;
+import com.mybatisflex.core.paginate.Page;
 import cn.swiftadmin.common.core.result.R;
 import cn.swiftadmin.common.security.annotation.RequiresPermission;
 import cn.swiftadmin.system.api.dto.PermissionPackageDTO;
+import cn.swiftadmin.system.api.dto.PermissionPackageQueryDTO;
 import cn.swiftadmin.system.api.service.PermissionPackageService;
 import cn.swiftadmin.system.api.vo.PermissionPackageVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,31 +33,16 @@ public class PermissionPackageController {
 
     /**
      * 分页查询权限包
-     * <p>支持按名称、状态等条件筛选</p>
-     *
-     * @param name 权限包名称（可选）
-     * @param status 状态（可选）
-     * @param page 页码（默认 1）
-     * @param pageSize 每页数量（默认 10）
-     * @return 权限包分页列表
      */
     @Operation(summary = "分页查询权限包", description = "支持按名称、状态等条件筛选")
     @GetMapping("/page")
     @RequiresPermission("system:permissionPackage:list")
-    public R<Page<PermissionPackageVO>> page(
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) Integer status,
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "10") Integer pageSize) {
-        return R.ok(permissionPackageService.page(name, status, page, pageSize));
+    public R<Page<PermissionPackageVO>> page(PermissionPackageQueryDTO query) {
+        return R.ok(permissionPackageService.page(query));
     }
 
     /**
      * 获取权限包详情
-     * <p>查看权限包的完整信息和包含的权限列表</p>
-     *
-     * @param id 权限包 ID
-     * @return 权限包详情
      */
     @GetMapping("/{id}")
     @RequiresPermission("system:permissionPackage:query")
@@ -66,9 +52,6 @@ public class PermissionPackageController {
 
     /**
      * 获取所有权限包列表
-     * <p>返回所有权限包的简化信息，用于选择</p>
-     *
-     * @return 权限包列表
      */
     @GetMapping("/list")
     @RequiresPermission("system:permissionPackage:list")
@@ -78,10 +61,6 @@ public class PermissionPackageController {
 
     /**
      * 创建权限包
-     * <p>新增权限包，可包含多个权限</p>
-     *
-     * @param dto 权限包创建参数
-     * @return 新创建的权限包 ID
      */
     @PostMapping
     @RequiresPermission("system:permissionPackage:add")
@@ -91,10 +70,6 @@ public class PermissionPackageController {
 
     /**
      * 更新权限包
-     * <p>修改权限包信息和权限列表</p>
-     *
-     * @param dto 权限包更新参数
-     * @return 操作结果
      */
     @Operation(summary = "更新权限包", description = "修改权限包信息和权限列表")
     @PutMapping
@@ -106,10 +81,6 @@ public class PermissionPackageController {
 
     /**
      * 批量删除权限包
-     * <p>支持同时删除多个权限包</p>
-     *
-     * @param ids 权限包 ID 列表
-     * @return 操作结果
      */
     @Operation(summary = "批量删除权限包", description = "支持同时删除多个权限包")
     @DeleteMapping("/{ids}")
@@ -121,11 +92,6 @@ public class PermissionPackageController {
 
     /**
      * 应用权限包到角色
-     * <p>将权限包的权限快速分配给指定角色</p>
-     *
-     * @param roleId 角色 ID
-     * @param packageId 权限包 ID
-     * @return 操作结果
      */
     @Operation(summary = "应用权限包到角色", description = "将权限包的权限快速分配给指定角色")
     @PostMapping("/apply")

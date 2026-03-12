@@ -1,6 +1,8 @@
 package cn.swiftadmin.system.api.dto;
 
+import cn.swiftadmin.common.core.result.PageQuery;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 角色查询 DTO
@@ -9,13 +11,8 @@ import lombok.Data;
  * @since 2026-03-10
  */
 @Data
-public class RoleQueryDTO {
-
-    /** 当前页码 */
-    private Integer page = 1;
-
-    /** 每页大小 */
-    private Integer pageSize = 10;
+@EqualsAndHashCode(callSuper = true)
+public class RoleQueryDTO extends PageQuery {
 
     /** 角色名称 */
     private String name;

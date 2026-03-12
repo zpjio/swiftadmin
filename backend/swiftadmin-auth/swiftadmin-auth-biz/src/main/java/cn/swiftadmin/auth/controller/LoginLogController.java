@@ -2,7 +2,7 @@ package cn.swiftadmin.auth.controller;
 
 import cn.swiftadmin.auth.api.entity.SysLoginLog;
 import cn.swiftadmin.auth.api.service.LoginLogService;
-import cn.swiftadmin.common.core.result.Page;
+import com.mybatisflex.core.paginate.Page;
 import cn.swiftadmin.common.core.result.R;
 import cn.swiftadmin.common.security.annotation.RequiresPermission;
 import io.swagger.v3.oas.annotations.Operation;

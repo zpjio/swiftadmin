@@ -3,7 +3,7 @@ package cn.swiftadmin.system.service.impl;
 import cn.swiftadmin.common.core.enums.CommonStatus;
 import cn.swiftadmin.common.core.enums.YesNo;
 import cn.swiftadmin.common.core.exception.BusinessException;
-import cn.swiftadmin.common.core.result.Page;
+import com.mybatisflex.core.paginate.Page;
 import cn.swiftadmin.common.core.util.BeanCopyUtils;
 import cn.swiftadmin.common.mybatis.util.PageHelper;
 import cn.swiftadmin.common.security.util.SecurityUtils;
@@ -23,10 +23,9 @@ import com.mybatisflex.spring.service.impl.ServiceImpl;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
+import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,8 +47,6 @@ public class UserManageServiceImpl extends ServiceImpl<SysUserMapper, SysUser> i
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
 
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
     public UserManageServiceImpl(SysUserRoleMapper userRoleMapper, UserService userService, PasswordEncoder passwordEncoder) {
         this.userRoleMapper = userRoleMapper;
         this.userService = userService;
@@ -67,21 +64,13 @@ public class UserManageServiceImpl extends ServiceImpl<SysUserMapper, SysUser> i
                 .and(SYS_USER.PHONE.like(PageHelper.likeIfPresent(query.getPhone())))
                 .and(SYS_USER.STATUS.eq(query.getStatus(), query.getStatus() != null))
                 .and(SYS_USER.DEPT_ID.eq(query.getDeptId(), query.getDeptId() != null))
+                .and(SYS_USER.CREATE_TIME.ge(query.getCreateTimeBegin(), query.getCreateTimeBegin() != null))
+                .and(SYS_USER.CREATE_TIME.le(query.getCreateTimeEnd(), query.getCreateTimeEnd() != null))
                 .orderBy(SYS_USER.CREATE_TIME.desc());
 
-        // 时间范围查询
-        if (StringUtils.hasText(query.getCreateTimeBegin())) {
-            queryWrapper.and(SYS_USER.CREATE_TIME.ge(LocalDateTime.parse(query.getCreateTimeBegin(), DATE_FORMATTER)));
-        }
-        if (StringUtils.hasText(query.getCreateTimeEnd())) {
-            queryWrapper.and(SYS_USER.CREATE_TIME.le(LocalDateTime.parse(query.getCreateTimeEnd(), DATE_FORMATTER)));
-        }
-
         // 使用 paginateAs 直接映射到 UserVO，解决关联字段映射问题
-        com.mybatisflex.core.paginate.Page<UserVO> flexPage = getMapper()
+        return getMapper()
                 .paginateAs(PageHelper.of(query.getPage(), query.getPageSize()), queryWrapper, UserVO.class);
-
-        return PageHelper.convert(flexPage);
     }
 
     @Override
@@ -134,7 +123,7 @@ public class UserManageServiceImpl extends ServiceImpl<SysUserMapper, SysUser> i
 
         save(user);
 
-        if (PageHelper.isNotEmpty(dto.getRoleIds())) {
+        if (!CollectionUtils.isEmpty(dto.getRoleIds())) {
             assignRoles(user.getId(), dto.getRoleIds());
         }
 
@@ -187,7 +176,7 @@ public class UserManageServiceImpl extends ServiceImpl<SysUserMapper, SysUser> i
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(List<Long> ids) {
-        if (PageHelper.isEmpty(ids)) {
+        if (CollectionUtils.isEmpty(ids)) {
             return;
         }
 
@@ -216,7 +205,7 @@ public class UserManageServiceImpl extends ServiceImpl<SysUserMapper, SysUser> i
     public void assignRoles(Long userId, List<Long> roleIds) {
         userRoleMapper.deleteByQuery(QueryWrapper.create().where(SYS_USER_ROLE.USER_ID.eq(userId)));
 
-        if (PageHelper.isNotEmpty(roleIds)) {
+        if (!CollectionUtils.isEmpty(roleIds)) {
             List<SysUserRole> userRoles = roleIds.stream()
                     .map(roleId -> SysUserRole.builder().userId(userId).roleId(roleId).build())
                     .collect(Collectors.toList());

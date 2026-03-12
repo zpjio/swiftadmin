@@ -1,6 +1,7 @@
 package cn.swiftadmin.system.api.service;
 
-import cn.swiftadmin.common.core.result.Page;
+import com.mybatisflex.core.paginate.Page;
+import cn.swiftadmin.system.api.dto.OperLogQueryDTO;
 import cn.swiftadmin.system.api.entity.SysOperLog;
 import com.mybatisflex.core.service.IService;
 
@@ -24,19 +25,10 @@ public interface OperLogService extends IService<SysOperLog> {
     /**
      * 分页查询操作日志
      *
-     * @param title 操作标题
-     * @param operName 操作人员
-     * @param businessType 业务类型
-     * @param status 操作状态
-     * @param beginTime 开始时间
-     * @param endTime 结束时间
-     * @param page 页码
-     * @param pageSize 每页大小
+     * @param query 查询条件
      * @return 分页结果
      */
-    Page<SysOperLog> page(String title, String operName, Integer businessType,
-                          Integer status, String beginTime, String endTime,
-                          Integer page, Integer pageSize);
+    Page<SysOperLog> page(OperLogQueryDTO query);
 
     /**
      * 批量删除操作日志

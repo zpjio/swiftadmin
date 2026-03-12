@@ -1,6 +1,6 @@
 package cn.swiftadmin.system.service.impl;
 
-import cn.swiftadmin.common.core.result.Page;
+import com.mybatisflex.core.paginate.Page;
 import cn.swiftadmin.common.security.domain.LoginUser;
 import cn.swiftadmin.common.security.service.UserSessionService;
 import cn.swiftadmin.system.api.service.OnlineUserService;
@@ -48,8 +48,8 @@ public class OnlineUserServiceImpl implements OnlineUserService {
 
         Page<OnlineUserVO> result = new Page<>();
         result.setRecords(pageData);
-        result.setTotal(total);
-        result.setPage(page);
+        result.setTotalRow(total);
+        result.setPageNumber(page);
         result.setPageSize(pageSize);
         return result;
     }

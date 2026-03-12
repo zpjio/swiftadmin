@@ -1,7 +1,7 @@
 package cn.swiftadmin.auth.api.service;
 
 import cn.swiftadmin.auth.api.entity.SysLoginLog;
-import cn.swiftadmin.common.core.result.Page;
+import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.service.IService;
 
 import java.util.List;

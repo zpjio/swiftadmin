@@ -4,7 +4,7 @@ import cn.swiftadmin.system.api.dto.UserDTO;
 import cn.swiftadmin.system.api.dto.UserQueryDTO;
 import cn.swiftadmin.system.api.entity.SysUser;
 import cn.swiftadmin.system.api.vo.UserVO;
-import cn.swiftadmin.common.core.result.Page;
+import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.service.IService;
 
 import java.util.List;

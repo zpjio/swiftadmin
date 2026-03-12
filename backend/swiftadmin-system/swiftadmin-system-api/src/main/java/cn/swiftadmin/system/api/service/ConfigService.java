@@ -1,6 +1,6 @@
 package cn.swiftadmin.system.api.service;
 
-import cn.swiftadmin.common.core.result.Page;
+import com.mybatisflex.core.paginate.Page;
 import cn.swiftadmin.system.api.dto.ConfigDTO;
 import cn.swiftadmin.system.api.dto.ConfigQueryDTO;
 import cn.swiftadmin.system.api.vo.ConfigVO;

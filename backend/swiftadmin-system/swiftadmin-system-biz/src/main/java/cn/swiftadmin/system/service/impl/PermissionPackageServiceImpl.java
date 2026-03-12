@@ -1,10 +1,11 @@
 package cn.swiftadmin.system.service.impl;
 
 import cn.swiftadmin.common.core.exception.BusinessException;
-import cn.swiftadmin.common.core.result.Page;
+import com.mybatisflex.core.paginate.Page;
 import cn.swiftadmin.common.core.util.BeanCopyUtils;
 import cn.swiftadmin.common.mybatis.util.PageHelper;
 import cn.swiftadmin.system.api.dto.PermissionPackageDTO;
+import cn.swiftadmin.system.api.dto.PermissionPackageQueryDTO;
 import cn.swiftadmin.system.api.entity.SysPermissionPackage;
 import cn.swiftadmin.system.api.entity.SysPermissionPackageMenu;
 import cn.swiftadmin.system.api.service.PermissionPackageService;
@@ -17,6 +18,7 @@ import com.mybatisflex.core.update.UpdateChain;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -44,16 +46,13 @@ public class PermissionPackageServiceImpl extends ServiceImpl<SysPermissionPacka
     }
 
     @Override
-    public Page<PermissionPackageVO> page(String name, Integer status, Integer page, Integer pageSize) {
+    public Page<PermissionPackageVO> page(PermissionPackageQueryDTO query) {
         QueryWrapper queryWrapper = QueryWrapper.create()
-                .where(SYS_PERMISSION_PACKAGE.NAME.like(PageHelper.likeIfPresent(name)))
-                .and(SYS_PERMISSION_PACKAGE.STATUS.eq(status, status != null))
+                .where(SYS_PERMISSION_PACKAGE.NAME.like(PageHelper.likeIfPresent(query.getName())))
+                .and(SYS_PERMISSION_PACKAGE.STATUS.eq(query.getStatus(), query.getStatus() != null))
                 .orderBy(SYS_PERMISSION_PACKAGE.SORT_ORDER.asc(), SYS_PERMISSION_PACKAGE.CREATE_TIME.desc());
 
-        return PageHelper.convert(
-                getMapper().paginate(PageHelper.of(page, pageSize), queryWrapper),
-                this::toPermissionPackageVO
-        );
+        return getMapper().paginateAs(PageHelper.of(query.getPage(), query.getPageSize()), queryWrapper, PermissionPackageVO.class);
     }
 
     @Override
@@ -103,7 +102,7 @@ public class PermissionPackageServiceImpl extends ServiceImpl<SysPermissionPacka
 
         save(pkg);
 
-        if (PageHelper.isNotEmpty(dto.getMenuIds())) {
+        if (!CollectionUtils.isEmpty(dto.getMenuIds())) {
             assignMenus(pkg.getId(), dto.getMenuIds());
         }
 
@@ -149,7 +148,7 @@ public class PermissionPackageServiceImpl extends ServiceImpl<SysPermissionPacka
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(List<Long> ids) {
-        if (PageHelper.isNotEmpty(ids)) {
+        if (!CollectionUtils.isEmpty(ids)) {
             getMapper().deleteBatchByIds(ids);
             packageMenuMapper.deleteByQuery(QueryWrapper.create()
                     .where(SYS_PERMISSION_PACKAGE_MENU.PACKAGE_ID.in(ids)));
@@ -172,7 +171,7 @@ public class PermissionPackageServiceImpl extends ServiceImpl<SysPermissionPacka
     @Transactional(rollbackFor = Exception.class)
     public void applyToRole(Long roleId, Long packageId) {
         List<Long> menuIds = getMenuIdsByPackageId(packageId);
-        if (PageHelper.isNotEmpty(menuIds)) {
+        if (!CollectionUtils.isEmpty(menuIds)) {
             roleService.assignMenus(roleId, menuIds);
         }
     }
@@ -196,7 +195,7 @@ public class PermissionPackageServiceImpl extends ServiceImpl<SysPermissionPacka
         packageMenuMapper.deleteByQuery(QueryWrapper.create()
                 .where(SYS_PERMISSION_PACKAGE_MENU.PACKAGE_ID.eq(packageId)));
 
-        if (PageHelper.isNotEmpty(menuIds)) {
+        if (!CollectionUtils.isEmpty(menuIds)) {
             List<SysPermissionPackageMenu> packageMenus = menuIds.stream()
                     .map(menuId -> SysPermissionPackageMenu.builder()
                             .packageId(packageId)

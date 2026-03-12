@@ -1,7 +1,7 @@
 package cn.swiftadmin.system.service.impl;
 
 import cn.swiftadmin.common.core.exception.BusinessException;
-import cn.swiftadmin.common.core.result.Page;
+import com.mybatisflex.core.paginate.Page;
 import cn.swiftadmin.common.core.util.BeanCopyUtils;
 import cn.swiftadmin.common.mybatis.util.PageHelper;
 import cn.swiftadmin.system.api.dto.ConfigDTO;
@@ -109,10 +109,7 @@ public class ConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig> i
                 .and(SYS_CONFIG.CONFIG_TYPE.eq(query.getConfigType(), query.getConfigType() != null))
                 .orderBy(SYS_CONFIG.CONFIG_KEY.asc());
 
-        return PageHelper.convert(
-                getMapper().paginate(PageHelper.of(query.getPage(), query.getPageSize()), queryWrapper),
-                config -> BeanCopyUtils.copy(config, ConfigVO::new)
-        );
+        return getMapper().paginateAs(PageHelper.of(query.getPage(), query.getPageSize()), queryWrapper, ConfigVO.class);
     }
 
     @Override

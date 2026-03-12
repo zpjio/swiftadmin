@@ -1,6 +1,8 @@
 package cn.swiftadmin.system.api.dto;
 
+import cn.swiftadmin.common.core.result.PageQuery;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 系统配置查询 DTO
@@ -9,7 +11,8 @@ import lombok.Data;
  * @since 2026-03-10
  */
 @Data
-public class ConfigQueryDTO {
+@EqualsAndHashCode(callSuper = true)
+public class ConfigQueryDTO extends PageQuery {
 
     /** 配置键（模糊查询） */
     private String configKey;
@@ -19,11 +22,5 @@ public class ConfigQueryDTO {
 
     /** 配置类型 */
     private String configType;
-
-    /** 页码 */
-    private Integer page = 1;
-
-    /** 每页大小 */
-    private Integer pageSize = 10;
 
 }

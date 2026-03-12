@@ -1,8 +1,9 @@
 package cn.swiftadmin.system.controller;
 
-import cn.swiftadmin.common.core.result.Page;
+import com.mybatisflex.core.paginate.Page;
 import cn.swiftadmin.common.core.result.R;
 import cn.swiftadmin.common.security.annotation.RequiresPermission;
+import cn.swiftadmin.system.api.dto.AuditLogQueryDTO;
 import cn.swiftadmin.system.api.entity.SysAuditLog;
 import cn.swiftadmin.system.api.service.AuditLogService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,30 +32,12 @@ public class AuditLogController {
     /**
      * 分页查询审计日志
      * <p>支持按业务模块、操作类型、操作人员、表名、时间范围等条件筛选</p>
-     *
-     * @param module 业务模块（可选）
-     * @param operation 操作类型（可选）
-     * @param operUserName 操作人员（可选）
-     * @param tableName 表名（可选）
-     * @param beginTime 开始时间（可选，格式：yyyy-MM-dd）
-     * @param endTime 结束时间（可选，格式：yyyy-MM-dd）
-     * @param page 页码（默认 1）
-     * @param pageSize 每页数量（默认 10）
-     * @return 审计日志分页列表
      */
     @Operation(summary = "分页查询审计日志", description = "支持按业务模块、操作类型、操作人员、表名、时间范围等条件筛选")
     @GetMapping("/page")
     @RequiresPermission("system:auditLog:list")
-    public R<Page<SysAuditLog>> page(
-            @RequestParam(required = false) String module,
-            @RequestParam(required = false) String operation,
-            @RequestParam(required = false) String operUserName,
-            @RequestParam(required = false) String tableName,
-            @RequestParam(required = false) String beginTime,
-            @RequestParam(required = false) String endTime,
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "10") Integer pageSize) {
-        return R.ok(auditLogService.page(module, operation, operUserName, tableName, beginTime, endTime, page, pageSize));
+    public R<Page<SysAuditLog>> page(AuditLogQueryDTO query) {
+        return R.ok(auditLogService.page(query));
     }
 
     /**

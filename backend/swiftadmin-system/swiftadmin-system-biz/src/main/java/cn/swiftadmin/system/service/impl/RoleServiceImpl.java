@@ -2,7 +2,7 @@ package cn.swiftadmin.system.service.impl;
 
 import cn.swiftadmin.common.core.exception.BusinessException;
 import cn.swiftadmin.common.core.enums.CommonStatus;
-import cn.swiftadmin.common.core.result.Page;
+import com.mybatisflex.core.paginate.Page;
 import cn.swiftadmin.common.core.util.BeanCopyUtils;
 import cn.swiftadmin.common.mybatis.util.PageHelper;
 import cn.swiftadmin.system.api.dto.RoleDTO;
@@ -20,6 +20,7 @@ import com.mybatisflex.spring.service.impl.ServiceImpl;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -56,10 +57,7 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
                 .and(SYS_ROLE.STATUS.eq(query.getStatus(), query.getStatus() != null))
                 .orderBy(SYS_ROLE.CREATE_TIME.desc());
 
-        return PageHelper.convert(
-                getMapper().paginate(PageHelper.of(query.getPage(), query.getPageSize()), queryWrapper),
-                role -> BeanCopyUtils.copy(role, RoleVO::new)
-        );
+        return getMapper().paginateAs(PageHelper.of(query.getPage(), query.getPageSize()), queryWrapper, RoleVO.class);
     }
 
     @Override
@@ -108,7 +106,7 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
         // 如果指定了权限包，使用权限包的菜单权限
         if (dto.getPackageId() != null) {
             permissionPackageService.applyToRole(role.getId(), dto.getPackageId());
-        } else if (PageHelper.isNotEmpty(dto.getMenuIds())) {
+        } else if (!CollectionUtils.isEmpty(dto.getMenuIds())) {
             assignMenus(role.getId(), dto.getMenuIds());
         }
 
@@ -159,7 +157,7 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(List<Long> ids) {
-        if (PageHelper.isNotEmpty(ids)) {
+        if (!CollectionUtils.isEmpty(ids)) {
             getMapper().deleteBatchByIds(ids);
             roleMenuMapper.deleteByQuery(QueryWrapper.create().where(SYS_ROLE_MENU.ROLE_ID.in(ids)));
         }
@@ -170,7 +168,7 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
     public void assignMenus(Long roleId, List<Long> menuIds) {
         roleMenuMapper.deleteByQuery(QueryWrapper.create().where(SYS_ROLE_MENU.ROLE_ID.eq(roleId)));
 
-        if (PageHelper.isNotEmpty(menuIds)) {
+        if (!CollectionUtils.isEmpty(menuIds)) {
             List<SysRoleMenu> roleMenus = menuIds.stream()
                     .map(menuId -> SysRoleMenu.builder().roleId(roleId).menuId(menuId).build())
                     .collect(Collectors.toList());

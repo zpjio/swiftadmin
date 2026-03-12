@@ -4,7 +4,7 @@ import cn.swiftadmin.system.api.dto.RoleDTO;
 import cn.swiftadmin.system.api.dto.RoleQueryDTO;
 import cn.swiftadmin.system.api.entity.SysRole;
 import cn.swiftadmin.system.api.vo.RoleVO;
-import cn.swiftadmin.common.core.result.Page;
+import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.service.IService;
 
 import java.util.List;

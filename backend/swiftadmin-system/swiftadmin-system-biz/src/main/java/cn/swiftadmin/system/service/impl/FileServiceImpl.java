@@ -3,10 +3,11 @@ package cn.swiftadmin.system.service.impl;
 import cn.swiftadmin.common.core.file.FileInfo;
 import cn.swiftadmin.common.core.file.FileStorageException;
 import cn.swiftadmin.common.core.file.FileUploadService;
-import cn.swiftadmin.common.core.result.Page;
+import com.mybatisflex.core.paginate.Page;
 import cn.swiftadmin.common.core.util.BeanCopyUtils;
 import cn.swiftadmin.common.mybatis.util.PageHelper;
 import cn.swiftadmin.common.security.util.SecurityUtils;
+import cn.swiftadmin.system.api.dto.FileQueryDTO;
 import cn.swiftadmin.system.api.entity.SysFile;
 import cn.swiftadmin.system.api.service.FileService;
 import cn.swiftadmin.system.api.vo.FileVO;
@@ -39,18 +40,15 @@ public class FileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impleme
     private final FileUploadService fileUploadService;
 
     @Override
-    public Page<FileVO> page(String fileName, String bizType, String storageType, Integer status, Integer page, Integer pageSize) {
+    public Page<FileVO> page(FileQueryDTO query) {
         QueryWrapper queryWrapper = QueryWrapper.create()
-                .where(SYS_FILE.FILE_NAME.like(PageHelper.likeIfPresent(fileName)))
-                .and(SYS_FILE.BIZ_TYPE.eq(bizType, bizType != null && !bizType.isEmpty()))
-                .and(SYS_FILE.STORAGE_TYPE.eq(storageType, storageType != null && !storageType.isEmpty()))
-                .and(SYS_FILE.STATUS.eq(status, status != null))
+                .where(SYS_FILE.FILE_NAME.like(PageHelper.likeIfPresent(query.getFileName())))
+                .and(SYS_FILE.BIZ_TYPE.eq(query.getBizType(), query.getBizType() != null && !query.getBizType().isEmpty()))
+                .and(SYS_FILE.STORAGE_TYPE.eq(query.getStorageType(), query.getStorageType() != null && !query.getStorageType().isEmpty()))
+                .and(SYS_FILE.STATUS.eq(query.getStatus(), query.getStatus() != null))
                 .orderBy(SYS_FILE.CREATE_TIME.desc());
 
-        return PageHelper.convert(
-                getMapper().paginate(PageHelper.of(page, pageSize), queryWrapper),
-                file -> toFileVO(file)
-        );
+        return getMapper().paginateAs(PageHelper.of(query.getPage(), query.getPageSize()), queryWrapper, FileVO.class);
     }
 
     @Override

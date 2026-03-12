@@ -4,7 +4,7 @@ import cn.swiftadmin.auth.api.entity.SysLoginLog;
 import cn.swiftadmin.auth.api.service.LoginLogService;
 import cn.swiftadmin.auth.mapper.SysLoginLogMapper;
 import cn.swiftadmin.common.core.enums.LogStatus;
-import cn.swiftadmin.common.core.result.Page;
+import com.mybatisflex.core.paginate.Page;
 import cn.swiftadmin.common.mybatis.util.PageHelper;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
@@ -75,8 +75,7 @@ public class LoginLogServiceImpl extends ServiceImpl<SysLoginLogMapper, SysLogin
         }
         queryWrapper.orderBy(SYS_LOGIN_LOG.LOGIN_TIME.desc());
 
-        com.mybatisflex.core.paginate.Page<SysLoginLog> flexPage = getMapper().paginate(page, pageSize, queryWrapper);
-        return PageHelper.convert(flexPage);
+        return getMapper().paginate(page, pageSize, queryWrapper);
     }
 
     @Override

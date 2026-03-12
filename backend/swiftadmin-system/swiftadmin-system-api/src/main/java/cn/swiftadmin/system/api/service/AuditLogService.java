@@ -1,6 +1,7 @@
 package cn.swiftadmin.system.api.service;
 
-import cn.swiftadmin.common.core.result.Page;
+import com.mybatisflex.core.paginate.Page;
+import cn.swiftadmin.system.api.dto.AuditLogQueryDTO;
 import cn.swiftadmin.system.api.entity.SysAuditLog;
 import com.mybatisflex.core.service.IService;
 
@@ -17,19 +18,10 @@ public interface AuditLogService extends IService<SysAuditLog> {
     /**
      * 分页查询审计日志
      *
-     * @param module 模块名称
-     * @param operation 操作类型
-     * @param operUserName 操作用户名
-     * @param tableName 表名
-     * @param beginTime 开始时间
-     * @param endTime 结束时间
-     * @param page 页码
-     * @param pageSize 每页大小
+     * @param query 查询条件
      * @return 分页结果
      */
-    Page<SysAuditLog> page(String module, String operation, String operUserName,
-                           String tableName, String beginTime, String endTime,
-                           Integer page, Integer pageSize);
+    Page<SysAuditLog> page(AuditLogQueryDTO query);
 
     /**
      * 获取审计日志详情

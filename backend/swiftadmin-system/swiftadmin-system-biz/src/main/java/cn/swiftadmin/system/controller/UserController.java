@@ -1,6 +1,6 @@
 package cn.swiftadmin.system.controller;
 
-import cn.swiftadmin.common.core.result.Page;
+import com.mybatisflex.core.paginate.Page;
 import cn.swiftadmin.common.core.result.R;
 import cn.swiftadmin.common.security.annotation.RequiresPermission;
 import cn.swiftadmin.common.security.util.SecurityUtils;

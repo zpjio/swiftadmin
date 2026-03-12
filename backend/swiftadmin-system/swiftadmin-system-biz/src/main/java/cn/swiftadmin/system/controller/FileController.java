@@ -1,10 +1,10 @@
 package cn.swiftadmin.system.controller;
 
-import cn.swiftadmin.common.core.result.Page;
+import com.mybatisflex.core.paginate.Page;
 import cn.swiftadmin.common.core.result.R;
 import cn.swiftadmin.common.security.annotation.OperationLog;
 import cn.swiftadmin.common.security.annotation.RequiresPermission;
-import cn.swiftadmin.system.api.entity.SysFile;
+import cn.swiftadmin.system.api.dto.FileQueryDTO;
 import cn.swiftadmin.system.api.service.FileService;
 import cn.swiftadmin.system.api.vo.FileVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,26 +38,12 @@ public class FileController {
 
     /**
      * 分页查询文件列表
-     *
-     * @param fileName 文件名
-     * @param bizType 业务类型
-     * @param storageType 存储类型
-     * @param status 状态
-     * @param page 页码
-     * @param size 每页大小
-     * @return 文件分页列表
      */
     @Operation(summary = "分页查询文件列表", description = "支持按文件名、业务类型、存储类型、状态筛选")
     @GetMapping("/page")
     @RequiresPermission("system:file:list")
-    public R<Page<FileVO>> page(
-            @RequestParam(required = false) String fileName,
-            @RequestParam(required = false) String bizType,
-            @RequestParam(required = false) String storageType,
-            @RequestParam(required = false) Integer status,
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "10") Integer size) {
-        return R.ok(fileService.page(fileName, bizType, storageType, status, page, size));
+    public R<Page<FileVO>> page(FileQueryDTO query) {
+        return R.ok(fileService.page(query));
     }
 
     /**

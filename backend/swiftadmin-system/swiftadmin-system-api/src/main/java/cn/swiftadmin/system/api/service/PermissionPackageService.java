@@ -1,7 +1,8 @@
 package cn.swiftadmin.system.api.service;
 
-import cn.swiftadmin.common.core.result.Page;
+import com.mybatisflex.core.paginate.Page;
 import cn.swiftadmin.system.api.dto.PermissionPackageDTO;
+import cn.swiftadmin.system.api.dto.PermissionPackageQueryDTO;
 import cn.swiftadmin.system.api.vo.PermissionPackageVO;
 
 import java.util.List;
@@ -17,13 +18,10 @@ public interface PermissionPackageService {
     /**
      * 分页查询权限包
      *
-     * @param name 名称（模糊查询）
-     * @param status 状态
-     * @param page 页码
-     * @param pageSize 每页大小
+     * @param query 查询条件
      * @return 分页结果
      */
-    Page<PermissionPackageVO> page(String name, Integer status, Integer page, Integer pageSize);
+    Page<PermissionPackageVO> page(PermissionPackageQueryDTO query);
 
     /**
      * 获取权限包详情

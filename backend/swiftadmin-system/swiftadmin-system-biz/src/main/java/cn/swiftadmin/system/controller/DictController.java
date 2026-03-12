@@ -1,9 +1,11 @@
 package cn.swiftadmin.system.controller;
 
-import cn.swiftadmin.common.core.result.Page;
+import com.mybatisflex.core.paginate.Page;
 import cn.swiftadmin.common.core.result.R;
 import cn.swiftadmin.common.security.annotation.OperationLog;
 import cn.swiftadmin.common.security.annotation.RequiresPermission;
+import cn.swiftadmin.system.api.dto.DictDataQueryDTO;
+import cn.swiftadmin.system.api.dto.DictTypeQueryDTO;
 import cn.swiftadmin.system.api.entity.SysDictData;
 import cn.swiftadmin.system.api.entity.SysDictType;
 import cn.swiftadmin.system.api.service.DictService;
@@ -35,13 +37,8 @@ public class DictController {
     @Operation(summary = "分页查询字典类型", description = "支持按字典名称、类型、状态筛选")
     @GetMapping("/dict-type/page")
     @RequiresPermission("system:dict:list")
-    public R<Page<SysDictType>> page(
-            @RequestParam(required = false) String dictName,
-            @RequestParam(required = false) String dictType,
-            @RequestParam(required = false) Integer status,
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "10") Integer pageSize) {
-        return R.ok(dictService.pageDictType(dictName, dictType, status, page, pageSize));
+    public R<Page<SysDictType>> pageDictType(DictTypeQueryDTO query) {
+        return R.ok(dictService.pageDictType(query));
     }
 
     @Operation(summary = "获取字典类型详情")
@@ -83,13 +80,8 @@ public class DictController {
     @Operation(summary = "分页查询字典数据", description = "支持按字典类型、标签、状态筛选")
     @GetMapping("/dict-data/page")
     @RequiresPermission("system:dict:list")
-    public R<Page<SysDictData>> pageData(
-            @RequestParam(required = false) String dictType,
-            @RequestParam(required = false) String dictLabel,
-            @RequestParam(required = false) Integer status,
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "10") Integer pageSize) {
-        return R.ok(dictService.pageDictData(dictType, dictLabel, status, page, pageSize));
+    public R<Page<SysDictData>> pageDictData(DictDataQueryDTO query) {
+        return R.ok(dictService.pageDictData(query));
     }
 
     @Operation(summary = "获取字典数据详情")

@@ -1,8 +1,10 @@
 package cn.swiftadmin.system.service.impl;
 
 import cn.swiftadmin.common.core.enums.CommonStatus;
-import cn.swiftadmin.common.core.result.Page;
+import com.mybatisflex.core.paginate.Page;
 import cn.swiftadmin.common.mybatis.util.PageHelper;
+import cn.swiftadmin.system.api.dto.DictDataQueryDTO;
+import cn.swiftadmin.system.api.dto.DictTypeQueryDTO;
 import cn.swiftadmin.system.api.entity.SysDictData;
 import cn.swiftadmin.system.api.entity.SysDictType;
 import cn.swiftadmin.system.api.service.DictService;
@@ -46,21 +48,14 @@ public class DictServiceImpl implements DictService {
     // ==================== 字典类型管理 ====================
 
     @Override
-    public Page<SysDictType> pageDictType(String dictName, String dictType, Integer status, Integer page, Integer pageSize) {
-        QueryWrapper queryWrapper = QueryWrapper.create();
+    public Page<SysDictType> pageDictType(DictTypeQueryDTO query) {
+        QueryWrapper queryWrapper = QueryWrapper.create()
+                .where(SYS_DICT_TYPE.DICT_NAME.like(PageHelper.likeIfPresent(query.getDictName())))
+                .and(SYS_DICT_TYPE.DICT_TYPE.like(PageHelper.likeIfPresent(query.getDictType())))
+                .and(SYS_DICT_TYPE.STATUS.eq(query.getStatus(), query.getStatus() != null))
+                .orderBy(SYS_DICT_TYPE.CREATE_TIME.desc());
 
-        if (dictName != null && !dictName.isEmpty()) {
-            queryWrapper.and(SYS_DICT_TYPE.DICT_NAME.like(dictName));
-        }
-        if (dictType != null && !dictType.isEmpty()) {
-            queryWrapper.and(SYS_DICT_TYPE.DICT_TYPE.like(dictType));
-        }
-        if (status != null) {
-            queryWrapper.and(SYS_DICT_TYPE.STATUS.eq(status));
-        }
-
-        com.mybatisflex.core.paginate.Page<SysDictType> flexPage = dictTypeMapper.paginate(page, pageSize, queryWrapper);
-        return PageHelper.convert(flexPage);
+        return dictTypeMapper.paginate(PageHelper.of(query.getPage(), query.getPageSize()), queryWrapper);
     }
 
     @Override
@@ -94,21 +89,14 @@ public class DictServiceImpl implements DictService {
     // ==================== 字典数据管理 ====================
 
     @Override
-    public Page<SysDictData> pageDictData(String dictType, String dictLabel, Integer status, Integer page, Integer pageSize) {
-        QueryWrapper queryWrapper = QueryWrapper.create();
+    public Page<SysDictData> pageDictData(DictDataQueryDTO query) {
+        QueryWrapper queryWrapper = QueryWrapper.create()
+                .where(SYS_DICT_DATA.DICT_TYPE.eq(query.getDictType(), query.getDictType() != null && !query.getDictType().isEmpty()))
+                .and(SYS_DICT_DATA.LABEL.like(PageHelper.likeIfPresent(query.getDictLabel())))
+                .and(SYS_DICT_DATA.STATUS.eq(query.getStatus(), query.getStatus() != null))
+                .orderBy(SYS_DICT_DATA.SORT_ORDER.asc());
 
-        if (dictType != null && !dictType.isEmpty()) {
-            queryWrapper.and(SYS_DICT_DATA.DICT_TYPE.eq(dictType));
-        }
-        if (dictLabel != null && !dictLabel.isEmpty()) {
-            queryWrapper.and(SYS_DICT_DATA.LABEL.like(dictLabel));
-        }
-        if (status != null) {
-            queryWrapper.and(SYS_DICT_DATA.STATUS.eq(status));
-        }
-
-        com.mybatisflex.core.paginate.Page<SysDictData> flexPage = dictDataMapper.paginate(page, pageSize, queryWrapper);
-        return PageHelper.convert(flexPage);
+        return dictDataMapper.paginate(PageHelper.of(query.getPage(), query.getPageSize()), queryWrapper);
     }
 
     @Override

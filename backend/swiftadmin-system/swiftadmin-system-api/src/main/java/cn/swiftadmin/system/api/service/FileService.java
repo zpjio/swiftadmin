@@ -1,6 +1,7 @@
 package cn.swiftadmin.system.api.service;
 
-import cn.swiftadmin.common.core.result.Page;
+import com.mybatisflex.core.paginate.Page;
+import cn.swiftadmin.system.api.dto.FileQueryDTO;
 import cn.swiftadmin.system.api.entity.SysFile;
 import cn.swiftadmin.system.api.vo.FileVO;
 import com.mybatisflex.core.service.IService;
@@ -19,15 +20,10 @@ public interface FileService extends IService<SysFile> {
     /**
      * 分页查询文件列表
      *
-     * @param fileName 文件名
-     * @param bizType 业务类型
-     * @param storageType 存储类型
-     * @param status 状态
-     * @param page 页码
-     * @param pageSize 每页大小
+     * @param query 查询条件
      * @return 分页结果
      */
-    Page<FileVO> page(String fileName, String bizType, String storageType, Integer status, Integer page, Integer pageSize);
+    Page<FileVO> page(FileQueryDTO query);
 
     /**
      * 上传单个文件
