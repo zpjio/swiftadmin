@@ -43,13 +43,13 @@ auth:
     # 账号密码登录配置
     max-login-fail-count: 5          # 最大登录失败次数
     lock-minutes: 15                  # 账户锁定时间（分钟）
-    
+
     # Token 配置
     refresh-interval-seconds: 5       # Token 刷新最小间隔（秒）
     max-refresh-count-per-day: 50     # 每日最大 Token 刷新次数
     state-expire-minutes: 10          # OAuth State 有效期（分钟）
     temp-token-expire-minutes: 10     # 临时 Token 有效期（分钟）
-    
+
     # 短信验证码配置
     code-expire-minutes: 5            # 验证码有效期（分钟）
     send-interval-seconds: 60         # 单手机号发送间隔（秒）
@@ -58,10 +58,31 @@ auth:
     captcha-trigger-threshold: 3      # 触发图形验证码的 IP 发送阈值
     max-verify-fail-count: 3          # 验证码错误次数上限
     verify-lock-minutes: 15           # 验证错误锁定时间（分钟）
-    
+
     # 缓存配置
     user-cache-expire-minutes: 30     # 用户信息缓存有效期（分钟）
-    
+
     # 社交 Token 配置
     refresh-threshold-hours: 24       # 社交 Token 刷新阈值（小时）
     bind-lock-timeout-seconds: 30     # 社交账号绑定锁超时时间（秒）
+
+  # 密码策略配置
+  password:
+    # 长度配置
+    min-length: 8                     # 最小密码长度
+    max-length: 32                    # 最大密码长度
+
+    # 复杂度要求
+    require-uppercase: true           # 是否要求包含大写字母
+    require-lowercase: true           # 是否要求包含小写字母
+    require-digit: true               # 是否要求包含数字
+    require-special-char: false       # 是否要求包含特殊字符
+
+    # 高级安全配置
+    forbid-contain-username: true     # 是否禁止包含用户名
+    max-sequential-chars: 3           # 连续字符检测长度（0表示不检测）
+    max-repeating-chars: 3            # 重复字符检测长度（0表示不检测）
+    history-check-count: 5            # 历史密码检查次数（0表示不检查）
+
+    # 弱密码检测
+    enable-weak-password-check: true  # 是否启用弱密码检测

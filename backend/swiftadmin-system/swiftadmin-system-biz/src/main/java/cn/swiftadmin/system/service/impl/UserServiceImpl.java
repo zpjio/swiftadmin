@@ -4,7 +4,7 @@ import cn.swiftadmin.common.core.enums.CommonStatus;
 import cn.swiftadmin.common.core.enums.YesNo;
 import cn.swiftadmin.common.core.exception.BusinessException;
 import cn.swiftadmin.common.core.result.PasswordStrengthResult;
-import cn.swiftadmin.common.core.util.PasswordStrengthUtils;
+import cn.swiftadmin.common.core.service.PasswordValidator;
 import cn.swiftadmin.system.api.entity.SysUser;
 import cn.swiftadmin.system.api.service.ConfigService;
 import cn.swiftadmin.system.api.service.PasswordHistoryService;
@@ -36,6 +36,7 @@ public class UserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impleme
     private final PasswordEncoder passwordEncoder;
     private final PasswordHistoryService passwordHistoryService;
     private final ConfigService configService;
+    private final PasswordValidator passwordValidator;
 
     /**
      * 根据用户名查询用户
@@ -302,10 +303,10 @@ public class UserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impleme
     }
 
     /**
-     * 校验密码强度
+     * 校验密码强度（使用可配置的密码策略）
      */
     private void validatePasswordStrength(String password, String username) {
-        PasswordStrengthResult result = PasswordStrengthUtils.validate(password, username);
+        PasswordStrengthResult result = passwordValidator.validate(password, username);
         if (!result.isValid()) {
             throw new BusinessException(400, result.getMessage());
         }

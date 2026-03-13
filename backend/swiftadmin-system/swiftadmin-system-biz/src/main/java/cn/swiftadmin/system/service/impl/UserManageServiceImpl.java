@@ -3,6 +3,8 @@ package cn.swiftadmin.system.service.impl;
 import cn.swiftadmin.common.core.enums.CommonStatus;
 import cn.swiftadmin.common.core.enums.YesNo;
 import cn.swiftadmin.common.core.exception.BusinessException;
+import cn.swiftadmin.common.core.result.PasswordStrengthResult;
+import cn.swiftadmin.common.core.service.PasswordValidator;
 import com.mybatisflex.core.paginate.Page;
 import cn.swiftadmin.common.core.util.BeanCopyUtils;
 import cn.swiftadmin.common.mybatis.util.PageHelper;
@@ -46,11 +48,14 @@ public class UserManageServiceImpl extends ServiceImpl<SysUserMapper, SysUser> i
     private final SysUserRoleMapper userRoleMapper;
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
+    private final PasswordValidator passwordValidator;
 
-    public UserManageServiceImpl(SysUserRoleMapper userRoleMapper, UserService userService, PasswordEncoder passwordEncoder) {
+    public UserManageServiceImpl(SysUserRoleMapper userRoleMapper, UserService userService,
+                                  PasswordEncoder passwordEncoder, PasswordValidator passwordValidator) {
         this.userRoleMapper = userRoleMapper;
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
+        this.passwordValidator = passwordValidator;
     }
 
     @Override
@@ -102,6 +107,12 @@ public class UserManageServiceImpl extends ServiceImpl<SysUserMapper, SysUser> i
     public Long create(UserDTO dto) {
         if (userService.existsByUsername(dto.getUsername())) {
             throw new BusinessException(400, "用户名已存在");
+        }
+
+        // 验证密码强度
+        PasswordStrengthResult strengthResult = passwordValidator.validate(dto.getPassword(), dto.getUsername());
+        if (!strengthResult.isValid()) {
+            throw new BusinessException(400, strengthResult.getMessage());
         }
 
         SysUser user = SysUser.builder()
