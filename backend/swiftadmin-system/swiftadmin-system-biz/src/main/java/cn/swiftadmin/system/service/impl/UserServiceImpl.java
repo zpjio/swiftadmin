@@ -53,10 +53,14 @@ public class UserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impleme
      */
     @Override
     public void resetPassword(Long userId, String newPassword) {
-        // 校验密码强度
+        // 校验用户存在
         SysUser user = getById(userId);
-        String username = user != null ? user.getUsername() : null;
-        validatePasswordStrength(newPassword, username);
+        if (user == null) {
+            throw new BusinessException(404, "用户不存在");
+        }
+
+        // 校验密码强度
+        validatePasswordStrength(newPassword, user.getUsername());
 
         // 检查密码历史
         checkPasswordHistory(userId, newPassword);

@@ -7,6 +7,7 @@ import cn.swiftadmin.auth.api.service.SmsService;
 import cn.swiftadmin.auth.api.vo.LoginVO;
 import cn.swiftadmin.auth.config.AuthSecurityProperties;
 import cn.swiftadmin.auth.util.TokenManager;
+import cn.swiftadmin.common.core.constants.RedisKeyConstants;
 import cn.swiftadmin.common.core.exception.BusinessException;
 import cn.swiftadmin.common.core.result.ErrorCode;
 import cn.swiftadmin.common.core.util.ServletUtils;
@@ -47,12 +48,6 @@ public class AuthServiceImpl implements AuthService {
     private final StringRedisTemplate redisTemplate;
     private final AuthSecurityProperties securityProperties;
     private final UserSessionService userSessionService;
-
-    /** Token 刷新频率限制（秒）：同一用户两次刷新之间至少间隔 5 秒 */
-    private static final int REFRESH_INTERVAL_SECONDS = 5;
-
-    /** 单个用户最大连续刷新次数（防止 Token 无限续期） */
-    private static final int MAX_REFRESH_COUNT_PER_DAY = 50;
 
     @Override
     public LoginVO login(LoginDTO dto) {
@@ -98,22 +93,22 @@ public class AuthServiceImpl implements AuthService {
             }
             
             // 2. 清除用户信息缓存
-            String userCacheKey = "user:info:" + loginUser.getUserId();
+            String userCacheKey = RedisKeyConstants.userInfo(loginUser.getUserId());
             redisTemplate.delete(userCacheKey);
             log.debug("用户信息缓存已清除：userId={}", loginUser.getUserId());
-            
+
             // 3. 清除用户权限缓存
-            String permCacheKey = "user:permissions:" + loginUser.getUserId();
+            String permCacheKey = RedisKeyConstants.userPermission(loginUser.getUserId());
             redisTemplate.delete(permCacheKey);
             log.debug("用户权限缓存已清除：userId={}", loginUser.getUserId());
-            
+
             // 4. 清除 Token 刷新频率记录
-            String refreshFreqKey = "token:refresh:freq:" + loginUser.getUsername();
+            String refreshFreqKey = RedisKeyConstants.tokenRefreshFreq(loginUser.getUsername());
             redisTemplate.delete(refreshFreqKey);
-            
+
             // 5. 清除当日刷新次数记录
             String today = java.time.LocalDate.now().toString();
-            String dailyCountKey = "token:refresh:count:" + loginUser.getUsername() + ":daily:" + today;
+            String dailyCountKey = RedisKeyConstants.tokenRefreshCount(loginUser.getUsername()) + ":daily:" + today;
             redisTemplate.delete(dailyCountKey);
             
             log.info("用户登出成功：userId={}, username={}", loginUser.getUserId(), loginUser.getUsername());
@@ -138,19 +133,19 @@ public class AuthServiceImpl implements AuthService {
         // 1. 验证 Token 类型（必须是 Refresh Token）
         if (!tokenManager.isRefreshToken(refreshToken)) {
             log.warn("Token 刷新失败：提供的不是 Refresh Token");
-            throw new BusinessException(ErrorCode.USER_PASSWORD_ERROR.getCode(), "请使用 Refresh Token 刷新");
+            throw new BusinessException(ErrorCode.TOKEN_INVALID.getCode(), "请使用 Refresh Token 刷新");
         }
 
         // 2. 验证 Token 有效性
         if (!tokenManager.validateToken(refreshToken)) {
             log.warn("Token 刷新失败：Refresh Token 无效或已过期");
-            throw new BusinessException(ErrorCode.USER_PASSWORD_ERROR.getCode(), "Refresh Token 无效或已过期");
+            throw new BusinessException(ErrorCode.TOKEN_INVALID);
         }
 
         // 3. 检查 Token 是否在黑名单中
         if (tokenManager.isTokenBlacklisted(refreshToken)) {
             log.warn("Token 刷新失败：Refresh Token 已在黑名单中，可能存在安全风险");
-            throw new BusinessException(ErrorCode.USER_PASSWORD_ERROR.getCode(), "Refresh Token 已失效，请重新登录");
+            throw new BusinessException(ErrorCode.TOKEN_INVALID.getCode(), "Refresh Token 已失效，请重新登录");
         }
 
         // 4. 验证请求上下文（IP 和 User-Agent 一致性检查）
@@ -195,12 +190,12 @@ public class AuthServiceImpl implements AuthService {
         String jti = tokenManager.getJtiFromToken(refreshToken);
         if (jti == null) {
             log.warn("Token 刷新上下文验证失败：JTI 为空");
-            throw new BusinessException(ErrorCode.USER_PASSWORD_ERROR.getCode(), "Token 信息不完整");
+            throw new BusinessException(ErrorCode.TOKEN_INVALID.getCode(), "Token 信息不完整");
         }
 
         // 获取存储的上下文信息
-        String storedIp = redisTemplate.opsForValue().get("token:context:ip:" + jti);
-        String storedUa = redisTemplate.opsForValue().get("token:context:ua:" + jti);
+        String storedIp = redisTemplate.opsForValue().get(RedisKeyConstants.tokenContextIp(jti));
+        String storedUa = redisTemplate.opsForValue().get(RedisKeyConstants.tokenContextUa(jti));
         
         // 获取当前请求信息
         String currentIp = ServletUtils.getClientIp(request);
@@ -241,8 +236,8 @@ public class AuthServiceImpl implements AuthService {
     private void saveRequestContext(String jti, String ip, String ua) {
         // 保存 IP 和 User-Agent，有效期与 Refresh Token 一致（7 天）
         long expireSeconds = securityProperties.getRefreshIntervalSeconds() * 2L;
-        redisTemplate.opsForValue().set("token:context:ip:" + jti, ip, expireSeconds, TimeUnit.SECONDS);
-        redisTemplate.opsForValue().set("token:context:ua:" + jti, ua, expireSeconds, TimeUnit.SECONDS);
+        redisTemplate.opsForValue().set(RedisKeyConstants.tokenContextIp(jti), ip, expireSeconds, TimeUnit.SECONDS);
+        redisTemplate.opsForValue().set(RedisKeyConstants.tokenContextUa(jti), ua, expireSeconds, TimeUnit.SECONDS);
     }
 
     /**
@@ -250,36 +245,41 @@ public class AuthServiceImpl implements AuthService {
      */
     private void checkRefreshFrequency(String refreshToken) {
         String username = tokenManager.getUsernameFromToken(refreshToken);
-        String refreshKey = "token:refresh:freq:" + username;
-        String countKey = "token:refresh:count:" + username;
+        String refreshKey = RedisKeyConstants.tokenRefreshFreq(username);
+        String countKey = RedisKeyConstants.tokenRefreshCount(username);
+
+        // 从配置获取刷新间隔（秒）
+        int refreshIntervalSeconds = securityProperties.getRefreshIntervalSeconds();
+        // 从配置获取每日最大刷新次数
+        int maxRefreshCountPerDay = securityProperties.getMaxRefreshCountPerDay();
 
         // 检查是否在最小间隔时间内
         String lastRefreshTime = redisTemplate.opsForValue().get(refreshKey);
         if (lastRefreshTime != null) {
             long currentTime = System.currentTimeMillis();
             long lastTime = Long.parseLong(lastRefreshTime);
-            
-            if (currentTime - lastTime < REFRESH_INTERVAL_SECONDS * 1000) {
+
+            if (currentTime - lastTime < refreshIntervalSeconds * 1000L) {
                 log.warn("Token 刷新频率过高：username={}, 时间间隔={}ms", username, currentTime - lastTime);
                 throw new BusinessException(ErrorCode.TOKEN_REFRESH_TOO_FREQUENT);
             }
         }
 
         // 更新最后刷新时间
-        redisTemplate.opsForValue().set(refreshKey, String.valueOf(System.currentTimeMillis()), 
-                REFRESH_INTERVAL_SECONDS * 2, TimeUnit.SECONDS);
+        redisTemplate.opsForValue().set(refreshKey, String.valueOf(System.currentTimeMillis()),
+                refreshIntervalSeconds * 2L, TimeUnit.SECONDS);
 
         // 检查当日刷新次数
         String today = java.time.LocalDate.now().toString();
         String dailyCountKey = countKey + ":daily:" + today;
-        
+
         Long currentCount = redisTemplate.opsForValue().increment(dailyCountKey);
         if (currentCount == 1) {
             // 设置过期时间为明天零点
             redisTemplate.expire(dailyCountKey, getSecondsUntilTomorrow(), TimeUnit.SECONDS);
         }
 
-        if (currentCount > MAX_REFRESH_COUNT_PER_DAY) {
+        if (currentCount > maxRefreshCountPerDay) {
             log.warn("Token 刷新次数超限：username={}, 当日次数={}", username, currentCount);
             throw new BusinessException(ErrorCode.TOKEN_REFRESH_LIMIT_EXCEEDED);
         }

@@ -4,6 +4,9 @@ import com.mybatisflex.core.paginate.Page;
 import cn.swiftadmin.common.core.result.R;
 import cn.swiftadmin.common.security.annotation.RequiresPermission;
 import cn.swiftadmin.common.security.util.SecurityUtils;
+import cn.swiftadmin.system.api.dto.AssignRoleDTO;
+import cn.swiftadmin.system.api.dto.ResetPasswordDTO;
+import cn.swiftadmin.system.api.dto.UpdateStatusDTO;
 import cn.swiftadmin.system.api.dto.UserDTO;
 import cn.swiftadmin.system.api.dto.UserQueryDTO;
 import cn.swiftadmin.system.api.service.UserManageService;
@@ -12,6 +15,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -65,7 +69,7 @@ public class UserController {
     @Operation(summary = "创建用户", description = "新增系统用户")
     @PostMapping
     @RequiresPermission("system:user:add")
-    public R<Long> create(@Valid @RequestBody UserDTO dto) {
+    public R<Long> create(@Validated(UserDTO.Create.class) @RequestBody UserDTO dto) {
         return R.ok(userManageService.create(dto));
     }
 
@@ -75,7 +79,7 @@ public class UserController {
     @Operation(summary = "更新用户", description = "修改用户信息")
     @PutMapping
     @RequiresPermission("system:user:edit")
-    public R<Void> update(@Valid @RequestBody UserDTO dto) {
+    public R<Void> update(@Validated(UserDTO.Update.class) @RequestBody UserDTO dto) {
         userManageService.update(dto);
         return R.ok();
     }
@@ -97,8 +101,8 @@ public class UserController {
     @Operation(summary = "更新用户状态", description = "启用或禁用用户")
     @PutMapping("/status")
     @RequiresPermission("system:user:edit")
-    public R<Void> updateStatus(@RequestParam Long userId, @RequestParam Integer status) {
-        userManageService.updateStatus(userId, status);
+    public R<Void> updateStatus(@Valid @RequestBody UpdateStatusDTO dto) {
+        userManageService.updateStatus(dto.getUserId(), dto.getStatus());
         return R.ok();
     }
 
@@ -108,8 +112,8 @@ public class UserController {
     @Operation(summary = "重置用户密码", description = "重置用户密码")
     @PutMapping("/reset-password")
     @RequiresPermission("system:user:resetPwd")
-    public R<Void> resetPassword(@RequestParam Long userId, @RequestParam String password) {
-        userManageService.resetPassword(userId, password);
+    public R<Void> resetPassword(@Valid @RequestBody ResetPasswordDTO dto) {
+        userManageService.resetPassword(dto.getUserId(), dto.getPassword());
         return R.ok();
     }
 
@@ -119,8 +123,8 @@ public class UserController {
     @Operation(summary = "分配角色", description = "为用户分配角色")
     @PutMapping("/role")
     @RequiresPermission("system:user:edit")
-    public R<Void> assignRoles(@RequestParam Long userId, @RequestParam List<Long> roleIds) {
-        userManageService.assignRoles(userId, roleIds);
+    public R<Void> assignRoles(@Valid @RequestBody AssignRoleDTO dto) {
+        userManageService.assignRoles(dto.getUserId(), dto.getRoleIds());
         return R.ok();
     }
 

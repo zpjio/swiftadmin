@@ -36,7 +36,28 @@ public final class RedisKeyConstants {
     /** OAuth 临时 Token 前缀 */
     public static final String OAUTH_TEMP_TOKEN = "oauth:temp:";
 
+    /** JWT 黑名单前缀 */
+    public static final String JWT_BLACKLIST = "jwt:blacklist:";
+
+    /** Token 刷新频率前缀 */
+    public static final String TOKEN_REFRESH_FREQ = "token:refresh:freq:";
+
+    /** Token 刷新次数前缀 */
+    public static final String TOKEN_REFRESH_COUNT = "token:refresh:count:";
+
+    /** Token 上下文 IP 前缀 */
+    public static final String TOKEN_CONTEXT_IP = "token:context:ip:";
+
+    /** Token 上下文 UA 前缀 */
+    public static final String TOKEN_CONTEXT_UA = "token:context:ua:";
+
+    /** 临时 Token 已使用前缀 */
+    public static final String TEMP_TOKEN_USED = "temp:token:used:";
+
     // ==================== 用户相关 ====================
+
+    /** 用户信息缓存前缀 */
+    public static final String USER_INFO = "user:info:";
 
     /** 用户权限缓存前缀 */
     public static final String USER_PERMISSION = "user:permission:";
@@ -81,6 +102,13 @@ public final class RedisKeyConstants {
     }
 
     /**
+     * 构建用户信息缓存 Key
+     */
+    public static String userInfo(Long userId) {
+        return USER_INFO + userId;
+    }
+
+    /**
      * 构建用户权限缓存 Key
      */
     public static String userPermission(Long userId) {
@@ -120,6 +148,48 @@ public final class RedisKeyConstants {
      */
     public static String rateLimitIp(String ip) {
         return RATE_LIMIT_IP + ip;
+    }
+
+    /**
+     * 构建 JWT 黑名单 Key
+     */
+    public static String jwtBlacklist(String jti) {
+        return JWT_BLACKLIST + jti;
+    }
+
+    /**
+     * 构建 Token 刷新频率 Key
+     */
+    public static String tokenRefreshFreq(String username) {
+        return TOKEN_REFRESH_FREQ + username;
+    }
+
+    /**
+     * 构建 Token 刷新次数 Key
+     */
+    public static String tokenRefreshCount(String username) {
+        return TOKEN_REFRESH_COUNT + username;
+    }
+
+    /**
+     * 构建 Token 上下文 IP Key
+     */
+    public static String tokenContextIp(String jti) {
+        return TOKEN_CONTEXT_IP + jti;
+    }
+
+    /**
+     * 构建 Token 上下文 UA Key
+     */
+    public static String tokenContextUa(String jti) {
+        return TOKEN_CONTEXT_UA + jti;
+    }
+
+    /**
+     * 构建临时 Token 已使用 Key
+     */
+    public static String tempTokenUsed(String jti) {
+        return TEMP_TOKEN_USED + jti;
     }
 
 }

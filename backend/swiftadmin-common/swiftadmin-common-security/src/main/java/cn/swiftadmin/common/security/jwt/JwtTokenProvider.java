@@ -1,5 +1,6 @@
 package cn.swiftadmin.common.security.jwt;
 
+import cn.swiftadmin.common.core.constants.RedisKeyConstants;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -30,9 +31,6 @@ public class JwtTokenProvider {
     private final JwtParser jwtParser;
     private final long expiration;
     private final long refreshExpiration;
-
-    /** 黑名单 Key 前缀 */
-    private static final String BLACKLIST_PREFIX = "jwt:blacklist:";
 
     public JwtTokenProvider(
             StringRedisTemplate redisTemplate,
@@ -202,17 +200,16 @@ public class JwtTokenProvider {
             
             // 获取 jti 作为 Redis key
             String jti = getJtiFromToken(token);
-            String usedKey = "temp:token:used:" + jti;
-            
+
             // 检查是否已使用
-            Boolean isUsed = redisTemplate.hasKey(usedKey);
+            Boolean isUsed = redisTemplate.hasKey(RedisKeyConstants.tempTokenUsed(jti));
             if (Boolean.TRUE.equals(isUsed)) {
                 log.warn("临时 Token 已被使用：jti={}", jti);
                 return false;
             }
-            
+
             // 标记为已使用（设置过期时间 10 分钟，与 Token 有效期一致）
-            redisTemplate.opsForValue().set(usedKey, "used", 10, TimeUnit.MINUTES);
+            redisTemplate.opsForValue().set(RedisKeyConstants.tempTokenUsed(jti), "used", 10, TimeUnit.MINUTES);
             return true;
         } catch (Exception e) {
             log.error("检查临时 Token 使用状态失败", e);
@@ -286,8 +283,7 @@ public class JwtTokenProvider {
         if (jti == null) {
             return false;
         }
-        String key = BLACKLIST_PREFIX + jti;
-        return Boolean.TRUE.equals(redisTemplate.hasKey(key));
+        return Boolean.TRUE.equals(redisTemplate.hasKey(RedisKeyConstants.jwtBlacklist(jti)));
     }
 
     /**
@@ -302,8 +298,7 @@ public class JwtTokenProvider {
         }
         long remainingTime = getTokenRemainingTime(token);
         if (remainingTime > 0) {
-            String key = BLACKLIST_PREFIX + jti;
-            redisTemplate.opsForValue().set(key, "1", remainingTime, TimeUnit.MILLISECONDS);
+            redisTemplate.opsForValue().set(RedisKeyConstants.jwtBlacklist(jti), "1", remainingTime, TimeUnit.MILLISECONDS);
             log.debug("Token 已加入黑名单: jti={}, 剩余有效时间: {}ms", jti, remainingTime);
         }
     }

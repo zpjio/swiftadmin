@@ -18,7 +18,9 @@ import org.apache.ibatis.session.RowBounds;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 数据权限拦截器
@@ -49,6 +51,9 @@ import java.util.Properties;
                 args = {MappedStatement.class, Object.class})
 })
 public class DataScopeInterceptor implements Interceptor {
+
+    /** 注解检查结果缓存，避免每次查询都进行反射检查 */
+    private static final ConcurrentHashMap<String, Boolean> ANNOTATION_CACHE = new ConcurrentHashMap<>();
 
     @Override
     public Object intercept(Invocation invocation) throws Throwable {
@@ -121,8 +126,16 @@ public class DataScopeInterceptor implements Interceptor {
 
     /**
      * 判断方法是否有 @DataScope 注解
+     * <p>使用缓存优化，避免每次查询都进行反射检查</p>
      */
     private boolean hasDataScopeAnnotation(String mappedStatementId) {
+        return ANNOTATION_CACHE.computeIfAbsent(mappedStatementId, this::checkDataScopeAnnotation);
+    }
+
+    /**
+     * 检查方法是否有 @DataScope 注解（实际执行反射检查）
+     */
+    private Boolean checkDataScopeAnnotation(String mappedStatementId) {
         try {
             int lastDot = mappedStatementId.lastIndexOf('.');
             if (lastDot <= 0) {
