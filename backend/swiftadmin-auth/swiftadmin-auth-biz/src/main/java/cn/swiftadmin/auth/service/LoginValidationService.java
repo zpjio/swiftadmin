@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 /**
  * 登录验证服务
@@ -36,7 +37,7 @@ public class LoginValidationService {
      */
     public void validateIpRateLimit(LoginContext context) {
         String ip = context.getIp();
-        if (ip == null || ip.isEmpty()) {
+        if (!StringUtils.hasLength(ip)) {
             return;
         }
 
@@ -74,7 +75,7 @@ public class LoginValidationService {
      * @return true=验证通过
      */
     public boolean validateCaptcha(String captchaId, String code) {
-        if (captchaId == null || code == null || code.trim().isEmpty()) {
+        if (captchaId == null || !StringUtils.hasText(code)) {
             log.warn("CAPTCHA_INVALID captchaId={}", captchaId);
             return false;
         }

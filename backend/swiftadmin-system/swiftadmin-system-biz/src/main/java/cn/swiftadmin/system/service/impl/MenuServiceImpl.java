@@ -19,6 +19,7 @@ import com.mybatisflex.spring.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -169,7 +170,7 @@ public class MenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impleme
      * 构建菜单树（优化版：O(n) 时间复杂度）
      */
     private List<MenuVO> buildTree(List<SysMenu> menus, Long rootParentId) {
-        if (menus == null || menus.isEmpty()) {
+        if (CollectionUtils.isEmpty(menus)) {
             return new ArrayList<>();
         }
 
@@ -191,7 +192,7 @@ public class MenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impleme
      * 构建选择树（优化版：O(n) 时间复杂度）
      */
     private List<MenuTreeVO> buildSelectTree(List<SysMenu> menus, Long rootParentId) {
-        if (menus == null || menus.isEmpty()) {
+        if (CollectionUtils.isEmpty(menus)) {
             return new ArrayList<>();
         }
 

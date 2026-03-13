@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.util.concurrent.TimeUnit;
 
@@ -31,7 +32,7 @@ public class IpRateLimiter {
      * @param ip IP 地址
      */
     public void checkIpLoginLimit(String ip) {
-        if (ip == null || ip.isEmpty()) {
+        if (!StringUtils.hasLength(ip)) {
             return;
         }
 
@@ -62,7 +63,7 @@ public class IpRateLimiter {
      * @return true=在黑名单中
      */
     public boolean isIpBlacklisted(String ip) {
-        if (ip == null || ip.isEmpty()) {
+        if (!StringUtils.hasLength(ip)) {
             return false;
         }
 
@@ -77,7 +78,7 @@ public class IpRateLimiter {
      * @param minutes 锁定时间（分钟）
      */
     public void addToBlacklist(String ip, int minutes) {
-        if (ip == null || ip.isEmpty()) {
+        if (!StringUtils.hasLength(ip)) {
             return;
         }
 
@@ -92,7 +93,7 @@ public class IpRateLimiter {
      * @param ip IP 地址
      */
     public void resetIpCount(String ip) {
-        if (ip == null || ip.isEmpty()) {
+        if (!StringUtils.hasLength(ip)) {
             return;
         }
 

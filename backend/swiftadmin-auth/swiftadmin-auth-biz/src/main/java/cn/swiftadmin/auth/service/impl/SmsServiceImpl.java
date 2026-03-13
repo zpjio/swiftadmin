@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.Random;
@@ -68,7 +69,7 @@ public class SmsServiceImpl implements SmsService {
         }
 
         // 3. IP 级别限流
-        if (ip != null && !ip.isEmpty()) {
+        if (StringUtils.hasText(ip)) {
             String ipCountKey = "sms:ip_count:" + ip;
             String ipCountStr = redisTemplate.opsForValue().get(ipCountKey);
             int ipCount = ipCountStr != null ? Integer.parseInt(ipCountStr) : 0;
@@ -203,7 +204,7 @@ public class SmsServiceImpl implements SmsService {
      */
     @Override
     public boolean isCaptchaRequired(String ip) {
-        if (ip == null || ip.isEmpty()) {
+        if (!StringUtils.hasLength(ip)) {
             return false;
         }
         return captchaService.isCaptchaRequired(ip, securityProperties.getCaptchaTriggerThreshold());

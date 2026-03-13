@@ -10,6 +10,7 @@ import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 
@@ -46,7 +47,7 @@ public class OperLogServiceImpl extends ServiceImpl<SysOperLogMapper, SysOperLog
 
     @Override
     public void deleteByIds(List<Long> ids) {
-        if (ids != null && !ids.isEmpty()) {
+        if (!CollectionUtils.isEmpty(ids)) {
             mapper.deleteBatchByIds(ids);
         }
     }

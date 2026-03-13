@@ -10,6 +10,7 @@ import com.mybatisflex.spring.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -55,19 +56,19 @@ public class LoginLogServiceImpl extends ServiceImpl<SysLoginLogMapper, SysLogin
     public Page<SysLoginLog> page(String username, String ip, Integer status, String beginTime, String endTime, Integer page, Integer pageSize) {
         QueryWrapper queryWrapper = QueryWrapper.create();
 
-        if (username != null && !username.isEmpty()) {
+        if (StringUtils.hasText(username)) {
             queryWrapper.and(SYS_LOGIN_LOG.USERNAME.like(username));
         }
-        if (ip != null && !ip.isEmpty()) {
+        if (StringUtils.hasText(ip)) {
             queryWrapper.and(SYS_LOGIN_LOG.IP_ADDRESS.like(ip));
         }
         if (status != null) {
             queryWrapper.and(SYS_LOGIN_LOG.STATUS.eq(status));
         }
-        if (beginTime != null && !beginTime.isEmpty()) {
+        if (StringUtils.hasText(beginTime)) {
             queryWrapper.and(SYS_LOGIN_LOG.LOGIN_TIME.ge(LocalDateTime.parse(beginTime + " 00:00:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))));
         }
-        if (endTime != null && !endTime.isEmpty()) {
+        if (StringUtils.hasText(endTime)) {
             queryWrapper.and(SYS_LOGIN_LOG.LOGIN_TIME.le(LocalDateTime.parse(endTime + " 23:59:59", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))));
         }
         queryWrapper.orderBy(SYS_LOGIN_LOG.LOGIN_TIME.desc());

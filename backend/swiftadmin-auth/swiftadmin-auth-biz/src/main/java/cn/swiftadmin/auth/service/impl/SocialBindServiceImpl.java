@@ -18,6 +18,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -201,7 +202,7 @@ public class SocialBindServiceImpl extends ServiceImpl<SysSocialBindMapper, SysS
      * <p>UpdateChain 可能不触发 SetListener，需手动加密</p>
      */
     private String encryptToken(String token) {
-        if (token == null || token.isEmpty()) {
+        if (!StringUtils.hasLength(token)) {
             return null;
         }
         return AesUtils.encrypt(token, tokenSecret);

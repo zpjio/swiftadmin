@@ -18,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -207,7 +209,7 @@ public class ConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig> i
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(List<Long> ids) {
-        if (ids == null || ids.isEmpty()) {
+        if (CollectionUtils.isEmpty(ids)) {
             return;
         }
 
@@ -223,7 +225,7 @@ public class ConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig> i
 
     @Override
     public void refreshCache(String configKey) {
-        if (configKey != null && !configKey.isEmpty()) {
+        if (StringUtils.hasText(configKey)) {
             // 刷新指定配置的缓存
             evictCache(configKey);
             SysConfig config = getOne(QueryWrapper.create()
@@ -235,7 +237,7 @@ public class ConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig> i
         } else {
             // 刷新全部缓存
             Set<String> keys = redisTemplate.keys(CACHE_PREFIX + "*");
-            if (keys != null && !keys.isEmpty()) {
+            if (!CollectionUtils.isEmpty(keys)) {
                 redisTemplate.delete(keys);
             }
             log.info("全部配置缓存已刷新");
@@ -281,7 +283,7 @@ public class ConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig> i
      * @return 有效返回 true
      */
     private boolean isValidConfigType(String configType) {
-        if (configType == null || configType.isEmpty()) {
+        if (!StringUtils.hasLength(configType)) {
             return false;
         }
         return DictUtils.existsValue(CONFIG_TYPE_DICT, configType);

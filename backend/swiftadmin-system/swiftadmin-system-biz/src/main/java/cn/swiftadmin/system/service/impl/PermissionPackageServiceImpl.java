@@ -19,6 +19,7 @@ import com.mybatisflex.spring.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -81,7 +82,7 @@ public class PermissionPackageServiceImpl extends ServiceImpl<SysPermissionPacka
     public Long create(PermissionPackageDTO dto) {
         // 自动生成编码
         String code = dto.getCode();
-        if (code == null || code.trim().isEmpty()) {
+        if (!StringUtils.hasText(code)) {
             code = generateCode(dto.getName());
         }
 
@@ -122,7 +123,7 @@ public class PermissionPackageServiceImpl extends ServiceImpl<SysPermissionPacka
         }
 
         String code = dto.getCode();
-        if (code == null || code.trim().isEmpty()) {
+        if (!StringUtils.hasText(code)) {
             code = existing.getCode();
         }
 
@@ -224,7 +225,7 @@ public class PermissionPackageServiceImpl extends ServiceImpl<SysPermissionPacka
      * 提取名称的简化编码（取首字母或简化处理）
      */
     private String extractPinyin(String name) {
-        if (name == null || name.isEmpty()) {
+        if (!StringUtils.hasLength(name)) {
             return "unknown";
         }
         // 简化处理：去除空格，转小写，取前缀

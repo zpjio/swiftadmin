@@ -1,6 +1,7 @@
 package cn.swiftadmin.system.api.util;
 
 import cn.swiftadmin.system.api.service.ConfigService;
+import org.springframework.util.StringUtils;
 
 /**
  * 系统配置工具类
@@ -108,7 +109,7 @@ public final class ConfigUtils {
      */
     public static long getLongValue(String key, long defaultValue) {
         String value = getValue(key);
-        if (value == null || value.isEmpty()) {
+        if (!StringUtils.hasLength(value)) {
             return defaultValue;
         }
         try {
@@ -127,7 +128,7 @@ public final class ConfigUtils {
      */
     public static double getDoubleValue(String key, double defaultValue) {
         String value = getValue(key);
-        if (value == null || value.isEmpty()) {
+        if (!StringUtils.hasLength(value)) {
             return defaultValue;
         }
         try {

@@ -8,10 +8,11 @@ import cn.swiftadmin.system.api.vo.OnlineUserVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -33,8 +34,8 @@ public class OnlineUserServiceImpl implements OnlineUserService {
         List<OnlineUserVO> allUsers = listAll();
 
         List<OnlineUserVO> filtered = allUsers.stream()
-                .filter(u -> username == null || username.isEmpty() || u.getUsername().contains(username))
-                .filter(u -> ip == null || ip.isEmpty() || (u.getIp() != null && u.getIp().contains(ip)))
+                .filter(u -> !StringUtils.hasText(username) || u.getUsername().contains(username))
+                .filter(u -> !StringUtils.hasText(ip) || (u.getIp() != null && u.getIp().contains(ip)))
                 .collect(Collectors.toList());
 
         int total = filtered.size();
@@ -59,7 +60,7 @@ public class OnlineUserServiceImpl implements OnlineUserService {
         List<OnlineUserVO> onlineUsers = new ArrayList<>();
 
         List<String> sessionIds = userSessionService.getAllSessionIds();
-        if (sessionIds == null || sessionIds.isEmpty()) {
+        if (CollectionUtils.isEmpty(sessionIds)) {
             return onlineUsers;
         }
 
@@ -102,7 +103,7 @@ public class OnlineUserServiceImpl implements OnlineUserService {
     @Override
     public boolean isOnline(Long userId) {
         List<String> sessionIds = userSessionService.getUserSessionIds(userId);
-        return sessionIds != null && !sessionIds.isEmpty();
+        return !CollectionUtils.isEmpty(sessionIds);
     }
 
     private OnlineUserVO convertToVO(LoginUser loginUser, String sessionId) {

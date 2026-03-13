@@ -16,6 +16,7 @@ import com.mybatisflex.spring.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 
@@ -123,11 +124,11 @@ public class UserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impleme
         UpdateChain<SysUser> chain = UpdateChain.of(SysUser.class);
         boolean hasUpdate = false;
 
-        if (nickname != null && !nickname.isEmpty()) {
+        if (StringUtils.hasText(nickname)) {
             chain.set(SYS_USER.NICKNAME, nickname);
             hasUpdate = true;
         }
-        if (avatar != null && !avatar.isEmpty()) {
+        if (StringUtils.hasText(avatar)) {
             chain.set(SYS_USER.AVATAR, avatar);
             hasUpdate = true;
         }

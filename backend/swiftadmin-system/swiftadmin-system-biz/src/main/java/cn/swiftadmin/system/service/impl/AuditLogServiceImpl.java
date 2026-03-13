@@ -11,6 +11,8 @@ import com.mybatisflex.spring.service.impl.ServiceImpl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,10 +34,10 @@ public class AuditLogServiceImpl extends ServiceImpl<SysAuditLogMapper, SysAudit
     @Override
     public Page<SysAuditLog> page(AuditLogQueryDTO query) {
         QueryWrapper queryWrapper = QueryWrapper.create()
-                .where(SYS_AUDIT_LOG.MODULE.eq(query.getModule(), query.getModule() != null && !query.getModule().isEmpty()))
-                .and(SYS_AUDIT_LOG.OPERATION.eq(query.getOperation(), query.getOperation() != null && !query.getOperation().isEmpty()))
+                .where(SYS_AUDIT_LOG.MODULE.eq(query.getModule(), StringUtils.hasText(query.getModule())))
+                .and(SYS_AUDIT_LOG.OPERATION.eq(query.getOperation(), StringUtils.hasText(query.getOperation())))
                 .and(SYS_AUDIT_LOG.OPER_USER_NAME.like(PageHelper.likeIfPresent(query.getOperUserName())))
-                .and(SYS_AUDIT_LOG.TABLE_NAME.eq(query.getTableName(), query.getTableName() != null && !query.getTableName().isEmpty()))
+                .and(SYS_AUDIT_LOG.TABLE_NAME.eq(query.getTableName(), StringUtils.hasText(query.getTableName())))
                 .and(SYS_AUDIT_LOG.OPER_TIME.ge(query.getBeginTime(), query.getBeginTime() != null))
                 .and(SYS_AUDIT_LOG.OPER_TIME.le(query.getEndTime(), query.getEndTime() != null))
                 .orderBy(SYS_AUDIT_LOG.OPER_TIME.desc());
@@ -58,7 +60,7 @@ public class AuditLogServiceImpl extends ServiceImpl<SysAuditLogMapper, SysAudit
 
     @Override
     public void deleteByIds(List<Long> ids) {
-        if (ids != null && !ids.isEmpty()) {
+        if (!CollectionUtils.isEmpty(ids)) {
             mapper.deleteBatchByIds(ids);
         }
     }
@@ -78,7 +80,7 @@ public class AuditLogServiceImpl extends ServiceImpl<SysAuditLogMapper, SysAudit
                                 .select(distinct(SYS_AUDIT_LOG.MODULE)))
                 .stream()
                 .map(SysAuditLog::getModule)
-                .filter(m -> m != null && !m.isEmpty())
+                .filter(StringUtils::hasText)
                 .collect(Collectors.toList());
     }
 

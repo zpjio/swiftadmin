@@ -21,6 +21,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -81,7 +82,7 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
     public Long create(RoleDTO dto) {
         // 自动生成角色编码
         String code = dto.getCode();
-        if (code == null || code.trim().isEmpty()) {
+        if (!StringUtils.hasText(code)) {
             code = generateRoleCode(dto.getName());
         }
 
@@ -127,7 +128,7 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
 
         // 自动生成角色编码（如果未提供）
         String code = dto.getCode();
-        if (code == null || code.trim().isEmpty()) {
+        if (!StringUtils.hasText(code)) {
             code = existing.getCode();
         }
 
@@ -233,7 +234,7 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
      * 简化名称用于生成编码
      */
     private String simplifyName(String name) {
-        if (name == null || name.isEmpty()) {
+        if (!StringUtils.hasLength(name)) {
             return "unknown";
         }
         // 简化处理：去除空格，转小写

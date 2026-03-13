@@ -15,6 +15,7 @@ import com.mybatisflex.core.query.QueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 
@@ -85,7 +86,7 @@ public class PermissionServiceImpl implements PermissionService {
 
         List<Integer> dataScopes = roleMapper.selectListByQueryAs(queryWrapper, Integer.class);
 
-        if (dataScopes == null || dataScopes.isEmpty()) {
+        if (CollectionUtils.isEmpty(dataScopes)) {
             return DATA_SCOPE_SELF; // 默认仅本人
         }
 
@@ -177,7 +178,7 @@ public class PermissionServiceImpl implements PermissionService {
             return false;
         }
         Set<String> userPermissions = getPermissionsByUserId(userId);
-        if (userPermissions == null || userPermissions.isEmpty()) {
+        if (CollectionUtils.isEmpty(userPermissions)) {
             return false;
         }
         for (String permission : permissions) {
@@ -200,7 +201,7 @@ public class PermissionServiceImpl implements PermissionService {
             return false;
         }
         Set<String> userRoles = getRolesByUserId(userId);
-        if (userRoles == null || userRoles.isEmpty()) {
+        if (CollectionUtils.isEmpty(userRoles)) {
             return false;
         }
         for (String role : roles) {

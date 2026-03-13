@@ -12,6 +12,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import javax.crypto.Mac;
@@ -56,7 +57,7 @@ public class DingTalkAuthHandler implements SocialAuthHandler {
 
     @Override
     public SocialUserInfo getUserInfo(String authCode) {
-        if (authCode == null || authCode.isEmpty()) {
+        if (!StringUtils.hasLength(authCode)) {
             throw new SocialAuthException(SocialAuthError.AUTH_CODE_INVALID);
         }
 

@@ -15,6 +15,8 @@ import com.mybatisflex.spring.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -196,7 +198,7 @@ public class DeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impleme
      * 收集子部门 ID（优化版：使用 Map 分组，O(n) 时间复杂度）
      */
     private void collectChildrenIdsOptimized(List<SysDept> allDepts, Long rootId, List<Long> ids) {
-        if (allDepts == null || allDepts.isEmpty()) {
+        if (CollectionUtils.isEmpty(allDepts)) {
             return;
         }
 
@@ -222,7 +224,7 @@ public class DeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impleme
      * 构建部门树（优化版：O(n) 时间复杂度）
      */
     private List<DeptVO> buildTree(List<SysDept> depts, Long rootParentId) {
-        if (depts == null || depts.isEmpty()) {
+        if (CollectionUtils.isEmpty(depts)) {
             return Collections.emptyList();
         }
 
@@ -261,7 +263,7 @@ public class DeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impleme
             return "0";
         }
         String parentAncestors = parent.getAncestors();
-        if (parentAncestors == null || parentAncestors.isEmpty()) {
+        if (!StringUtils.hasLength(parentAncestors)) {
             parentAncestors = "0";
         }
         return parentAncestors + "," + parentId;
@@ -284,7 +286,7 @@ public class DeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impleme
         }
         // 检查目标部门的祖级路径是否包含父部门
         String ancestors = target.getAncestors();
-        if (ancestors == null || ancestors.isEmpty()) {
+        if (!StringUtils.hasLength(ancestors)) {
             return false;
         }
         return ancestors.contains(parentId.toString());

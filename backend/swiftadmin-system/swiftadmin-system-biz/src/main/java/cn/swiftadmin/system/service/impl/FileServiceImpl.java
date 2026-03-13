@@ -18,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
@@ -43,8 +45,8 @@ public class FileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impleme
     public Page<FileVO> page(FileQueryDTO query) {
         QueryWrapper queryWrapper = QueryWrapper.create()
                 .where(SYS_FILE.FILE_NAME.like(PageHelper.likeIfPresent(query.getFileName())))
-                .and(SYS_FILE.BIZ_TYPE.eq(query.getBizType(), query.getBizType() != null && !query.getBizType().isEmpty()))
-                .and(SYS_FILE.STORAGE_TYPE.eq(query.getStorageType(), query.getStorageType() != null && !query.getStorageType().isEmpty()))
+                .and(SYS_FILE.BIZ_TYPE.eq(query.getBizType(), StringUtils.hasText(query.getBizType())))
+                .and(SYS_FILE.STORAGE_TYPE.eq(query.getStorageType(), StringUtils.hasText(query.getStorageType())))
                 .and(SYS_FILE.STATUS.eq(query.getStatus(), query.getStatus() != null))
                 .orderBy(SYS_FILE.CREATE_TIME.desc());
 
@@ -150,7 +152,7 @@ public class FileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impleme
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteFiles(List<Long> ids) {
-        if (ids == null || ids.isEmpty()) {
+        if (CollectionUtils.isEmpty(ids)) {
             return;
         }
 

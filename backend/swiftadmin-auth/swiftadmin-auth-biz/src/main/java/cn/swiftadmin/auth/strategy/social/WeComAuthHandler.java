@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URLEncoder;
@@ -50,7 +51,7 @@ public class WeComAuthHandler implements SocialAuthHandler {
 
     @Override
     public SocialUserInfo getUserInfo(String authCode) {
-        if (authCode == null || authCode.isEmpty()) {
+        if (!StringUtils.hasLength(authCode)) {
             throw new SocialAuthException(SocialAuthError.AUTH_CODE_INVALID);
         }
 
