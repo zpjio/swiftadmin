@@ -5,6 +5,7 @@ import cn.swiftadmin.common.core.enums.YesNo;
 import cn.swiftadmin.common.core.exception.BusinessException;
 import cn.swiftadmin.common.core.result.PasswordStrengthResult;
 import cn.swiftadmin.common.core.service.PasswordValidator;
+import cn.swiftadmin.common.mybatis.annotation.DataScopeValidate;
 import com.mybatisflex.core.paginate.Page;
 import cn.swiftadmin.common.core.util.BeanCopyUtils;
 import cn.swiftadmin.common.mybatis.util.PageHelper;
@@ -142,6 +143,7 @@ public class UserManageServiceImpl extends ServiceImpl<SysUserMapper, SysUser> i
     }
 
     @Override
+    @DataScopeValidate
     @Transactional(rollbackFor = Exception.class)
     public void update(UserDTO dto) {
         if (dto.getId() == null) {

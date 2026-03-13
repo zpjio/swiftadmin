@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 import type { MenuVO } from '@/api/menu'
+import { refreshPermissionApi, checkPermissionRefreshApi } from '@/api/auth'
 
 export interface UserInfo {
   id: number
@@ -70,6 +71,34 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
+  // 检查并刷新权限
+  const checkAndRefreshPermissions = async () => {
+    try {
+      const result = await checkPermissionRefreshApi()
+      if (result.needRefresh) {
+        return refreshUserPermissions()
+      }
+      return false
+    } catch (error) {
+      console.error('检查权限刷新失败:', error)
+      return false
+    }
+  }
+
+  // 刷新用户权限
+  const refreshUserPermissions = async () => {
+    try {
+      const result = await refreshPermissionApi()
+      permissions.value = result.permissions || []
+      roles.value = result.roles || []
+      console.log('权限已刷新:', result)
+      return true
+    } catch (error) {
+      console.error('刷新权限失败:', error)
+      return false
+    }
+  }
+
   return {
     token,
     refreshToken,
@@ -79,7 +108,11 @@ export const useUserStore = defineStore('user', () => {
     userMenus,
     setToken,
     setUserInfo,
+    setPermissions,
+    setRoles: (newRoles: string[]) => { roles.value = newRoles },
     logout,
     initToken,
+    checkAndRefreshPermissions,
+    refreshUserPermissions,
   }
 })

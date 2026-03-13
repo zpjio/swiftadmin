@@ -43,3 +43,6 @@ mvnw.cmd
 # pnpm
 
 backend/.claude/settings.local.json
+CLAUDE.md
+.claude/settings.json
+.claude/settings.local.json

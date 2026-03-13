@@ -149,3 +149,34 @@ export function forceChangePasswordApi(data: ForceChangePasswordParams) {
     },
   })
 }
+
+/**
+ * 权限信息
+ */
+export interface PermissionInfo {
+  permissions: string[]
+  roles: string[]
+  dataScope: number
+  isSuperAdmin?: boolean
+}
+
+/**
+ * 检查权限刷新
+ */
+export function checkPermissionRefreshApi() {
+  return post<{ needRefresh: boolean; timestamp?: string }>('/auth/permission/check-refresh')
+}
+
+/**
+ * 刷新权限
+ */
+export function refreshPermissionApi() {
+  return post<PermissionInfo>('/auth/permission/refresh')
+}
+
+/**
+ * 获取权限信息
+ */
+export function getPermissionInfoApi() {
+  return post<PermissionInfo>('/auth/permission/info')
+}

@@ -2,7 +2,7 @@
   <NCard title="部门管理">
     <div class="toolbar mb-4">
       <NSpace>
-        <NButton type="primary" @click="handleAdd">
+        <NButton v-auth="'system:dept:add'" type="primary" @click="handleAdd">
           <template #icon><icon-mdi-plus /></template>
           新增部门
         </NButton>
@@ -73,8 +73,11 @@ import { useMessage, useDialog, type DataTableColumns, type FormInst, type FormR
 import { getDeptTreeApi, getDeptDetailApi, createDeptApi, updateDeptApi, deleteDeptApi } from '@/api/dept'
 import type { DeptVO, DeptDTO } from '@/api/dept'
 
+import { usePermission } from '@/composables'
+
 const message = useMessage()
 const dialog = useDialog()
+const { hasPermission } = usePermission()
 
 const loading = ref(false)
 const tableData = ref<DeptVO[]>([])
@@ -117,9 +120,9 @@ const columns: DataTableColumns<DeptVO> = [
     width: 180,
     fixed: 'right',
     render: (row) => h('div', { style: { display: 'flex', gap: '8px' } }, [
-      h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#1890ff', cursor: 'pointer' }, onClick: (_e: MouseEvent) => handleAdd(_e, row.id) }, '新增'),
-      h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#faad14', cursor: 'pointer' }, onClick: () => handleEdit(row) }, '编辑'),
-      h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer' }, onClick: () => handleDelete(row) }, '删除'),
+      hasPermission('system:dept:add') ? h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#1890ff', cursor: 'pointer' }, onClick: (_e: MouseEvent) => handleAdd(_e, row.id) }, '新增') : null,
+      hasPermission('system:dept:edit') ? h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#faad14', cursor: 'pointer' }, onClick: () => handleEdit(row) }, '编辑') : null,
+      hasPermission('system:dept:delete') ? h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer' }, onClick: () => handleDelete(row) }, '删除') : null,
     ]),
   },
 ]

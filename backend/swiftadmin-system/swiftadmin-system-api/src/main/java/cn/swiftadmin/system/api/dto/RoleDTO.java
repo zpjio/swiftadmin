@@ -31,7 +31,6 @@ public class RoleDTO {
 
     private Integer status;
     private Integer dataScope;
-    private Long packageId;
     private List<Long> menuIds;
     private List<Long> deptIds;
 

@@ -34,7 +34,7 @@
 
       <!-- 操作按钮 -->
       <NSpace class="mb-4">
-        <NButton type="primary" @click="handleAdd">
+        <NButton v-auth="'system:config:add'" type="primary" @click="handleAdd">
           <template #icon><icon-mdi-plus /></template>
           新增配置
         </NButton>
@@ -42,7 +42,7 @@
           <template #icon><icon-mdi-refresh /></template>
           刷新缓存
         </NButton>
-        <NButton type="error" :disabled="selectedRowKeys.length === 0" @click="handleBatchDelete">
+        <NButton v-auth="'system:config:delete'" type="error" :disabled="selectedRowKeys.length === 0" @click="handleBatchDelete">
           <template #icon><icon-mdi-delete /></template>
           批量删除
         </NButton>
@@ -108,9 +108,11 @@ import {
   type ConfigDTO,
 } from '@/api/config'
 import { useDict } from '@/composables/useDict'
+import { usePermission } from '@/composables'
 
 const message = useMessage()
 const dialog = useDialog()
+const { hasPermission } = usePermission()
 const formRef = ref<any>(null)
 const loading = ref(false)
 const tableData = ref<ConfigVO[]>([])
@@ -186,8 +188,8 @@ const columns: DataTableColumns<ConfigVO> = [
     fixed: 'right',
     render: (row) =>
       h('div', { style: { display: 'flex', gap: '8px' } }, [
-        h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer' }, onClick: () => handleEdit(row) }, '编辑'),
-        h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer' }, onClick: () => handleDelete(row) }, '删除'),
+        hasPermission('system:config:edit') ? h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer' }, onClick: () => handleEdit(row) }, '编辑') : null,
+        hasPermission('system:config:delete') ? h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer' }, onClick: () => handleDelete(row) }, '删除') : null,
       ]),
   },
 ]

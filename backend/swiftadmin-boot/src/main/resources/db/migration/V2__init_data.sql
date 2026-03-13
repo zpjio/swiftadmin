@@ -14,8 +14,15 @@ INSERT INTO sys_user (username, password, nickname, email, phone, avatar, status
 VALUES ('admin', '$2b$10$xNZHyOGnnUT0j3s0.AC9q..fbsKu/HJkTFSdK/wUfh5nuAo6VQovC', '超级管理员', 'admin@swiftadmin.cn', '13800000000', 'https://app-assets-oss.oss-cn-beijing.aliyuncs.com/qianzhou-app/static/image/avatar/41.jpg', 1, 1, 1, 0, 0);
 
 -- 默认角色
-INSERT INTO sys_role (name, code, description, data_scope, package_id, status)
-VALUES ('超级管理员', 'admin', '拥有系统全部权限', 1, NULL, 1);
+INSERT INTO sys_role (name, code, description, data_scope, status)
+VALUES ('超级管理员', 'admin', '拥有系统全部权限', 1, 1);
+
+-- 预置角色模板
+INSERT INTO sys_role (name, code, description, data_scope, status) VALUES
+('系统管理员', 'system_admin', '系统配置和用户管理', 1, 1),
+('部门经理', 'dept_manager', '部门管理和部门用户管理', 3, 1),
+('普通员工', 'employee', '基础功能使用权限', 5, 1),
+('访客', 'visitor', '仅有查看权限', 5, 1);
 
 -- 关联管理员角色
 INSERT INTO sys_user_role (user_id, role_id) VALUES (1, 1);
@@ -127,41 +134,7 @@ INSERT INTO sys_menu (id, parent_id, name, path, component, type, icon, sort_ord
 (61, 58, '日志导出', NULL, NULL, 3, NULL, 3, 'monitor:loginlog:export', 1);
 
 -- ============================================
--- 三、权限包数据
--- ============================================
-
--- 预置权限包
-INSERT INTO sys_permission_package (name, code, description, sort_order, status) VALUES
-('系统管理包', 'pkg_system', '包含系统管理相关所有权限（用户、角色、菜单、部门）', 1, 1),
-('用户管理包', 'pkg_user', '包含用户查看、编辑权限', 2, 1),
-('部门管理包', 'pkg_dept', '包含部门查看、编辑权限', 3, 1),
-('只读包', 'pkg_readonly', '仅有查看权限，无编辑和删除权限', 4, 1);
-
--- 预置角色模板
-INSERT INTO sys_role (name, code, description, data_scope, package_id, status) VALUES
-('系统管理员', 'system_admin', '系统配置和用户管理', 1, 1, 1),
-('部门经理', 'dept_manager', '部门管理和部门用户管理', 3, 3, 1),
-('普通员工', 'employee', '基础功能使用权限', 5, 2, 1),
-('访客', 'visitor', '仅有查看权限', 5, 4, 1);
-
--- 关联权限包与菜单（系统管理包 - 包含所有系统管理权限）
-INSERT INTO sys_permission_package_menu (package_id, menu_id)
-SELECT 1, id FROM sys_menu WHERE id <= 33;
-
--- 用户管理包 - 包含用户查看和基本操作
-INSERT INTO sys_permission_package_menu (package_id, menu_id)
-SELECT 2, id FROM sys_menu WHERE parent_id = 2 AND permission IN ('system:user:list', 'system:user:query');
-
--- 部门管理包
-INSERT INTO sys_permission_package_menu (package_id, menu_id)
-SELECT 3, id FROM sys_menu WHERE parent_id = 5 OR id = 5;
-
--- 只读包 - 仅查看权限
-INSERT INTO sys_permission_package_menu (package_id, menu_id)
-SELECT 4, id FROM sys_menu WHERE permission LIKE '%:list' OR permission LIKE '%:query' OR type IN (1, 2);
-
--- ============================================
--- 四、字典数据
+-- 三、字典数据
 -- ============================================
 
 -- 用户状态字典
@@ -266,6 +239,34 @@ INSERT INTO sys_role_menu (role_id, menu_id) VALUES
  (1, 50), (1, 51), (1, 52), (1, 53),
  (1, 54), (1, 55), (1, 56), (1, 57),
  (1, 58), (1, 59), (1, 60), (1, 61);
+
+-- 系统管理员角色菜单权限(role_id=2): 系统管理全部权限
+INSERT INTO sys_role_menu (role_id, menu_id) VALUES
+ (2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (2, 7),
+ (2, 8), (2, 9), (2, 10), (2, 11), (2, 12), (2, 13),
+ (2, 14), (2, 15), (2, 16), (2, 17),
+ (2, 18), (2, 19), (2, 20), (2, 21),
+ (2, 22), (2, 23), (2, 24), (2, 25),
+ (2, 26), (2, 27), (2, 28), (2, 29),
+ (2, 30), (2, 31), (2, 32), (2, 33),
+ (2, 40), (2, 41), (2, 42), (2, 43), (2, 44);
+
+-- 部门经理角色菜单权限(role_id=3): 部门管理+用户管理
+INSERT INTO sys_role_menu (role_id, menu_id) VALUES
+ (3, 1), (3, 2), (3, 5),
+ (3, 8), (3, 9), (3, 10), (3, 11), (3, 12),
+ (3, 22), (3, 23), (3, 24), (3, 25);
+
+-- 普通员工角色菜单权限(role_id=4): 用户查看+文件管理
+INSERT INTO sys_role_menu (role_id, menu_id) VALUES
+ (4, 1), (4, 2), (4, 40),
+ (4, 8), (4, 41), (4, 42), (4, 43);
+
+-- 访客角色菜单权限(role_id=5): 仅查看权限
+INSERT INTO sys_role_menu (role_id, menu_id) VALUES
+ (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (5, 6), (5, 7),
+ (5, 8), (5, 14), (5, 18), (5, 22), (5, 26), (5, 30),
+ (5, 40), (5, 41), (5, 50), (5, 51), (5, 52);
 
 -- ============================================
 -- 七、配置类型字典

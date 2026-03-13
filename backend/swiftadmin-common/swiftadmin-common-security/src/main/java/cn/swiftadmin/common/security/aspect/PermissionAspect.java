@@ -4,6 +4,7 @@ import cn.swiftadmin.common.security.annotation.RequiresPermission;
 import cn.swiftadmin.common.security.annotation.RequiresRole;
 import cn.swiftadmin.common.security.domain.LoginUser;
 import cn.swiftadmin.common.security.exception.PermissionDeniedException;
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -24,6 +25,7 @@ import java.util.Set;
  * @author zhangpengju
  * @since 2026-03-10
  */
+@Slf4j
 @Aspect
 @Component
 public class PermissionAspect {
@@ -33,13 +35,13 @@ public class PermissionAspect {
      */
     @Around("@annotation(cn.swiftadmin.common.security.annotation.RequiresPermission)")
     public Object checkPermission(ProceedingJoinPoint joinPoint) throws Throwable {
-        // 获取注解
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
         RequiresPermission annotation = method.getAnnotation(RequiresPermission.class);
 
-        // 获取当前用户
         LoginUser loginUser = getLoginUser();
+        String[] permissions = annotation.value();
+
         if (loginUser == null) {
             throw new PermissionDeniedException("用户未登录");
         }
@@ -50,25 +52,20 @@ public class PermissionAspect {
         }
 
         // 校验权限
-        String[] permissions = annotation.value();
         Set<String> userPermissions = loginUser.getPermissions();
 
         if (CollectionUtils.isEmpty(userPermissions)) {
             throw new PermissionDeniedException("用户无任何权限");
         }
 
-        boolean hasPermission;
+        boolean checkResult;
         if (annotation.logical() == RequiresPermission.Logical.AND) {
-            // 需要满足所有权限
-            hasPermission = Arrays.stream(permissions)
-                    .allMatch(userPermissions::contains);
+            checkResult = Arrays.stream(permissions).allMatch(userPermissions::contains);
         } else {
-            // 满足其中一个权限即可
-            hasPermission = Arrays.stream(permissions)
-                    .anyMatch(userPermissions::contains);
+            checkResult = Arrays.stream(permissions).anyMatch(userPermissions::contains);
         }
 
-        if (!hasPermission) {
+        if (!checkResult) {
             throw new PermissionDeniedException("权限不足，需要权限：" + Arrays.toString(permissions));
         }
 
@@ -80,13 +77,13 @@ public class PermissionAspect {
      */
     @Around("@annotation(cn.swiftadmin.common.security.annotation.RequiresRole)")
     public Object checkRole(ProceedingJoinPoint joinPoint) throws Throwable {
-        // 获取注解
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
         RequiresRole annotation = method.getAnnotation(RequiresRole.class);
 
-        // 获取当前用户
         LoginUser loginUser = getLoginUser();
+        String[] roles = annotation.value();
+
         if (loginUser == null) {
             throw new PermissionDeniedException("用户未登录");
         }
@@ -97,25 +94,20 @@ public class PermissionAspect {
         }
 
         // 校验角色
-        String[] roles = annotation.value();
         Set<String> userRoles = loginUser.getRoles();
 
         if (CollectionUtils.isEmpty(userRoles)) {
             throw new PermissionDeniedException("用户无任何角色");
         }
 
-        boolean hasRole;
+        boolean checkResult;
         if (annotation.logical() == RequiresPermission.Logical.AND) {
-            // 需要满足所有角色
-            hasRole = Arrays.stream(roles)
-                    .allMatch(userRoles::contains);
+            checkResult = Arrays.stream(roles).allMatch(userRoles::contains);
         } else {
-            // 满足其中一个角色即可
-            hasRole = Arrays.stream(roles)
-                    .anyMatch(userRoles::contains);
+            checkResult = Arrays.stream(roles).anyMatch(userRoles::contains);
         }
 
-        if (!hasRole) {
+        if (!checkResult) {
             throw new PermissionDeniedException("角色不足，需要角色：" + Arrays.toString(roles));
         }
 

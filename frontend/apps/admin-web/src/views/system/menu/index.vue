@@ -12,7 +12,7 @@
         </div>
         <div class="mb-4">
           <NSpace>
-            <NButton type="primary" size="small" @click="handleAdd()">
+            <NButton v-auth="'system:menu:add'" type="primary" size="small" @click="handleAdd()">
               <template #icon><icon-mdi-plus /></template>
               新增
             </NButton>
@@ -50,15 +50,15 @@
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-medium">{{ isEditing ? '编辑菜单' : '菜单详情' }}</h3>
             <NSpace>
-              <NButton v-if="!isEditing" type="primary" @click="startEdit">
+              <NButton v-if="!isEditing && hasPermission('system:menu:edit')" type="primary" @click="startEdit">
                 <template #icon><icon-mdi-pencil /></template>
                 编辑
               </NButton>
-              <NButton v-if="!isEditing" type="primary" @click="handleAdd(selectedMenu.id)">
+              <NButton v-if="!isEditing && hasPermission('system:menu:add')" type="primary" @click="handleAdd(selectedMenu.id)">
                 <template #icon><icon-mdi-plus /></template>
                 新增子菜单
               </NButton>
-              <template v-else>
+              <template v-else-if="isEditing">
                 <NButton @click="cancelEdit">取消</NButton>
                 <NButton type="primary" :loading="submitLoading" @click="handleSubmit">保存</NButton>
               </template>
@@ -90,10 +90,10 @@
             <NDescriptionsItem label="创建时间">{{ selectedMenu.createdAt || '-' }}</NDescriptionsItem>
             <NDescriptionsItem label="操作" :span="2">
               <NSpace>
-                <NButton type="primary" size="small" @click="handleAdd(selectedMenu.id)">
+                <NButton v-if="hasPermission('system:menu:add')" type="primary" size="small" @click="handleAdd(selectedMenu.id)">
                   新增子菜单
                 </NButton>
-                <NPopconfirm @positive-click="handleDelete">
+                <NPopconfirm v-if="hasPermission('system:menu:delete')" @positive-click="handleDelete">
                   <template #trigger>
                     <NButton type="error" size="small">删除</NButton>
                   </template>
@@ -234,7 +234,10 @@ import IconSelect from '@/components/IconSelect.vue'
 import { Icon } from '@iconify/vue'
 import { normalizeIconName } from '@/utils/icon'
 
+import { usePermission } from '@/composables'
+
 const message = useMessage()
+const { hasPermission } = usePermission()
 
 const loading = ref(false)
 const submitLoading = ref(false)

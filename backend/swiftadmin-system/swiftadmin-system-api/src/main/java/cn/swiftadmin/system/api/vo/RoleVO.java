@@ -33,12 +33,6 @@ public class RoleVO {
     /** 数据范围：1=全部，2=自定义，3=本部门，4=本部门及以下，5=仅本人 */
     private Integer dataScope;
 
-    /** 关联权限包ID */
-    private Long packageId;
-
-    /** 权限包名称 */
-    private String packageName;
-
     /** 菜单 ID 列表 */
     private List<Long> menuIds;
 

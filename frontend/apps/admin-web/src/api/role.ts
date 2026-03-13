@@ -22,8 +22,6 @@ export interface RoleVO {
   description: string
   status: number
   dataScope: number
-  packageId: number
-  packageName: string
   menuIds: number[]
   deptIds: number[]
   createTime: string
@@ -40,7 +38,6 @@ export interface RoleDTO {
   description?: string
   status?: number
   dataScope?: number
-  packageId?: number
   menuIds?: number[]
   deptIds?: number[]
 }

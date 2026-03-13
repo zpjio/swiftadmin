@@ -45,11 +45,11 @@
 
       <div class="actions">
         <NSpace>
-          <NButton type="primary" @click="handleAdd">
+          <NButton v-auth="'system:user:add'" type="primary" @click="handleAdd">
             <template #icon><icon-mdi-plus /></template>
             新增用户
           </NButton>
-          <NButton type="error" :disabled="selectedRowKeys.length === 0" @click="handleBatchDelete">
+          <NButton v-auth="'system:user:delete'" type="error" :disabled="selectedRowKeys.length === 0" @click="handleBatchDelete">
             <template #icon><icon-mdi-delete /></template>
             批量删除
           </NButton>
@@ -69,6 +69,9 @@
 
     <!-- 新增/编辑弹窗 -->
     <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 700px;">
+      <NAlert v-if="isSuperAdmin" type="warning" style="margin-bottom: 16px;">
+        超级管理员拥有系统全部权限，角色和状态不可修改
+      </NAlert>
       <NForm :model="formData" :rules="computedFormRules" ref="formRef" label-placement="left" label-width="80">
         <NFormItem label="用户名" path="username">
           <NInput v-model:value="formData.username" placeholder="请输入用户名" :disabled="isEdit" />
@@ -92,6 +95,7 @@
             placeholder="请选择角色"
             multiple
             clearable
+            :disabled="isSuperAdmin"
           />
         </NFormItem>
         <NFormItem label="手机号" path="phone">
@@ -108,7 +112,8 @@
           </NRadioGroup>
         </NFormItem>
         <NFormItem label="状态" path="status">
-          <NSwitch v-model:value="formData.status" :checked-value="1" :unchecked-value="0" />
+          <NSwitch v-model:value="formData.status" :checked-value="1" :unchecked-value="0" :disabled="isSuperAdmin" />
+          <NText v-if="isSuperAdmin" depth="3" style="margin-left: 8px;">超级管理员不可禁用</NText>
         </NFormItem>
         <NFormItem v-if="!isEdit" label="密码" path="password">
           <NInput v-model:value="formData.password" type="password" placeholder="请输入密码" show-password-on="click" />
@@ -165,8 +170,11 @@ import type { UserVO, UserDTO, UserQuery } from '@/api/user'
 import type { DeptVO } from '@/api/dept'
 import type { RoleVO } from '@/api/role'
 
+import { usePermission } from '@/composables'
+
 const message = useMessage()
 const dialog = useDialog()
+const { hasPermission } = usePermission()
 
 const loading = ref(false)
 const tableData = ref<UserVO[]>([])
@@ -205,7 +213,20 @@ const pagination = reactive({
 const columns: DataTableColumns<UserVO> = [
   { type: 'selection' },
   { title: 'ID', key: 'id', width: 80 },
-  { title: '用户名', key: 'username', width: 120 },
+  {
+    title: '用户名',
+    key: 'username',
+    width: 140,
+    render: (row) => {
+      if (row.username === 'admin') {
+        return h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } }, [
+          h('span', row.username),
+          h('span', { style: { background: '#ff9800', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontSize: '12px' } }, '超管')
+        ])
+      }
+      return row.username
+    }
+  },
   { title: '昵称', key: 'nickname', width: 120 },
   { title: '手机号', key: 'phone', width: 130 },
   { title: '邮箱', key: 'email', width: 180, ellipsis: { tooltip: true } },
@@ -228,11 +249,20 @@ const columns: DataTableColumns<UserVO> = [
     key: 'actions',
     width: 200,
     fixed: 'right',
-    render: (row) => h('div', { style: { display: 'flex', gap: '8px' } }, [
-      h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#1890ff', cursor: 'pointer' }, onClick: () => handleEdit(row) }, '编辑'),
-      h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#faad14', cursor: 'pointer' }, onClick: () => handleResetPassword(row) }, '重置密码'),
-      h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer' }, onClick: () => handleDelete(row) }, '删除'),
-    ]),
+    render: (row) => {
+      const isSuperAdmin = row.username === 'admin'
+      const buttons: any[] = []
+      if (hasPermission('system:user:edit')) {
+        buttons.push(h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#1890ff', cursor: 'pointer' }, onClick: () => handleEdit(row) }, '编辑'))
+      }
+      if (hasPermission('system:user:resetPassword')) {
+        buttons.push(h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#faad14', cursor: 'pointer' }, onClick: () => handleResetPassword(row) }, '重置密码'))
+      }
+      if (hasPermission('system:user:delete') && !isSuperAdmin) {
+        buttons.push(h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer' }, onClick: () => handleDelete(row) }, '删除'))
+      }
+      return h('div', { style: { display: 'flex', gap: '8px' } }, buttons)
+    },
   },
 ]
 
@@ -255,6 +285,9 @@ const formData = reactive<UserDTO>({
   roleIds: [],
   remark: '',
 })
+
+// 判断是否为超级管理员
+const isSuperAdmin = computed(() => formData.username === 'admin')
 
 // 动态表单验证规则
 const computedFormRules = computed<FormRules>(() => ({
@@ -441,6 +474,12 @@ const handleBatchDelete = () => {
     message.warning('请选择要删除的用户')
     return
   }
+  // 过滤掉超级管理员用户
+  const adminUsers = tableData.value.filter(u => selectedRowKeys.value.includes(u.id) && u.username === 'admin')
+  if (adminUsers.length > 0) {
+    message.warning('超级管理员用户不可删除')
+    return
+  }
   dialog.warning({
     title: '确认删除',
     content: `确定要删除选中的 ${selectedRowKeys.value.length} 个用户吗？`,
@@ -478,7 +517,7 @@ const handleSubmit = async () => {
       const errorMsg = error.message || error.response?.data?.message || '操作失败'
       // 将分号分隔的错误信息转换为换行显示
       if (errorMsg.includes(';')) {
-        const errors = errorMsg.split(';').filter(Boolean).map(e => e.trim()).join('\n')
+        const errors = errorMsg.split(';').filter(Boolean).map((e: string) => e.trim()).join('\n')
         message.error(errors, { duration: 5000 })
       } else {
         message.error(errorMsg)

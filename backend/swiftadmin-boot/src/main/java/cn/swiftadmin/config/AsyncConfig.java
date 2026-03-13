@@ -39,4 +39,25 @@ public class AsyncConfig {
         return executor;
     }
 
+    /**
+     * 权限预热线程池
+     * <p>用于登录后异步预热用户权限数据</p>
+     *
+     * @return 线程池执行器
+     */
+    @Bean("permissionWarmupExecutor")
+    public Executor permissionWarmupExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(3);
+        executor.setMaxPoolSize(8);
+        executor.setQueueCapacity(50);
+        executor.setThreadNamePrefix("perm-warmup-");
+        executor.setRejectedExecutionHandler((r, e) -> {
+            // 队列满时由调用线程执行，确保预热任务不丢失
+            r.run();
+        });
+        executor.initialize();
+        return executor;
+    }
+
 }

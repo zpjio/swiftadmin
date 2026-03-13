@@ -7,6 +7,7 @@ import cn.swiftadmin.system.api.dto.MenuDTO;
 import cn.swiftadmin.system.api.entity.SysMenu;
 import cn.swiftadmin.system.api.entity.SysUser;
 import cn.swiftadmin.system.api.service.MenuService;
+import cn.swiftadmin.system.api.service.PermissionCacheRefreshService;
 import cn.swiftadmin.system.api.service.UserService;
 import cn.swiftadmin.system.api.vo.MenuTreeVO;
 import cn.swiftadmin.system.api.vo.MenuVO;
@@ -44,6 +45,7 @@ public class MenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impleme
 
     private final SysRoleMenuMapper roleMenuMapper;
     private final UserService userService;
+    private final PermissionCacheRefreshService cacheRefreshService;
 
     @Override
     public List<MenuVO> getTree(Integer status) {
@@ -93,6 +95,11 @@ public class MenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impleme
             throw new BusinessException(400, "父菜单不能是自己");
         }
 
+        // 检查权限标识是否变更
+        SysMenu existing = getById(dto.getId());
+        boolean permissionChanged = existing != null &&
+                !java.util.Objects.equals(existing.getPermission(), dto.getPermission());
+
         UpdateChain.of(SysMenu.class)
                 .set(SYS_MENU.PARENT_ID, dto.getParentId() != null ? dto.getParentId() : 0L)
                 .set(SYS_MENU.NAME, dto.getName())
@@ -106,6 +113,11 @@ public class MenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impleme
                 .set(SYS_MENU.UPDATE_TIME, LocalDateTime.now())
                 .where(SYS_MENU.ID.eq(dto.getId()))
                 .update();
+
+        // 如果权限标识变更，清除相关用户缓存
+        if (permissionChanged) {
+            cacheRefreshService.clearCacheByMenuId(dto.getId());
+        }
     }
 
     @Override
@@ -114,6 +126,9 @@ public class MenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impleme
         if (count(QueryWrapper.create().where(SYS_MENU.PARENT_ID.eq(id))) > 0) {
             throw new BusinessException(400, "存在子菜单，不能删除");
         }
+
+        // 清除关联用户的权限缓存
+        cacheRefreshService.clearCacheByMenuId(id);
 
         removeById(id);
         roleMenuMapper.deleteByQuery(QueryWrapper.create().where(SYS_ROLE_MENU.MENU_ID.eq(id)));

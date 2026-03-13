@@ -13,7 +13,7 @@
         <div class="mb-4 flex items-center justify-between">
           <span class="text-gray-500 text-sm">字典类型</span>
           <NSpace>
-            <NButton type="primary" size="small" @click="handleAddType">
+            <NButton v-auth="'system:dict:add'" type="primary" size="small" @click="handleAddType">
               <template #icon><icon-mdi-plus /></template>
               新增
             </NButton>
@@ -41,10 +41,10 @@
                   </NTag>
                 </div>
                 <div class="type-actions mt-2 flex gap-1">
-                  <NButton size="tiny" quaternary @click.stop="handleEditType(item)">
+                  <NButton v-if="hasPermission('system:dict:edit')" size="tiny" quaternary @click.stop="handleEditType(item)">
                     <template #icon><icon-mdi-pencil /></template>
                   </NButton>
-                  <NPopconfirm @positive-click="handleDeleteType(item)">
+                  <NPopconfirm v-if="hasPermission('system:dict:delete')" @positive-click="handleDeleteType(item)">
                     <template #trigger>
                       <NButton size="tiny" quaternary type="error" @click.stop>
                         <template #icon><icon-mdi-delete /></template>
@@ -87,7 +87,7 @@
             </div>
             <NSpace>
               <NInput v-model:value="dataQueryForm.dictLabel" placeholder="搜索数据标签" clearable style="width: 150px" @update:value="handleSearchData" />
-              <NButton type="primary" @click="handleAddData">
+              <NButton v-auth="'system:dict:add'" type="primary" @click="handleAddData">
                 <template #icon><icon-mdi-plus /></template>
                 新增数据
               </NButton>
@@ -189,8 +189,11 @@ import {
 } from '@/api/dict'
 import type { DictTypeVO, DictDataVO, DictTypeDTO, DictDataDTO, DictTypeQuery, DictDataQuery } from '@/api/dict'
 
+import { usePermission } from '@/composables'
+
 const message = useMessage()
 const dialog = useDialog()
+const { hasPermission } = usePermission()
 
 // 表单 ref
 const typeFormRef = ref<any>(null)
@@ -279,8 +282,8 @@ const dataColumns: DataTableColumns<DictDataVO> = [
     fixed: 'right',
     render: (row) =>
       h('div', { style: { display: 'flex', gap: '8px' } }, [
-        h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer' }, onClick: () => handleEditData(row) }, '编辑'),
-        h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer' }, onClick: () => handleDeleteData(row) }, '删除'),
+        hasPermission('system:dict:edit') ? h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer' }, onClick: () => handleEditData(row) }, '编辑') : null,
+        hasPermission('system:dict:delete') ? h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer' }, onClick: () => handleDeleteData(row) }, '删除') : null,
       ]),
   },
 ]

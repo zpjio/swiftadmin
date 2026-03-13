@@ -12,6 +12,7 @@ import cn.swiftadmin.common.core.exception.BusinessException;
 import cn.swiftadmin.common.core.result.ErrorCode;
 import cn.swiftadmin.common.core.util.ServletUtils;
 import cn.swiftadmin.common.security.domain.LoginUser;
+import cn.swiftadmin.common.security.service.PermissionWarmupService;
 import cn.swiftadmin.common.security.service.UserSessionService;
 import cn.swiftadmin.system.api.entity.SysUser;
 import cn.swiftadmin.system.api.service.UserService;
@@ -48,6 +49,7 @@ public class AuthServiceImpl implements AuthService {
     private final StringRedisTemplate redisTemplate;
     private final AuthSecurityProperties securityProperties;
     private final UserSessionService userSessionService;
+    private final PermissionWarmupService permissionWarmupService;
 
     @Override
     public LoginVO login(LoginDTO dto) {
@@ -70,6 +72,10 @@ public class AuthServiceImpl implements AuthService {
 
         eventPublisher.publishEvent(LoginEvent.success(
                 user.getUsername(), ipAddress, userAgent, "password"));
+
+        // 异步预热用户权限数据，减少首次请求延迟
+        permissionWarmupService.warmupUserPermission(user.getId());
+        permissionWarmupService.warmupUserMenus(user.getId());
 
         return buildLoginVO(user);
     }

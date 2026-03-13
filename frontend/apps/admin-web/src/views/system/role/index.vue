@@ -36,11 +36,11 @@
 
       <div class="actions">
         <NSpace>
-          <NButton type="primary" @click="handleAdd">
+          <NButton v-auth="'system:role:add'" type="primary" @click="handleAdd">
             <template #icon><icon-mdi-plus /></template>
             新增角色
           </NButton>
-          <NButton type="error" :disabled="selectedRowKeys.length === 0" @click="handleBatchDelete">
+          <NButton v-auth="'system:role:delete'" type="error" :disabled="selectedRowKeys.length === 0" @click="handleBatchDelete">
             <template #icon><icon-mdi-delete /></template>
             批量删除
           </NButton>
@@ -59,7 +59,10 @@
     />
 
     <!-- 新增/编辑弹窗 -->
-    <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 500px;">
+    <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 600px;">
+      <NAlert v-if="isAdminRole" type="warning" style="margin-bottom: 16px;">
+        超级管理员角色拥有系统全部权限和数据范围，无需配置权限
+      </NAlert>
       <NForm :model="formData" :rules="currentFormRules" ref="formRef" label-placement="left" label-width="100">
         <NFormItem label="角色名称" path="name">
           <NInput v-model:value="formData.name" placeholder="请输入角色名称" />
@@ -86,20 +89,16 @@
           </div>
         </NFormItem>
         <NFormItem label="状态" path="status">
-          <NRadioGroup v-model:value="formData.status">
+          <NRadioGroup v-model:value="formData.status" :disabled="isAdminRole">
             <NRadio :value="1">正常</NRadio>
             <NRadio :value="0">禁用</NRadio>
           </NRadioGroup>
+          <NText v-if="isAdminRole" depth="3" style="margin-left: 8px;">超级管理员不可禁用</NText>
         </NFormItem>
-        <NFormItem label="数据范围" path="dataScope">
+        <NFormItem v-if="!isAdminRole" label="数据范围" path="dataScope">
           <NSelect
             v-model:value="formData.dataScope"
-            :options="[
-              { label: '全部数据', value: 1 },
-              { label: '本部门及以下', value: 2 },
-              { label: '本部门', value: 3 },
-              { label: '仅本人', value: 4 },
-            ]"
+            :options="dataScopeOptions"
           />
         </NFormItem>
         <NFormItem label="备注" path="description">
@@ -158,9 +157,11 @@ import { getMenuTreeApi } from '@/api/menu'
 import type { RoleVO, RoleDTO, RoleQuery } from '@/api/role'
 import type { MenuVO } from '@/api/menu'
 import { generateRoleCode } from '@/utils/codeGenerator'
+import { usePermission } from '@/composables'
 
 const message = useMessage()
 const dialog = useDialog()
+const { hasPermission } = usePermission()
 
 const loading = ref(false)
 const tableData = ref<RoleVO[]>([])
@@ -169,6 +170,15 @@ const queryForm = reactive<RoleQuery>({
   page: 1,
   pageSize: 10,
 })
+
+// 数据范围选项
+const dataScopeOptions = [
+  { label: '全部数据', value: 1 },
+  { label: '自定义', value: 2 },
+  { label: '本部门', value: 3 },
+  { label: '本部门及以下', value: 4 },
+  { label: '仅本人', value: 5 },
+]
 
 const pagination = reactive({
   page: 1,
@@ -194,14 +204,27 @@ const pagination = reactive({
 const columns: DataTableColumns<RoleVO> = [
   { type: 'selection' },
   { title: 'ID', key: 'id', width: 80 },
-  { title: '角色名称', key: 'name', width: 150 },
+  {
+    title: '角色名称',
+    key: 'name',
+    width: 180,
+    render: (row) => {
+      if (row.code === 'admin') {
+        return h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } }, [
+          h('span', row.name),
+          h('span', { style: { background: '#ff9800', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontSize: '12px' } }, '超管')
+        ])
+      }
+      return row.name
+    }
+  },
   { title: '角色编码', key: 'code', width: 150 },
   { title: '描述', key: 'description', width: 200, ellipsis: { tooltip: true } },
   {
     title: '数据范围',
     key: 'dataScope',
     width: 120,
-    render: (row) => ({ 1: '全部数据', 2: '本部门及以下', 3: '本部门', 4: '仅本人' }[row.dataScope] || '未知'),
+    render: (row) => dataScopeOptions.find(o => o.value === row.dataScope)?.label || '未知',
   },
   {
     title: '状态',
@@ -209,17 +232,26 @@ const columns: DataTableColumns<RoleVO> = [
     width: 80,
     render: (row) => h('span', { style: { color: row.status === 1 ? '#52c41a' : '#ff4d4f' } }, row.status === 1 ? '正常' : '禁用'),
   },
-  { title: '创建时间', key: 'createTime', width: 180 },
+  { title: '创建时间', key: 'createTime', width: 160 },
   {
     title: '操作',
     key: 'actions',
-    width: 220,
+    width: 200,
     fixed: 'right',
-    render: (row) => h('div', { style: { display: 'flex', gap: '8px' } }, [
-      h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#1890ff', cursor: 'pointer' }, onClick: () => handleEdit(row) }, '编辑'),
-      h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#52c41a', cursor: 'pointer' }, onClick: () => handlePermission(row) }, '分配权限'),
-      h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer' }, onClick: () => handleDelete(row) }, '删除'),
-    ]),
+    render: (row) => {
+      const buttons: any[] = []
+      const isAdmin = row.code === 'admin'
+      if (hasPermission('system:role:edit')) {
+        buttons.push(h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#1890ff', cursor: 'pointer' }, onClick: () => handleEdit(row) }, '编辑'))
+        if (!isAdmin) {
+          buttons.push(h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#52c41a', cursor: 'pointer' }, onClick: () => handlePermission(row) }, '分配权限'))
+        }
+      }
+      if (hasPermission('system:role:delete') && !isAdmin) {
+        buttons.push(h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer' }, onClick: () => handleDelete(row) }, '删除'))
+      }
+      return h('div', { style: { display: 'flex', gap: '8px' } }, buttons)
+    },
   },
 ]
 
@@ -229,20 +261,23 @@ const modalTitle = ref('')
 const isEdit = ref(false)
 const submitLoading = ref(false)
 const formRef = ref<FormInst | null>(null)
-const autoGenerateCode = ref(true) // 默认自动生成编码
+const autoGenerateCode = ref(true)
 
 const formData = reactive<RoleDTO>({
   name: '',
   code: '',
   description: '',
   status: 1,
-  dataScope: 1,
+  dataScope: 5,
 })
 
 // 计算生成的编码预览
 const generatedCodePreview = computed(() => {
   return generateRoleCode(formData.name || '')
 })
+
+// 判断是否为超级管理员角色
+const isAdminRole = computed(() => formData.code === 'admin')
 
 // 监听角色名称变化，自动生成编码
 watch(() => formData.name, (newName) => {
@@ -259,12 +294,11 @@ const formRules: FormRules = {
   ],
 }
 
-// 动态表单验证规则（根据是否自动生成编码）
+// 动态表单验证规则
 const currentFormRules = computed<FormRules>(() => {
   if (isEdit.value || !autoGenerateCode.value) {
     return formRules
   }
-  // 自动生成时不需要验证 code
   return {
     name: { required: true, message: '请输入角色名称', trigger: 'blur' },
   }
@@ -355,8 +389,6 @@ const handleUnselectAllMenu = () => {
 
 // 展开全部菜单
 const handleExpandAllMenu = () => {
-  const res = menuTreeData.value
-  // 需要从原始菜单数据获取所有有子节点的ID
   getMenuTreeApi().then((data) => {
     expandedMenuKeys.value = getAllMenuKeysForExpand(data as MenuVO[])
   })
@@ -402,14 +434,14 @@ const handleReset = () => {
 const handleAdd = () => {
   modalTitle.value = '新增角色'
   isEdit.value = false
-  autoGenerateCode.value = true // 默认自动生成
+  autoGenerateCode.value = true
   Object.assign(formData, {
     id: undefined,
     name: '',
     code: '',
     description: '',
     status: 1,
-    dataScope: 1,
+    dataScope: 5,
   })
   showModal.value = true
 }
@@ -441,7 +473,6 @@ const handlePermission = async (row: RoleVO) => {
     const detail = await getRoleDetailApi(row.id)
     permissionForm.roleId = detail.id
     permissionForm.menuIds = detail.menuIds || []
-    // 展开已选中的菜单
     expandedMenuKeys.value = getAllMenuKeysForExpand(await getMenuTreeApi() as MenuVO[])
     showPermissionModal.value = true
   } catch (error: any) {
@@ -489,6 +520,12 @@ const handleBatchDelete = () => {
     message.warning('请选择要删除的角色')
     return
   }
+  // 过滤掉超级管理员角色
+  const adminRoles = tableData.value.filter(r => selectedRowKeys.value.includes(r.id) && r.code === 'admin')
+  if (adminRoles.length > 0) {
+    message.warning('超级管理员角色不可删除')
+    return
+  }
   dialog.warning({
     title: '确认删除',
     content: `确定要删除选中的 ${selectedRowKeys.value.length} 个角色吗？`,
@@ -515,7 +552,6 @@ const handleSubmit = async () => {
     submitLoading.value = true
     try {
       const submitData = { ...formData }
-      // 新增且自动生成时，使用前端生成的编码
       if (!isEdit.value && autoGenerateCode.value) {
         submitData.code = generatedCodePreview.value
       }

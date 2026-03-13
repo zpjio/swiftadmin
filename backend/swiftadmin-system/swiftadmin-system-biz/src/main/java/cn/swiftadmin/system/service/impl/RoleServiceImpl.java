@@ -9,7 +9,7 @@ import cn.swiftadmin.system.api.dto.RoleDTO;
 import cn.swiftadmin.system.api.dto.RoleQueryDTO;
 import cn.swiftadmin.system.api.entity.SysRole;
 import cn.swiftadmin.system.api.entity.SysRoleMenu;
-import cn.swiftadmin.system.api.service.PermissionPackageService;
+import cn.swiftadmin.system.api.service.PermissionCacheRefreshService;
 import cn.swiftadmin.system.api.service.RoleService;
 import cn.swiftadmin.system.api.vo.RoleVO;
 import cn.swiftadmin.system.mapper.SysRoleMapper;
@@ -17,7 +17,6 @@ import cn.swiftadmin.system.mapper.SysRoleMenuMapper;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.update.UpdateChain;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -33,7 +32,6 @@ import static cn.swiftadmin.system.api.entity.table.SysUserRoleTableDef.SYS_USER
 
 /**
  * 角色服务实现类
- * <p>支持自动生成角色编码，支持使用权限包快速分配菜单权限</p>
  *
  * @author zhangpengju
  * @since 2026-03-10
@@ -42,12 +40,12 @@ import static cn.swiftadmin.system.api.entity.table.SysUserRoleTableDef.SYS_USER
 public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> implements RoleService {
 
     private final SysRoleMenuMapper roleMenuMapper;
-    private final PermissionPackageService permissionPackageService;
+    private final PermissionCacheRefreshService cacheRefreshService;
 
     public RoleServiceImpl(SysRoleMenuMapper roleMenuMapper,
-                          @Lazy PermissionPackageService permissionPackageService) {
+                          PermissionCacheRefreshService cacheRefreshService) {
         this.roleMenuMapper = roleMenuMapper;
-        this.permissionPackageService = permissionPackageService;
+        this.cacheRefreshService = cacheRefreshService;
     }
 
     @Override
@@ -95,7 +93,6 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
                 .code(code)
                 .description(dto.getDescription())
                 .dataScope(dto.getDataScope() != null ? dto.getDataScope() : 5)
-                .packageId(dto.getPackageId())
                 .status(dto.getStatus() != null ? CommonStatus.fromCode(dto.getStatus()) : CommonStatus.ENABLED)
                 .createTime(LocalDateTime.now())
                 .updateTime(LocalDateTime.now())
@@ -104,10 +101,8 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
 
         save(role);
 
-        // 如果指定了权限包，使用权限包的菜单权限
-        if (dto.getPackageId() != null) {
-            permissionPackageService.applyToRole(role.getId(), dto.getPackageId());
-        } else if (!CollectionUtils.isEmpty(dto.getMenuIds())) {
+        // 分配菜单权限
+        if (!CollectionUtils.isEmpty(dto.getMenuIds())) {
             assignMenus(role.getId(), dto.getMenuIds());
         }
 
@@ -141,16 +136,16 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
                 .set(SYS_ROLE.CODE, code)
                 .set(SYS_ROLE.DESCRIPTION, dto.getDescription())
                 .set(SYS_ROLE.DATA_SCOPE, dto.getDataScope())
-                .set(SYS_ROLE.PACKAGE_ID, dto.getPackageId())
                 .set(SYS_ROLE.STATUS, dto.getStatus() != null ? CommonStatus.fromCode(dto.getStatus()) : null)
                 .set(SYS_ROLE.UPDATE_TIME, LocalDateTime.now())
                 .where(SYS_ROLE.ID.eq(dto.getId()))
                 .update();
 
-        // 如果指定了权限包，使用权限包的菜单权限
-        if (dto.getPackageId() != null) {
-            permissionPackageService.applyToRole(dto.getId(), dto.getPackageId());
-        } else if (dto.getMenuIds() != null) {
+        // 清除拥有该角色的用户权限缓存
+        cacheRefreshService.clearCacheByRoleId(dto.getId());
+
+        // 更新菜单权限
+        if (dto.getMenuIds() != null) {
             assignMenus(dto.getId(), dto.getMenuIds());
         }
     }
@@ -159,6 +154,9 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
     @Transactional(rollbackFor = Exception.class)
     public void delete(List<Long> ids) {
         if (!CollectionUtils.isEmpty(ids)) {
+            // 清除拥有这些角色的用户权限缓存
+            cacheRefreshService.clearCacheByRoleIds(ids);
+
             mapper.deleteBatchByIds(ids);
             roleMenuMapper.deleteByQuery(QueryWrapper.create().where(SYS_ROLE_MENU.ROLE_ID.in(ids)));
         }
@@ -175,6 +173,9 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
                     .collect(Collectors.toList());
             roleMenuMapper.insertBatch(roleMenus);
         }
+
+        // 清除拥有该角色的用户权限缓存
+        cacheRefreshService.clearCacheByRoleId(roleId);
     }
 
     @Override
@@ -215,7 +216,7 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
 
     /**
      * 自动生成角色编码
-     * <p>规则：role_ + 名称简化 + 时间戳后4位</p>
+     * <p>规则：role_ + 名称简化</p>
      *
      * @param name 角色名称
      * @return 角色编码

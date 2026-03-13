@@ -45,7 +45,6 @@ CREATE TABLE sys_role (
     code VARCHAR(50) NOT NULL UNIQUE,
     description VARCHAR(255),
     data_scope TINYINT DEFAULT 1 COMMENT '数据权限范围: 1全部 2自定义 3本部门 4本部门及以下 5仅本人',
-    package_id BIGINT COMMENT '关联权限包ID',
     status SMALLINT DEFAULT 1,
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -220,32 +219,7 @@ CREATE INDEX idx_dict_type ON sys_dict_data(dict_type);
 CREATE INDEX idx_dict_data_status ON sys_dict_data(status);
 
 -- ============================================
--- 四、权限包表
--- ============================================
-
--- 权限包表
-CREATE TABLE sys_permission_package (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '权限包ID',
-    name VARCHAR(100) NOT NULL COMMENT '权限包名称',
-    code VARCHAR(100) NOT NULL UNIQUE COMMENT '权限包编码',
-    description VARCHAR(500) COMMENT '描述',
-    sort_order INT DEFAULT 0 COMMENT '排序',
-    status TINYINT DEFAULT 1 COMMENT '状态：1=正常，0=禁用',
-    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    deleted TINYINT DEFAULT 0 COMMENT '是否删除：0=未删除，1=已删除'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='权限包表';
-
--- 权限包菜单关联表
-CREATE TABLE sys_permission_package_menu (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'ID',
-    package_id BIGINT NOT NULL COMMENT '权限包ID',
-    menu_id BIGINT NOT NULL COMMENT '菜单ID',
-    UNIQUE KEY uk_package_menu (package_id, menu_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='权限包菜单关联表';
-
--- ============================================
--- 五、日志表
+-- 四、日志表
 -- ============================================
 
 -- 操作日志表
@@ -296,7 +270,7 @@ CREATE TABLE sys_audit_log (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='审计日志表';
 
 -- ============================================
--- 六、文件管理表
+-- 五、文件管理表
 -- ============================================
 
 -- 系统文件表

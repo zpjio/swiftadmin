@@ -47,12 +47,24 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     public Set<String> getPermissionsByUserId(Long userId) {
+        // 获取用户直接关联的角色ID
+        QueryWrapper roleQuery = QueryWrapper.create()
+                .select(SYS_USER_ROLE.ROLE_ID)
+                .from(SYS_USER_ROLE)
+                .where(SYS_USER_ROLE.USER_ID.eq(userId));
+
+        List<Long> roleIds = roleMapper.selectListByQueryAs(roleQuery, Long.class);
+
+        if (CollectionUtils.isEmpty(roleIds)) {
+            return new HashSet<>();
+        }
+
+        // 查询这些角色关联的所有菜单权限
         QueryWrapper queryWrapper = QueryWrapper.create()
                 .select(distinct(SYS_MENU.PERMISSION))
                 .from(SYS_MENU)
                 .innerJoin(SYS_ROLE_MENU).on(SYS_MENU.ID.eq(SYS_ROLE_MENU.MENU_ID))
-                .innerJoin(SYS_USER_ROLE).on(SYS_ROLE_MENU.ROLE_ID.eq(SYS_USER_ROLE.ROLE_ID))
-                .where(SYS_USER_ROLE.USER_ID.eq(userId))
+                .where(SYS_ROLE_MENU.ROLE_ID.in(roleIds))
                 .and(SYS_MENU.PERMISSION.isNotNull())
                 .and(SYS_MENU.PERMISSION.ne(""));
 

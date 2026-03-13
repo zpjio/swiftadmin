@@ -45,10 +45,6 @@ public class SysRole {
     @Column
     private Integer dataScope;
 
-    /** 关联权限包ID */
-    @Column
-    private Long packageId;
-
     /** 状态 */
     @Column
     private CommonStatus status;
