@@ -23,6 +23,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.concurrent.TimeUnit;
 
@@ -43,7 +44,6 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final TokenManager tokenManager;
     private final SmsService smsService;
-    private final HttpServletRequest request;
     private final ApplicationEventPublisher eventPublisher;
     private final StringRedisTemplate redisTemplate;
     private final AuthSecurityProperties securityProperties;
@@ -51,8 +51,8 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginVO login(LoginDTO dto) {
-        String ipAddress = ServletUtils.getClientIp(request);
-        String userAgent = ServletUtils.getUserAgent(request);
+        String ipAddress = ServletUtils.getClientIp();
+        String userAgent = ServletUtils.getUserAgent();
 
         SysUser user = userService.getByUsername(dto.getUsername());
 
@@ -121,8 +121,12 @@ public class AuthServiceImpl implements AuthService {
      * @return Token（不含 Bearer 前缀），无则返回 null
      */
     private String getTokenFromRequest() {
+        HttpServletRequest request = ServletUtils.getRequest();
+        if (request == null) {
+            return null;
+        }
         String bearerToken = request.getHeader("Authorization");
-        if (org.springframework.util.StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }
         return null;
@@ -174,8 +178,8 @@ public class AuthServiceImpl implements AuthService {
         log.info("Token 刷新成功：username={}", username);
 
         // 9. 发布刷新事件
-        String ipAddress = ServletUtils.getClientIp(request);
-        String userAgent = ServletUtils.getUserAgent(request);
+        String ipAddress = ServletUtils.getClientIp();
+        String userAgent = ServletUtils.getUserAgent();
         eventPublisher.publishEvent(LoginEvent.tokenRefresh(
                 username, ipAddress, userAgent));
 
@@ -199,8 +203,8 @@ public class AuthServiceImpl implements AuthService {
         String storedUa = redisTemplate.opsForValue().get(RedisKeyConstants.tokenContextUa(jti));
 
         // 获取当前请求信息
-        String currentIp = ServletUtils.getClientIp(request);
-        String currentUserAgent = ServletUtils.getUserAgent(request);
+        String currentIp = ServletUtils.getClientIp();
+        String currentUserAgent = ServletUtils.getUserAgent();
 
         // 如果是首次刷新（没有存储的上下文），保存当前上下文
         if (storedIp == null && storedUa == null) {

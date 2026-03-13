@@ -3,6 +3,7 @@ package cn.swiftadmin.common.security.aspect;
 import cn.swiftadmin.common.security.annotation.OperationLog;
 import cn.swiftadmin.common.security.domain.LoginUser;
 import cn.swiftadmin.common.security.event.OperationLogEvent;
+import cn.swiftadmin.common.core.util.ServletUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -40,8 +41,9 @@ public class OperationLogAspect {
     /** 请求开始时间 */
     private static final ThreadLocal<Long> START_TIME = new ThreadLocal<>();
 
-    /** 当前操作的日志数据 */
-    private static final ThreadLocal<Map<String, Object>> CURRENT_LOG = new ThreadLocal<>();
+    /** 当前操作的日志数据（初始容量 16，避免扩容） */
+    private static final ThreadLocal<Map<String, Object>> CURRENT_LOG = 
+            ThreadLocal.withInitial(() -> new HashMap<>(16));
 
     private final ApplicationEventPublisher eventPublisher;
     private final ObjectMapper objectMapper;
@@ -69,8 +71,8 @@ public class OperationLogAspect {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         OperationLog operationLog = signature.getMethod().getAnnotation(OperationLog.class);
 
-        // 初始化日志数据
-        Map<String, Object> logData = new HashMap<>();
+        // 初始化日志数据（使用 withInitial 创建的 Map）
+        Map<String, Object> logData = CURRENT_LOG.get();
         logData.put("title", operationLog.title());
         logData.put("businessType", operationLog.businessType().getCode());
         logData.put("operatorType", operationLog.operatorType().getCode());
@@ -82,7 +84,7 @@ public class OperationLogAspect {
         if (attributes != null) {
             HttpServletRequest request = attributes.getRequest();
             logData.put("operUrl", request.getRequestURI());
-            logData.put("operIp", getClientIp(request));
+            logData.put("operIp", ServletUtils.getClientIp(request));
             logData.put("requestMethod", request.getMethod());
 
             // 保存请求参数
@@ -98,8 +100,6 @@ public class OperationLogAspect {
             logData.put("operName", loginUser.getUsername());
             logData.put("deptName", loginUser.getNickname());
         }
-
-        CURRENT_LOG.set(logData);
     }
 
     /**
@@ -153,9 +153,17 @@ public class OperationLogAspect {
         } catch (Exception ex) {
             log.error("记录操作日志异常", ex);
         } finally {
-            START_TIME.remove();
-            CURRENT_LOG.remove();
+            cleanup();
         }
+    }
+
+    /**
+     * 清理 ThreadLocal 变量
+     * <p>统一清理方法，确保所有 ThreadLocal 变量都被正确清理</p>
+     */
+    private void cleanup() {
+        START_TIME.remove();
+        CURRENT_LOG.remove();
     }
 
     /**

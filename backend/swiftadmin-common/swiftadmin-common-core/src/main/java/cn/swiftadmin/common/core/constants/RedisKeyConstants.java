@@ -18,6 +18,9 @@ public final class RedisKeyConstants {
     /** 登录 Token 前缀 */
     public static final String LOGIN_TOKEN = "auth:token:";
 
+    /** 登录会话额外信息前缀 */
+    public static final String LOGIN_SESSION_EXTRA = "auth:session:extra:";
+
     /** 登录失败次数 */
     public static final String LOGIN_FAIL_COUNT = "auth:fail:count:";
 
@@ -108,6 +111,13 @@ public final class RedisKeyConstants {
      */
     public static String loginToken(String sessionId) {
         return LOGIN_TOKEN + sessionId;
+    }
+
+    /**
+     * 构建登录会话额外信息 Key
+     */
+    public static String loginSessionExtra(String sessionId) {
+        return LOGIN_SESSION_EXTRA + sessionId;
     }
 
     /**

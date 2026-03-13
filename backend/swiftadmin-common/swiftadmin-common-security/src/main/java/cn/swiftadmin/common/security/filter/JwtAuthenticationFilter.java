@@ -1,6 +1,6 @@
 package cn.swiftadmin.common.security.filter;
 
-import cn.swiftadmin.common.core.result.R;
+import cn.swiftadmin.common.core.util.ErrorResponseWriter;
 import cn.swiftadmin.common.security.domain.LoginUser;
 import cn.swiftadmin.common.security.jwt.JwtTokenProvider;
 import cn.swiftadmin.common.security.service.UserDetailsService;
@@ -12,7 +12,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -39,6 +38,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenProvider tokenProvider;
     private final UserDetailsService userDetailsService;
     private final UserSessionService userSessionService;
+    private final ErrorResponseWriter errorResponseWriter;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
@@ -50,14 +50,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 1. 验证 Token 格式和签名
             if (!tokenProvider.validateToken(token)) {
                 log.debug("Token 验证失败：{}", request.getRequestURI());
-                sendErrorResponse(response, HttpStatus.UNAUTHORIZED.value(), "Token 无效或已过期");
+                errorResponseWriter.writeError(response, HttpStatus.UNAUTHORIZED.value(), "Token 无效或已过期");
                 return;
             }
 
             // 2. 检查 Token 是否在黑名单中
             if (tokenProvider.isTokenBlacklisted(token)) {
                 log.debug("Token 已在黑名单中：{}", request.getRequestURI());
-                sendErrorResponse(response, HttpStatus.UNAUTHORIZED.value(), "Token 已失效，请重新登录");
+                errorResponseWriter.writeError(response, HttpStatus.UNAUTHORIZED.value(), "Token 已失效，请重新登录");
                 return;
             }
 
@@ -66,7 +66,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             LoginUser sessionUser = userSessionService.getSession(sessionId);
             if (sessionUser == null) {
                 log.debug("会话不存在或已被强制下线：sessionId={}, uri={}", sessionId, request.getRequestURI());
-                sendErrorResponse(response, HttpStatus.UNAUTHORIZED.value(), "会话已失效，请重新登录");
+                errorResponseWriter.writeError(response, HttpStatus.UNAUTHORIZED.value(), "会话已失效，请重新登录");
                 return;
             }
 
@@ -82,26 +82,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 log.debug("用户认证成功：{}", username);
             } else {
                 log.warn("用户不存在：{}", username);
-                sendErrorResponse(response, HttpStatus.UNAUTHORIZED.value(), "用户不存在");
+                errorResponseWriter.writeError(response, HttpStatus.UNAUTHORIZED.value(), "用户不存在");
                 return;
             }
         }
 
         filterChain.doFilter(request, response);
-    }
-
-    /**
-     * 发送错误响应
-     *
-     * @param response HTTP 响应
-     * @param status 状态码
-     * @param message 错误消息
-     */
-    private void sendErrorResponse(HttpServletResponse response, int status, String message) throws IOException {
-        response.setStatus(status);
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(R.fail(status, message).toString());
     }
 
     /**

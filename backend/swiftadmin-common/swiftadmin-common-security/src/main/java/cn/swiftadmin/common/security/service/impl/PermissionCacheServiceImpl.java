@@ -1,5 +1,6 @@
 package cn.swiftadmin.common.security.service.impl;
 
+import cn.swiftadmin.common.core.constants.RedisKeyConstants;
 import cn.swiftadmin.common.security.domain.LoginUser;
 import cn.swiftadmin.common.security.service.PermissionCacheService;
 import lombok.RequiredArgsConstructor;
@@ -22,16 +23,6 @@ import java.util.concurrent.TimeUnit;
 @Service
 @RequiredArgsConstructor
 public class PermissionCacheServiceImpl implements PermissionCacheService {
-
-    /**
-     * 缓存前缀
-     */
-    private static final String CACHE_PREFIX = "swiftadmin:permission:";
-
-    /**
-     * 用户权限缓存前缀
-     */
-    private static final String USER_PERMISSION_KEY = CACHE_PREFIX + "user:";
 
     /**
      * 缓存过期时间（小时）
@@ -99,7 +90,7 @@ public class PermissionCacheServiceImpl implements PermissionCacheService {
 
     @Override
     public void clearAllPermissionCache() {
-        Set<String> keys = redisTemplate.keys(CACHE_PREFIX + "*");
+        Set<String> keys = redisTemplate.keys(RedisKeyConstants.USER_PERMISSION + "*");
         if (keys != null && !keys.isEmpty()) {
             redisTemplate.delete(keys);
             log.debug("清除所有用户权限缓存: count={}", keys.size());
@@ -117,7 +108,7 @@ public class PermissionCacheServiceImpl implements PermissionCacheService {
      * 获取用户缓存 Key
      */
     private String getUserKey(Long userId) {
-        return USER_PERMISSION_KEY + userId;
+        return RedisKeyConstants.userPermission(userId);
     }
 
 }

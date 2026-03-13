@@ -12,10 +12,10 @@ import cn.swiftadmin.auth.util.TokenManager;
 import cn.swiftadmin.common.core.exception.BusinessException;
 import cn.swiftadmin.common.core.result.ErrorCode;
 import cn.swiftadmin.common.core.util.ServletUtils;
+import cn.swiftadmin.common.core.util.SensitiveUtils;
 import cn.swiftadmin.system.api.entity.SysUser;
 import cn.swiftadmin.system.api.service.ConfigService;
 import cn.swiftadmin.system.api.service.UserService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,6 +33,9 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class PasswordAuthStrategy implements AuthStrategy {
 
+    /** 连续失败告警阈值（达到此值记录 ERROR 日志） */
+    private static final int CONTINUOUS_FAILURE_WARN_THRESHOLD = 3;
+
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final TokenManager tokenManager;
@@ -41,7 +44,6 @@ public class PasswordAuthStrategy implements AuthStrategy {
     private final LoginValidationService validationService;
     private final LoginSessionService sessionService;
     private final LoginEventService eventService;
-    private final HttpServletRequest request;
 
     @Override
     public LoginType getLoginType() {
@@ -51,8 +53,8 @@ public class PasswordAuthStrategy implements AuthStrategy {
     @Override
     public LoginVO authenticate(LoginDTO dto) {
         String username = dto.getUsername();
-        String ip = dto.getIp() != null ? dto.getIp() : ServletUtils.getClientIp(request);
-        String userAgent = ServletUtils.getUserAgent(request);
+        String ip = dto.getIp() != null ? dto.getIp() : ServletUtils.getClientIp();
+        String userAgent = ServletUtils.getUserAgent();
 
         // 构建登录上下文
         LoginContext context = LoginContext.ofPassword(ip, userAgent).withUsername(username);
@@ -63,17 +65,19 @@ public class PasswordAuthStrategy implements AuthStrategy {
         // 2. 查询用户
         SysUser user = userService.getByUsername(username);
         if (user == null) {
-            log.warn("LOGIN_FAILED username={} reason=USER_NOT_FOUND", username);
+            log.warn("LOGIN_FAILED username={} reason=USER_NOT_FOUND ip={}", 
+                    SensitiveUtils.maskUsername(username), SensitiveUtils.maskIp(context.getIp()));
             eventService.publishFailure(username, "用户不存在", context);
             throw new BusinessException(ErrorCode.USER_PASSWORD_ERROR);
         }
 
         // 3. 检查账户锁定
         if (userService.isAccountLocked(username)) {
-            log.warn("LOGIN_FAILED username={} reason=ACCOUNT_LOCKED", username);
+            log.warn("LOGIN_FAILED username={} reason=ACCOUNT_LOCKED ip={}", 
+                    SensitiveUtils.maskUsername(username), SensitiveUtils.maskIp(context.getIp()));
             eventService.publishFailure(username, "账户已锁定", context);
             throw new BusinessException(ErrorCode.USER_DISABLED.getCode(),
-                    "账户已锁定，请 " + securityProperties.getLockMinutes() + " 分钟后再试");
+                    "账户已锁定，请稍后再试");
         }
 
         // 4. 验证码检查（如果需要）
@@ -86,7 +90,8 @@ public class PasswordAuthStrategy implements AuthStrategy {
 
         // 6. 检查用户状态
         if (!user.getStatus().isEnabled()) {
-            log.warn("LOGIN_FAILED username={} reason=USER_DISABLED status={}", username, user.getStatus());
+            log.warn("LOGIN_FAILED username={} reason=USER_DISABLED status={} ip={}", 
+                    SensitiveUtils.maskUsername(username), user.getStatus(), SensitiveUtils.maskIp(context.getIp()));
             eventService.publishFailure(username, "用户已禁用", context);
             throw new BusinessException(ErrorCode.USER_DISABLED);
         }
@@ -96,14 +101,16 @@ public class PasswordAuthStrategy implements AuthStrategy {
 
         // 8. 检查是否需要强制修改密码
         if (user.getForceChangePassword() != null && user.getForceChangePassword().isYes()) {
-            log.info("LOGIN_SUCCESS username={} action=FORCE_CHANGE_PASSWORD", username);
+            log.info("LOGIN_SUCCESS username={} action=FORCE_CHANGE_PASSWORD ip={}", 
+                    SensitiveUtils.maskUsername(username), SensitiveUtils.maskIp(context.getIp()));
             eventService.publishSuccess(context);
             return sessionService.createTempSession(username);
         }
 
         // 9. 检查密码是否过期
         if (userService.isPasswordExpired(user)) {
-            log.info("LOGIN_SUCCESS username={} action=PASSWORD_EXPIRED", username);
+            log.info("LOGIN_SUCCESS username={} action=PASSWORD_EXPIRED ip={}", 
+                    SensitiveUtils.maskUsername(username), SensitiveUtils.maskIp(context.getIp()));
             eventService.publishSuccess(context);
             return sessionService.createPasswordExpiredSession(username);
         }
@@ -115,12 +122,13 @@ public class PasswordAuthStrategy implements AuthStrategy {
         int remainingDays = userService.getPasswordRemainingDays(user);
         int warningDays = configService.getPasswordExpireWarningDays();
 
-        log.info("LOGIN_SUCCESS username={} ip={}", username, ip);
+        log.info("LOGIN_SUCCESS username={} ip={}", SensitiveUtils.maskUsername(username), SensitiveUtils.maskIp(ip));
         eventService.publishSuccess(context);
 
         if (remainingDays <= warningDays && remainingDays > 0) {
             loginVO.setPasswordRemainingDays(remainingDays);
-            log.info("PASSWORD_EXPIRING_SOON username={} remainingDays={}", username, remainingDays);
+            log.info("PASSWORD_EXPIRING_SOON username={} remainingDays={}", 
+                    SensitiveUtils.maskUsername(username), remainingDays);
         }
 
         return loginVO;
@@ -132,21 +140,33 @@ public class PasswordAuthStrategy implements AuthStrategy {
     private void handlePasswordError(String username, LoginContext context) {
         int failCount = userService.incrementLoginFailCount(username);
         int maxFailCount = securityProperties.getMaxLoginFailCount();
-        int remaining = maxFailCount - failCount;
 
-        log.warn("LOGIN_FAILED username={} reason=PASSWORD_ERROR failCount={} remaining={}",
-                username, failCount, remaining);
+        // 连续失败达到阈值记录为 ERROR 级别（可能是攻击行为）
+        if (failCount >= CONTINUOUS_FAILURE_WARN_THRESHOLD) {
+            log.error("LOGIN_FAILED username={} reason=PASSWORD_ERROR failCount={} ip={}", 
+                    SensitiveUtils.maskUsername(username), failCount, SensitiveUtils.maskIp(context.getIp()));
+        } else {
+            log.warn("LOGIN_FAILED username={} reason=PASSWORD_ERROR failCount={} ip={}", 
+                    SensitiveUtils.maskUsername(username), failCount, SensitiveUtils.maskIp(context.getIp()));
+        }
 
         if (failCount >= maxFailCount) {
             userService.lockAccount(username, securityProperties.getLockMinutes());
-            log.warn("ACCOUNT_LOCKED username={} lockMinutes={}", username, securityProperties.getLockMinutes());
+            log.error("ACCOUNT_LOCKED username={} lockMinutes={} ip={}", 
+                    SensitiveUtils.maskUsername(username), securityProperties.getLockMinutes(), 
+                    SensitiveUtils.maskIp(context.getIp()));
             eventService.publishFailure(username, "账户已锁定", context);
             throw new BusinessException(ErrorCode.USER_DISABLED.getCode(),
-                    "登录失败次数过多，账户已锁定 " + securityProperties.getLockMinutes() + " 分钟");
+                    "账户已锁定，请稍后再试")
+                    .withContext("username", username)
+                    .withContext("failCount", failCount)
+                    .withContext("ip", context.getIp());
         }
 
         eventService.publishFailure(username, "密码错误", context);
-        throw new BusinessException(ErrorCode.USER_PASSWORD_ERROR.getCode(),
-                "用户名或密码错误，还剩 " + remaining + " 次机会");
+        // 对外统一消息，不暴露剩余次数
+        throw new BusinessException(ErrorCode.USER_PASSWORD_ERROR)
+                .withContext("username", username)
+                .withContext("failCount", failCount);
     }
 }

@@ -1,5 +1,6 @@
 package cn.swiftadmin.common.security.service.impl;
 
+import cn.swiftadmin.common.core.constants.RedisKeyConstants;
 import cn.swiftadmin.common.security.domain.LoginUser;
 import cn.swiftadmin.common.security.service.UserSessionService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -28,10 +29,6 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class UserSessionServiceImpl implements UserSessionService {
 
-    private static final String LOGIN_TOKEN_KEY = "swiftadmin:login:token:";
-    private static final String USER_TOKENS_KEY = "swiftadmin:login:user_tokens:";
-    private static final String SESSION_EXTRA_KEY = "swiftadmin:login:extra:";
-
     private final StringRedisTemplate stringRedisTemplate;
     private final ObjectMapper objectMapper;
 
@@ -42,9 +39,9 @@ public class UserSessionServiceImpl implements UserSessionService {
 
     @Override
     public void createSession(String sessionId, LoginUser loginUser, String ip, String userAgent, long expireSeconds) {
-        String tokenKey = LOGIN_TOKEN_KEY + sessionId;
-        String extraKey = SESSION_EXTRA_KEY + sessionId;
-        String userTokensKey = USER_TOKENS_KEY + loginUser.getUserId();
+        String tokenKey = RedisKeyConstants.loginToken(sessionId);
+        String extraKey = RedisKeyConstants.loginSessionExtra(sessionId);
+        String userTokensKey = RedisKeyConstants.USER_TOKENS + loginUser.getUserId();
 
         try {
             String loginUserJson = objectMapper.writeValueAsString(loginUser);
@@ -69,7 +66,7 @@ public class UserSessionServiceImpl implements UserSessionService {
 
     @Override
     public LoginUser getSession(String sessionId) {
-        String key = LOGIN_TOKEN_KEY + sessionId;
+        String key = RedisKeyConstants.loginToken(sessionId);
         String json = stringRedisTemplate.opsForValue().get(key);
         if (json == null || json.isEmpty()) {
             return null;
@@ -84,7 +81,7 @@ public class UserSessionServiceImpl implements UserSessionService {
 
     @Override
     public SessionExtra getSessionExtra(String sessionId) {
-        String key = SESSION_EXTRA_KEY + sessionId;
+        String key = RedisKeyConstants.loginSessionExtra(sessionId);
         Map<Object, Object> entries = stringRedisTemplate.opsForHash().entries(key);
         if (entries == null || entries.isEmpty()) {
             return null;
@@ -115,16 +112,16 @@ public class UserSessionServiceImpl implements UserSessionService {
 
     @Override
     public boolean removeSession(String sessionId) {
-        String tokenKey = LOGIN_TOKEN_KEY + sessionId;
+        String tokenKey = RedisKeyConstants.loginToken(sessionId);
         String json = stringRedisTemplate.opsForValue().get(tokenKey);
 
         if (json != null) {
             try {
                 LoginUser loginUser = objectMapper.readValue(json, LoginUser.class);
                 stringRedisTemplate.delete(tokenKey);
-                stringRedisTemplate.delete(SESSION_EXTRA_KEY + sessionId);
+                stringRedisTemplate.delete(RedisKeyConstants.loginSessionExtra(sessionId));
                 if (loginUser != null && loginUser.getUserId() != null) {
-                    stringRedisTemplate.opsForSet().remove(USER_TOKENS_KEY + loginUser.getUserId(), sessionId);
+                    stringRedisTemplate.opsForSet().remove(RedisKeyConstants.USER_TOKENS + loginUser.getUserId(), sessionId);
                 }
                 log.debug("删除用户会话: sessionId={}", sessionId);
                 return true;
@@ -134,13 +131,13 @@ public class UserSessionServiceImpl implements UserSessionService {
         }
 
         stringRedisTemplate.delete(tokenKey);
-        stringRedisTemplate.delete(SESSION_EXTRA_KEY + sessionId);
+        stringRedisTemplate.delete(RedisKeyConstants.loginSessionExtra(sessionId));
         return false;
     }
 
     @Override
     public List<String> getUserSessionIds(Long userId) {
-        Set<String> tokens = stringRedisTemplate.opsForSet().members(USER_TOKENS_KEY + userId);
+        Set<String> tokens = stringRedisTemplate.opsForSet().members(RedisKeyConstants.USER_TOKENS + userId);
         if (tokens == null || tokens.isEmpty()) {
             return new ArrayList<>();
         }
@@ -149,25 +146,25 @@ public class UserSessionServiceImpl implements UserSessionService {
 
     @Override
     public List<String> getAllSessionIds() {
-        Set<String> keys = stringRedisTemplate.keys(LOGIN_TOKEN_KEY + "*");
+        Set<String> keys = stringRedisTemplate.keys(RedisKeyConstants.LOGIN_TOKEN + "*");
         if (keys == null || keys.isEmpty()) {
             return new ArrayList<>();
         }
         return keys.stream()
-                .map(key -> key.replace(LOGIN_TOKEN_KEY, ""))
+                .map(key -> key.replace(RedisKeyConstants.LOGIN_TOKEN, ""))
                 .toList();
     }
 
     @Override
     public long count() {
-        Set<String> keys = stringRedisTemplate.keys(LOGIN_TOKEN_KEY + "*");
+        Set<String> keys = stringRedisTemplate.keys(RedisKeyConstants.LOGIN_TOKEN + "*");
         return keys != null ? keys.size() : 0;
     }
 
     @Override
     public void refreshSession(String sessionId, long expireSeconds) {
-        String tokenKey = LOGIN_TOKEN_KEY + sessionId;
-        String extraKey = SESSION_EXTRA_KEY + sessionId;
+        String tokenKey = RedisKeyConstants.loginToken(sessionId);
+        String extraKey = RedisKeyConstants.loginSessionExtra(sessionId);
 
         Long ttl = stringRedisTemplate.getExpire(tokenKey, TimeUnit.SECONDS);
         if (ttl != null && ttl > 0) {
@@ -176,7 +173,7 @@ public class UserSessionServiceImpl implements UserSessionService {
 
             LoginUser loginUser = getSession(sessionId);
             if (loginUser != null) {
-                stringRedisTemplate.expire(USER_TOKENS_KEY + loginUser.getUserId(), expireSeconds, TimeUnit.SECONDS);
+                stringRedisTemplate.expire(RedisKeyConstants.USER_TOKENS + loginUser.getUserId(), expireSeconds, TimeUnit.SECONDS);
             }
             log.debug("刷新会话过期时间: sessionId={}, expireSeconds={}", sessionId, expireSeconds);
         }

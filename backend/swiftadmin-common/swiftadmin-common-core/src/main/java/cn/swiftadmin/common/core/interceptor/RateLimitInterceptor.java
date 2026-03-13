@@ -1,8 +1,8 @@
 package cn.swiftadmin.common.core.interceptor;
 
 import cn.swiftadmin.common.core.annotation.RateLimit;
-import cn.swiftadmin.common.core.result.R;
 import cn.swiftadmin.common.core.util.ServletUtils;
+import cn.swiftadmin.common.core.util.ErrorResponseWriter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -28,7 +28,7 @@ import java.util.List;
 public class RateLimitInterceptor implements HandlerInterceptor {
 
     private final StringRedisTemplate redisTemplate;
-    private final ObjectMapper objectMapper;
+    private final ErrorResponseWriter errorResponseWriter;
     private final DefaultRedisScript<Long> rateLimitScript;
 
     /**
@@ -52,9 +52,11 @@ public class RateLimitInterceptor implements HandlerInterceptor {
             return current
             """;
 
-    public RateLimitInterceptor(StringRedisTemplate redisTemplate, ObjectMapper objectMapper) {
+    public RateLimitInterceptor(StringRedisTemplate redisTemplate, 
+                                 ErrorResponseWriter errorResponseWriter,
+                                 ObjectMapper objectMapper) {
         this.redisTemplate = redisTemplate;
-        this.objectMapper = objectMapper;
+        this.errorResponseWriter = errorResponseWriter;
         this.rateLimitScript = new DefaultRedisScript<>();
         this.rateLimitScript.setScriptText(LUA_SCRIPT);
         this.rateLimitScript.setResultType(Long.class);
@@ -83,11 +85,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
 
         if (result != null && result == -1) {
             log.warn("限流触发：key={}, max={}", key, maxRequests);
-
-            response.setStatus(429);
-            response.setContentType("application/json;charset=UTF-8");
-            R<Void> apiResult = R.fail(429, rateLimit.message());
-            response.getWriter().write(objectMapper.writeValueAsString(apiResult));
+            errorResponseWriter.writeError(response, 429, rateLimit.message());
             return false;
         }
 
