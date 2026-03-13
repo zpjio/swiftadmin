@@ -8,6 +8,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -68,7 +70,7 @@ public class UserSessionServiceImpl implements UserSessionService {
     public LoginUser getSession(String sessionId) {
         String key = RedisKeyConstants.loginToken(sessionId);
         String json = stringRedisTemplate.opsForValue().get(key);
-        if (json == null || json.isEmpty()) {
+        if (!StringUtils.hasLength(json)) {
             return null;
         }
         try {
@@ -83,7 +85,7 @@ public class UserSessionServiceImpl implements UserSessionService {
     public SessionExtra getSessionExtra(String sessionId) {
         String key = RedisKeyConstants.loginSessionExtra(sessionId);
         Map<Object, Object> entries = stringRedisTemplate.opsForHash().entries(key);
-        if (entries == null || entries.isEmpty()) {
+        if (CollectionUtils.isEmpty(entries)) {
             return null;
         }
 
@@ -138,7 +140,7 @@ public class UserSessionServiceImpl implements UserSessionService {
     @Override
     public List<String> getUserSessionIds(Long userId) {
         Set<String> tokens = stringRedisTemplate.opsForSet().members(RedisKeyConstants.USER_TOKENS + userId);
-        if (tokens == null || tokens.isEmpty()) {
+        if (CollectionUtils.isEmpty(tokens)) {
             return new ArrayList<>();
         }
         return new ArrayList<>(tokens);
@@ -147,7 +149,7 @@ public class UserSessionServiceImpl implements UserSessionService {
     @Override
     public List<String> getAllSessionIds() {
         Set<String> keys = stringRedisTemplate.keys(RedisKeyConstants.LOGIN_TOKEN + "*");
-        if (keys == null || keys.isEmpty()) {
+        if (CollectionUtils.isEmpty(keys)) {
             return new ArrayList<>();
         }
         return keys.stream()

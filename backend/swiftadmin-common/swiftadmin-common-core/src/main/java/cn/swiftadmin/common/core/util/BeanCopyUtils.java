@@ -1,6 +1,7 @@
 package cn.swiftadmin.common.core.util;
 
 import org.springframework.beans.BeanUtils;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -107,7 +108,7 @@ public final class BeanCopyUtils {
      * @return 拷贝后的目标对象列表
      */
     public static <S, T> List<T> copyList(List<S> sourceList, Supplier<T> targetSupplier, String... ignoreProperties) {
-        if (Objects.isNull(sourceList) || sourceList.isEmpty() || Objects.isNull(targetSupplier)) {
+        if (CollectionUtils.isEmpty(sourceList) || Objects.isNull(targetSupplier)) {
             return Collections.emptyList();
         }
 
@@ -134,7 +135,7 @@ public final class BeanCopyUtils {
      * @return 拷贝后的目标对象列表
      */
     public static <S, T> List<T> copyList(List<S> sourceList, Supplier<T> targetSupplier, BiConsumer<S, T> postProcessor) {
-        if (Objects.isNull(sourceList) || sourceList.isEmpty() || Objects.isNull(targetSupplier)) {
+        if (CollectionUtils.isEmpty(sourceList) || Objects.isNull(targetSupplier)) {
             return Collections.emptyList();
         }
         return sourceList.stream()
@@ -150,7 +151,7 @@ public final class BeanCopyUtils {
      * @return 拷贝后的目标对象列表
      */
     public static <S, T> List<T> copyList(List<S> sourceList, Function<S, T> mapper) {
-        if (Objects.isNull(sourceList) || sourceList.isEmpty() || Objects.isNull(mapper)) {
+        if (CollectionUtils.isEmpty(sourceList) || Objects.isNull(mapper)) {
             return Collections.emptyList();
         }
         return sourceList.stream()
@@ -166,7 +167,7 @@ public final class BeanCopyUtils {
      * @return 拷贝后的目标对象列表
      */
     public static <S, T> List<T> copyListParallel(List<S> sourceList, Supplier<T> targetSupplier) {
-        if (Objects.isNull(sourceList) || sourceList.isEmpty() || Objects.isNull(targetSupplier)) {
+        if (CollectionUtils.isEmpty(sourceList) || Objects.isNull(targetSupplier)) {
             return Collections.emptyList();
         }
         return sourceList.parallelStream()
@@ -183,7 +184,7 @@ public final class BeanCopyUtils {
      * @return 拷贝后的目标对象列表
      */
     public static <S, T> List<T> copyListParallel(List<S> sourceList, Supplier<T> targetSupplier, String... ignoreProperties) {
-        if (Objects.isNull(sourceList) || sourceList.isEmpty() || Objects.isNull(targetSupplier)) {
+        if (CollectionUtils.isEmpty(sourceList) || Objects.isNull(targetSupplier)) {
             return Collections.emptyList();
         }
         return sourceList.parallelStream()

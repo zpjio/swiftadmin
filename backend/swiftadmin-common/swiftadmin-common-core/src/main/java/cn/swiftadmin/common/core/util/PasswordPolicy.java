@@ -2,6 +2,7 @@ package cn.swiftadmin.common.core.util;
 
 import cn.swiftadmin.common.core.exception.BusinessException;
 import cn.swiftadmin.common.core.result.ErrorCode;
+import org.springframework.util.StringUtils;
 
 import java.util.regex.Pattern;
 
@@ -60,7 +61,7 @@ public final class PasswordPolicy {
      * 验证密码强度
      */
     private static void validatePasswordStrength(String password, String username) {
-        if (password == null || password.isEmpty()) {
+        if (!StringUtils.hasLength(password)) {
             throw new BusinessException(ErrorCode.PASSWORD_WEAK, "密码不能为空");
         }
 
@@ -94,7 +95,7 @@ public final class PasswordPolicy {
                     "密码必须包含至少一个特殊字符（如 !@#$%^&*）");
         }
 
-        if (username != null && !username.isEmpty()) {
+        if (StringUtils.hasText(username)) {
             String lowerPassword = password.toLowerCase();
             String lowerUsername = username.toLowerCase();
             if (lowerPassword.contains(lowerUsername)) {
@@ -185,7 +186,7 @@ public final class PasswordPolicy {
      * 计算密码强度分数
      */
     public static int calculatePasswordStrength(String password) {
-        if (password == null || password.isEmpty()) {
+        if (!StringUtils.hasLength(password)) {
             return 0;
         }
 

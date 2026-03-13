@@ -4,6 +4,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -15,7 +16,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -52,7 +52,7 @@ public class EncryptionUtil {
         }
         
         try {
-            if (aesKey == null || aesKey.trim().isEmpty()) {
+            if (!StringUtils.hasText(aesKey)) {
                 log.warn("未配置加密密钥，将生成随机密钥（重启后失效）");
                 KeyGenerator keyGen = KeyGenerator.getInstance(ALGORITHM);
                 keyGen.init(KEY_SIZE, SecureRandom.getInstanceStrong());
@@ -76,7 +76,7 @@ public class EncryptionUtil {
      * @return 解码后的密钥字节
      */
     private static byte[] validateAndDecodeKey(String key) {
-        if (Objects.isNull(key) || key.trim().isEmpty()) {
+        if (!StringUtils.hasText(key)) {
             throw new IllegalArgumentException("密钥不能为空");
         }
         
@@ -107,7 +107,7 @@ public class EncryptionUtil {
      * @return 密文（Base64 编码）
      */
     public String encrypt(String plaintext) {
-        if (plaintext == null || plaintext.isEmpty()) {
+        if (!StringUtils.hasLength(plaintext)) {
             return plaintext;
         }
 
@@ -145,7 +145,7 @@ public class EncryptionUtil {
      * @return 明文
      */
     public String decrypt(String ciphertext) {
-        if (ciphertext == null || ciphertext.isEmpty()) {
+        if (!StringUtils.hasLength(ciphertext)) {
             return ciphertext;
         }
 
@@ -270,7 +270,7 @@ public class EncryptionUtil {
      * @return 脱敏后的姓名
      */
     public static String maskName(String name) {
-        if (name == null || name.isEmpty()) {
+        if (!StringUtils.hasLength(name)) {
             return name;
         }
         if (name.length() == 1) {

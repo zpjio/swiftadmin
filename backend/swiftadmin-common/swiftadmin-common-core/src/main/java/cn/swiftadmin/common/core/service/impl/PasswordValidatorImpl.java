@@ -6,8 +6,8 @@ import cn.swiftadmin.common.core.service.PasswordValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
-import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -49,7 +49,7 @@ public class PasswordValidatorImpl implements PasswordValidator {
     @Override
     public PasswordStrengthResult validate(String password, String username, String... historyPasswords) {
         // 1. 非空检查
-        if (Objects.isNull(password) || password.isEmpty()) {
+        if (!StringUtils.hasLength(password)) {
             return PasswordStrengthResult.fail("密码不能为空");
         }
 
@@ -93,7 +93,7 @@ public class PasswordValidatorImpl implements PasswordValidator {
         }
 
         // 5. 用户名检查
-        if (properties.isForbidContainUsername() && username != null && !username.isEmpty()) {
+        if (properties.isForbidContainUsername() && StringUtils.hasText(username)) {
             if (password.toLowerCase().contains(username.toLowerCase())) {
                 return PasswordStrengthResult.fail("密码不能包含用户名");
             }
@@ -140,7 +140,7 @@ public class PasswordValidatorImpl implements PasswordValidator {
 
     @Override
     public int calculateStrengthScore(String password) {
-        if (password == null || password.isEmpty()) {
+        if (!StringUtils.hasLength(password)) {
             return 0;
         }
 

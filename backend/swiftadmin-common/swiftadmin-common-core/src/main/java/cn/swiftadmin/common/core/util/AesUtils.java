@@ -1,6 +1,7 @@
 package cn.swiftadmin.common.core.util;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.StringUtils;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
@@ -8,7 +9,6 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Base64;
-import java.util.Objects;
 
 /**
  * AES 加密工具类
@@ -51,7 +51,7 @@ public final class AesUtils {
      * @throws IllegalArgumentException 如果密钥长度不足或加密失败
      */
     public static String encrypt(String plainText, String secretKey) {
-        if (Objects.isNull(plainText) || plainText.isEmpty()) {
+        if (!StringUtils.hasLength(plainText)) {
             return null;
         }
 
@@ -93,7 +93,7 @@ public final class AesUtils {
      * @throws IllegalArgumentException 如果密钥长度不足或解密失败
      */
     public static String decrypt(String cipherText, String secretKey) {
-        if (Objects.isNull(cipherText) || cipherText.isEmpty()) {
+        if (!StringUtils.hasLength(cipherText)) {
             return null;
         }
 
@@ -134,7 +134,7 @@ public final class AesUtils {
      * 验证密钥
      */
     private static void validateKey(String secretKey) {
-        if (Objects.isNull(secretKey) || secretKey.trim().isEmpty()) {
+        if (!StringUtils.hasText(secretKey)) {
             throw new IllegalArgumentException("密钥不能为空");
         }
     }
@@ -173,7 +173,7 @@ public final class AesUtils {
      * @return true=密钥格式正确
      */
     public static boolean isValidKey(String secretKey) {
-        if (Objects.isNull(secretKey) || secretKey.trim().isEmpty()) {
+        if (!StringUtils.hasText(secretKey)) {
             return false;
         }
         

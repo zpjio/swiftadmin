@@ -1,5 +1,7 @@
 package cn.swiftadmin.common.core.util;
 
+import org.springframework.util.StringUtils;
+
 /**
  * 敏感信息脱敏工具类
  * <p>用于日志输出时脱敏用户名、IP、手机号等敏感信息</p>
@@ -21,7 +23,7 @@ public final class SensitiveUtils {
      * @return 脱敏后的用户名
      */
     public static String maskUsername(String username) {
-        if (username == null || username.isEmpty()) {
+        if (!StringUtils.hasLength(username)) {
             return "***";
         }
         if (username.length() <= 2) {
@@ -39,7 +41,7 @@ public final class SensitiveUtils {
      * @return 脱敏后的 IP
      */
     public static String maskIp(String ip) {
-        if (ip == null || ip.isEmpty()) {
+        if (!StringUtils.hasLength(ip)) {
             return "***.*.*.*";
         }
         String[] parts = ip.split("\\.");
@@ -58,7 +60,7 @@ public final class SensitiveUtils {
      * @return 脱敏后的手机号
      */
     public static String maskPhone(String phone) {
-        if (phone == null || phone.isEmpty()) {
+        if (!StringUtils.hasLength(phone)) {
             return "***";
         }
         if (phone.length() < 7) {
@@ -76,7 +78,7 @@ public final class SensitiveUtils {
      * @return 脱敏后的邮箱
      */
     public static String maskEmail(String email) {
-        if (email == null || email.isEmpty()) {
+        if (!StringUtils.hasLength(email)) {
             return "***";
         }
         int atIndex = email.indexOf('@');

@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Arrays;
@@ -63,7 +65,7 @@ public class FileUploadService {
     private void initExtensionFilters() {
         // 禁止的扩展名
         String forbidden = fileStorageProperties.getForbiddenExtensions();
-        if (forbidden != null && !forbidden.isEmpty()) {
+        if (StringUtils.hasText(forbidden)) {
             forbiddenExtensions = new HashSet<>(
                     Arrays.asList(forbidden.toLowerCase().split(","))
             );
@@ -76,7 +78,7 @@ public class FileUploadService {
 
         // 允许的扩展名
         String allowed = fileStorageProperties.getAllowedExtensions();
-        if (allowed != null && !allowed.isEmpty()) {
+        if (StringUtils.hasText(allowed)) {
             allowedExtensions = new HashSet<>(
                     Arrays.asList(allowed.toLowerCase().split(","))
             );
@@ -143,13 +145,13 @@ public class FileUploadService {
         }
 
         String originalFilename = file.getOriginalFilename();
-        if (originalFilename == null || originalFilename.isEmpty()) {
+        if (!StringUtils.hasLength(originalFilename)) {
             throw new FileStorageException("文件名不能为空");
         }
 
         // 获取文件扩展名
         String extension = getFileExtension(originalFilename);
-        if (extension == null || extension.isEmpty()) {
+        if (!StringUtils.hasLength(extension)) {
             throw new FileStorageException("无法识别文件类型");
         }
 
@@ -161,7 +163,7 @@ public class FileUploadService {
         }
 
         // 检查是否在允许列表中（如果配置了允许列表）
-        if (allowedExtensions != null && !allowedExtensions.isEmpty()) {
+        if (!CollectionUtils.isEmpty(allowedExtensions)) {
             if (!allowedExtensions.contains(extLower)) {
                 throw new FileStorageException("不允许上传该类型的文件：" + extension);
             }
@@ -172,7 +174,7 @@ public class FileUploadService {
      * 获取文件扩展名
      */
     private String getFileExtension(String fileName) {
-        if (fileName == null || fileName.isEmpty()) {
+        if (!StringUtils.hasLength(fileName)) {
             return null;
         }
         int lastDotIndex = fileName.lastIndexOf(".");

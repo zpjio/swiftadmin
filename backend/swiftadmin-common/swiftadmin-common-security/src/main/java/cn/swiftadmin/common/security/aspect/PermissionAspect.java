@@ -11,6 +11,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -52,7 +53,7 @@ public class PermissionAspect {
         String[] permissions = annotation.value();
         Set<String> userPermissions = loginUser.getPermissions();
 
-        if (userPermissions == null || userPermissions.isEmpty()) {
+        if (CollectionUtils.isEmpty(userPermissions)) {
             throw new PermissionDeniedException("用户无任何权限");
         }
 
@@ -99,7 +100,7 @@ public class PermissionAspect {
         String[] roles = annotation.value();
         Set<String> userRoles = loginUser.getRoles();
 
-        if (userRoles == null || userRoles.isEmpty()) {
+        if (CollectionUtils.isEmpty(userRoles)) {
             throw new PermissionDeniedException("用户无任何角色");
         }
 

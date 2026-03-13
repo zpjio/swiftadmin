@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.Set;
@@ -91,7 +92,7 @@ public class PermissionCacheServiceImpl implements PermissionCacheService {
     @Override
     public void clearAllPermissionCache() {
         Set<String> keys = redisTemplate.keys(RedisKeyConstants.USER_PERMISSION + "*");
-        if (keys != null && !keys.isEmpty()) {
+        if (!CollectionUtils.isEmpty(keys)) {
             redisTemplate.delete(keys);
             log.debug("清除所有用户权限缓存: count={}", keys.size());
         }

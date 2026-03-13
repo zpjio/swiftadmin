@@ -1,10 +1,10 @@
 package cn.swiftadmin.common.core.util;
 
 import cn.swiftadmin.common.core.result.PasswordStrengthResult;
+import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -74,7 +74,7 @@ public final class PasswordStrengthUtils {
      * @return 校验结果
      */
     public static PasswordStrengthResult validate(String password, String username) {
-        if (Objects.isNull(password) || password.isEmpty()) {
+        if (!StringUtils.hasLength(password)) {
             return PasswordStrengthResult.fail("密码不能为空");
         }
 
@@ -86,7 +86,7 @@ public final class PasswordStrengthUtils {
             return PasswordStrengthResult.fail("密码过于简单，请使用更复杂的密码");
         }
 
-        if (username != null && !username.isEmpty() && password.equalsIgnoreCase(username)) {
+        if (StringUtils.hasText(username) && password.equalsIgnoreCase(username)) {
             return PasswordStrengthResult.fail("密码不能与用户名相同");
         }
 
@@ -246,7 +246,7 @@ public final class PasswordStrengthUtils {
     public static java.util.List<String> generateSuggestions(String password) {
         java.util.List<String> suggestions = new java.util.ArrayList<>();
 
-        if (Objects.isNull(password) || password.isEmpty()) {
+        if (!StringUtils.hasLength(password)) {
             suggestions.add("密码不能为空");
             return suggestions;
         }
