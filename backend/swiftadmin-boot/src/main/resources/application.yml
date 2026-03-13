@@ -66,6 +66,11 @@ auth:
     refresh-threshold-hours: 24       # 社交 Token 刷新阈值（小时）
     bind-lock-timeout-seconds: 30     # 社交账号绑定锁超时时间（秒）
 
+    # Token 上下文验证配置
+    token-context-validation-mode: MODERATE  # 验证模式：STRICT/MODERATE/LOOSE
+    ip-change-threshold: 3            # IP 变化次数阈值（MODERATE 模式）
+    ip-change-window-minutes: 30      # IP 变化统计时间窗口（分钟）
+
   # 密码策略配置
   password:
     # 长度配置

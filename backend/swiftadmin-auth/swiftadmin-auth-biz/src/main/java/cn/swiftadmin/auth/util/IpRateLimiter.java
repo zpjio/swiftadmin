@@ -1,5 +1,6 @@
 package cn.swiftadmin.auth.util;
 
+import cn.swiftadmin.common.core.constants.RedisKeyConstants;
 import cn.swiftadmin.common.core.exception.BusinessException;
 import cn.swiftadmin.common.core.result.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -34,9 +35,9 @@ public class IpRateLimiter {
             return;
         }
 
-        String key = "login:ip:attempts:" + ip;
+        String key = RedisKeyConstants.ipLoginAttempts(ip);
         Long attempts = redisTemplate.opsForValue().increment(key);
-        
+
         // 首次访问设置过期时间
         if (attempts == 1) {
             redisTemplate.expire(key, 1, TimeUnit.HOURS);
@@ -46,7 +47,7 @@ public class IpRateLimiter {
         if (attempts > 20) {
             log.warn("IP 登录次数超限：ip={}, 次数={}", ip, attempts);
             // 将 IP 加入黑名单 30 分钟
-            String blacklistKey = "login:ip:blacklist:" + ip;
+            String blacklistKey = RedisKeyConstants.ipLoginBlacklist(ip);
             redisTemplate.opsForValue().set(blacklistKey, "blocked", 30, TimeUnit.MINUTES);
             throw new BusinessException(ErrorCode.RATE_LIMIT_EXCEEDED);
         }
@@ -64,8 +65,8 @@ public class IpRateLimiter {
         if (ip == null || ip.isEmpty()) {
             return false;
         }
-        
-        String blacklistKey = "login:ip:blacklist:" + ip;
+
+        String blacklistKey = RedisKeyConstants.ipLoginBlacklist(ip);
         return Boolean.TRUE.equals(redisTemplate.hasKey(blacklistKey));
     }
 
@@ -79,8 +80,8 @@ public class IpRateLimiter {
         if (ip == null || ip.isEmpty()) {
             return;
         }
-        
-        String blacklistKey = "login:ip:blacklist:" + ip;
+
+        String blacklistKey = RedisKeyConstants.ipLoginBlacklist(ip);
         redisTemplate.opsForValue().set(blacklistKey, "blocked", minutes, TimeUnit.MINUTES);
         log.warn("IP 已加入黑名单：ip={}, 锁定时间={}分钟", ip, minutes);
     }
@@ -94,8 +95,8 @@ public class IpRateLimiter {
         if (ip == null || ip.isEmpty()) {
             return;
         }
-        
-        String key = "login:ip:attempts:" + ip;
+
+        String key = RedisKeyConstants.ipLoginAttempts(ip);
         redisTemplate.delete(key);
         log.debug("IP 登录计数已重置：ip={}", ip);
     }

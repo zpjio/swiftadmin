@@ -123,6 +123,40 @@ public class AuthSecurityProperties {
      */
     private int bindLockTimeoutSeconds = 30;
 
+    // ========== Token 上下文验证配置 ==========
+
+    /**
+     * Token 上下文验证模式
+     * <p>STRICT: 严格模式，IP 变化直接拒绝</p>
+     * <p>MODERATE: 中等模式，IP 变化记录警告，短时间内多次变化才拒绝</p>
+     * <p>LOOSE: 宽松模式，IP 变化仅记录日志，不阻止</p>
+     */
+    private TokenContextValidationMode tokenContextValidationMode = TokenContextValidationMode.MODERATE;
+
+    /**
+     * IP 变化次数阈值（仅在 MODERATE 模式下生效）
+     * <p>短时间内 IP 变化次数超过此值，视为异常</p>
+     */
+    private int ipChangeThreshold = 3;
+
+    /**
+     * IP 变化统计时间窗口（分钟）
+     * <p>在此时间窗口内统计 IP 变化次数</p>
+     */
+    private int ipChangeWindowMinutes = 30;
+
+    /**
+     * Token 上下文验证模式枚举
+     */
+    public enum TokenContextValidationMode {
+        /** 严格模式：IP 变化直接拒绝 */
+        STRICT,
+        /** 中等模式：短时间多次 IP 变化才拒绝 */
+        MODERATE,
+        /** 宽松模式：仅记录日志，不阻止 */
+        LOOSE
+    }
+
     /**
      * 配置参数校验
      * <p>在 Bean 初始化后自动执行，确保配置参数合法</p>
@@ -148,6 +182,8 @@ public class AuthSecurityProperties {
         validateRange("captchaTriggerFailCount", captchaTriggerFailCount, 1, 10, "登录失败触发图形验证码阈值");
         validateRange("refreshThresholdHours", refreshThresholdHours, 1, 72, "社交 Token 刷新阈值");
         validateRange("bindLockTimeoutSeconds", bindLockTimeoutSeconds, 1, 300, "绑定锁超时时间");
+        validateRange("ipChangeThreshold", ipChangeThreshold, 1, 10, "IP 变化次数阈值");
+        validateRange("ipChangeWindowMinutes", ipChangeWindowMinutes, 1, 1440, "IP 变化统计时间窗口");
         
         log.info("认证安全配置参数验证通过");
     }

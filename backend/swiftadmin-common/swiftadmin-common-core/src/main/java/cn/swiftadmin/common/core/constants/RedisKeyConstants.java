@@ -51,6 +51,9 @@ public final class RedisKeyConstants {
     /** Token 上下文 UA 前缀 */
     public static final String TOKEN_CONTEXT_UA = "token:context:ua:";
 
+    /** Token IP 变化次数前缀 */
+    public static final String TOKEN_IP_CHANGE_COUNT = "token:ip:change:";
+
     /** 临时 Token 已使用前缀 */
     public static final String TEMP_TOKEN_USED = "temp:token:used:";
 
@@ -83,6 +86,12 @@ public final class RedisKeyConstants {
 
     /** 接口限流前缀 */
     public static final String RATE_LIMIT_API = "rate:api:";
+
+    /** IP 登录尝试次数前缀 */
+    public static final String IP_LOGIN_ATTEMPTS = "auth:ip:attempts:";
+
+    /** IP 登录黑名单前缀 */
+    public static final String IP_LOGIN_BLACKLIST = "auth:ip:blacklist:";
 
     // ==================== 第三方平台 ====================
 
@@ -190,6 +199,27 @@ public final class RedisKeyConstants {
      */
     public static String tempTokenUsed(String jti) {
         return TEMP_TOKEN_USED + jti;
+    }
+
+    /**
+     * 构建 Token IP 变化次数 Key
+     */
+    public static String tokenIpChangeCount(String jti) {
+        return TOKEN_IP_CHANGE_COUNT + jti;
+    }
+
+    /**
+     * 构建 IP 登录尝试次数 Key
+     */
+    public static String ipLoginAttempts(String ip) {
+        return IP_LOGIN_ATTEMPTS + ip;
+    }
+
+    /**
+     * 构建 IP 登录黑名单 Key
+     */
+    public static String ipLoginBlacklist(String ip) {
+        return IP_LOGIN_BLACKLIST + ip;
     }
 
 }

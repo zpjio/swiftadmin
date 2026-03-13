@@ -184,6 +184,7 @@ public class AuthServiceImpl implements AuthService {
 
     /**
      * 验证请求上下文（IP 和 User-Agent 一致性）
+     * <p>改进：采用可配置的验证策略，避免用户切换网络被强制登出</p>
      */
     private void validateRequestContext(String refreshToken) {
         // 从 Redis 获取与该 Token 关联的请求上下文信息
@@ -196,7 +197,7 @@ public class AuthServiceImpl implements AuthService {
         // 获取存储的上下文信息
         String storedIp = redisTemplate.opsForValue().get(RedisKeyConstants.tokenContextIp(jti));
         String storedUa = redisTemplate.opsForValue().get(RedisKeyConstants.tokenContextUa(jti));
-        
+
         // 获取当前请求信息
         String currentIp = ServletUtils.getClientIp(request);
         String currentUserAgent = ServletUtils.getUserAgent(request);
@@ -208,22 +209,91 @@ public class AuthServiceImpl implements AuthService {
             return;
         }
 
-        // 验证 IP 是否一致
-        if (storedIp != null && !storedIp.equals(currentIp)) {
-            log.warn("Token 刷新 IP 不一致：stored={}, current={}, jti={}. 可能存在 Token 被盗风险，已加入黑名单", 
-                    storedIp, currentIp, jti);
-            tokenManager.addToBlacklist(refreshToken);
-            throw new BusinessException(ErrorCode.TOKEN_STOLEN);
+        // 检查 IP 是否变化
+        boolean ipChanged = storedIp != null && !storedIp.equals(currentIp);
+
+        if (ipChanged) {
+            handleIpChange(jti, storedIp, currentIp, refreshToken);
         }
 
         // 验证 User-Agent 是否一致（宽松策略，只记录不阻止）
         if (storedUa != null && !storedUa.equals(currentUserAgent)) {
-            log.warn("Token 刷新 User-Agent 不一致：stored={}, current={}, jti={}", 
-                    storedUa, currentUserAgent, jti);
-            // 注意：User-Agent 可能因浏览器升级而变化，这里只记录警告，不阻止刷新
+            log.info("Token 刷新 User-Agent 变化：jti={}, old={}, new={}", jti, storedUa, currentUserAgent);
+            // 更新 User-Agent
+            redisTemplate.opsForValue().set(RedisKeyConstants.tokenContextUa(jti), currentUserAgent,
+                    securityProperties.getRefreshIntervalSeconds() * 2L, TimeUnit.SECONDS);
         }
 
         log.debug("Token 刷新上下文验证通过：jti={}, ip={}", jti, currentIp);
+    }
+
+    /**
+     * 处理 IP 变化
+     * <p>根据配置的验证模式采取不同策略</p>
+     */
+    private void handleIpChange(String jti, String storedIp, String currentIp, String refreshToken) {
+        var mode = securityProperties.getTokenContextValidationMode();
+
+        switch (mode) {
+            case STRICT -> {
+                // 严格模式：IP 变化直接拒绝
+                log.warn("Token 刷新 IP 不一致（严格模式）：stored={}, current={}, jti={}",
+                        storedIp, currentIp, jti);
+                tokenManager.addToBlacklist(refreshToken);
+                throw new BusinessException(ErrorCode.TOKEN_STOLEN);
+            }
+            case MODERATE -> {
+                // 中等模式：短时间内多次 IP 变化才拒绝
+                handleModerateMode(jti, storedIp, currentIp, refreshToken);
+            }
+            case LOOSE -> {
+                // 宽松模式：仅记录日志，更新 IP
+                log.info("Token 刷新 IP 变化（宽松模式）：stored={}, current={}, jti={}",
+                        storedIp, currentIp, jti);
+                updateTokenIp(jti, currentIp);
+            }
+        }
+    }
+
+    /**
+     * 中等模式处理：短时间内多次 IP 变化才视为异常
+     */
+    private void handleModerateMode(String jti, String storedIp, String currentIp, String refreshToken) {
+        String ipChangeKey = RedisKeyConstants.tokenIpChangeCount(jti);
+        int threshold = securityProperties.getIpChangeThreshold();
+        int windowMinutes = securityProperties.getIpChangeWindowMinutes();
+
+        // 增加并获取 IP 变化次数
+        Long changeCount = redisTemplate.opsForValue().increment(ipChangeKey);
+
+        if (changeCount != null && changeCount == 1) {
+            // 首次变化，设置过期时间
+            redisTemplate.expire(ipChangeKey, windowMinutes, TimeUnit.MINUTES);
+        }
+
+        // 更新 IP
+        updateTokenIp(jti, currentIp);
+
+        if (changeCount != null && changeCount >= threshold) {
+            // IP 变化次数超限，视为异常
+            log.warn("Token 刷新 IP 变化次数超限（中等模式）：jti={}, count={}, threshold={}, stored={}, current={}",
+                    jti, changeCount, threshold, storedIp, currentIp);
+            tokenManager.addToBlacklist(refreshToken);
+            throw new BusinessException(ErrorCode.TOKEN_STOLEN.getCode(),
+                    "检测到异常的 IP 变化，请重新登录");
+        }
+
+        // 记录警告但允许继续
+        log.warn("Token 刷新 IP 变化（中等模式）：jti={}, count={}, threshold={}, stored={}, current={}",
+                jti, changeCount, threshold, storedIp, currentIp);
+    }
+
+    /**
+     * 更新 Token 关联的 IP 地址
+     */
+    private void updateTokenIp(String jti, String newIp) {
+        redisTemplate.opsForValue().set(RedisKeyConstants.tokenContextIp(jti), newIp,
+                securityProperties.getRefreshIntervalSeconds() * 2L, TimeUnit.SECONDS);
     }
 
     /**
