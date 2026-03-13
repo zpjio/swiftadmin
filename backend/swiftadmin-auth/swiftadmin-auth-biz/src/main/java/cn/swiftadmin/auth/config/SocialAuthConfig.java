@@ -1,16 +1,14 @@
 package cn.swiftadmin.auth.config;
 
 import cn.swiftadmin.auth.api.service.SocialBindService;
+import cn.swiftadmin.auth.service.LoginEventService;
+import cn.swiftadmin.auth.service.LoginSessionService;
 import cn.swiftadmin.auth.strategy.SocialAuthStrategy;
 import cn.swiftadmin.auth.strategy.social.SocialAuthHandler;
-import cn.swiftadmin.auth.util.TokenManager;
-import cn.swiftadmin.common.security.service.UserDetailsService;
-import cn.swiftadmin.common.security.service.UserSessionService;
 import cn.swiftadmin.system.api.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -31,26 +29,21 @@ public class SocialAuthConfig {
     @Bean
     public SocialAuthStrategy socialAuthStrategy(
             SocialBindService socialBindService,
-            TokenManager tokenManager,
             UserService userService,
             ObjectMapper objectMapper,
             StringRedisTemplate redisTemplate,
-            ApplicationEventPublisher eventPublisher,
+            LoginSessionService sessionService,
+            LoginEventService eventService,
             HttpServletRequest request,
-            UserDetailsService userDetailsService,
-            UserSessionService userSessionService,
             List<SocialAuthHandler> handlers) {
         return new SocialAuthStrategy(
                 socialBindService,
-                tokenManager,
                 userService,
                 objectMapper,
                 redisTemplate,
-                eventPublisher,
+                sessionService,
+                eventService,
                 request,
-                userDetailsService,
-                userSessionService,
                 handlers);
     }
-
 }

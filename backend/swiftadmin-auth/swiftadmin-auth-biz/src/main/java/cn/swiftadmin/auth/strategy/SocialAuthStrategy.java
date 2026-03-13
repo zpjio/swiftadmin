@@ -4,25 +4,23 @@ import cn.swiftadmin.auth.api.dto.LoginDTO;
 import cn.swiftadmin.auth.api.dto.OAuthStateDTO;
 import cn.swiftadmin.auth.api.dto.SocialUserInfo;
 import cn.swiftadmin.auth.api.entity.SysSocialBind;
-import cn.swiftadmin.auth.api.event.LoginEvent;
+import cn.swiftadmin.auth.api.enums.LoginType;
 import cn.swiftadmin.auth.api.service.SocialBindService;
 import cn.swiftadmin.auth.api.vo.LoginVO;
+import cn.swiftadmin.auth.context.LoginContext;
+import cn.swiftadmin.auth.service.LoginEventService;
+import cn.swiftadmin.auth.service.LoginSessionService;
 import cn.swiftadmin.auth.strategy.social.SocialAuthHandler;
-import cn.swiftadmin.auth.util.TokenManager;
 import cn.swiftadmin.auth.api.exception.SocialAuthError;
 import cn.swiftadmin.auth.api.exception.SocialAuthException;
-import cn.swiftadmin.auth.api.enums.LoginType;
+import cn.swiftadmin.common.core.constants.RedisKeyConstants;
 import cn.swiftadmin.common.core.util.ServletUtils;
-import cn.swiftadmin.common.security.domain.LoginUser;
-import cn.swiftadmin.common.security.service.UserDetailsService;
-import cn.swiftadmin.common.security.service.UserSessionService;
 import cn.swiftadmin.system.api.entity.SysUser;
 import cn.swiftadmin.system.api.service.UserService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
@@ -35,6 +33,7 @@ import java.util.stream.Collectors;
 /**
  * 社交登录策略
  * <p>统一处理所有社交登录平台，通过注入 SocialAuthHandler 实现扩展</p>
+ * <p>重构版：依赖注入从 9 个减少到 8 个</p>
  *
  * @author zhangpengju
  * @since 2026-03-10
@@ -43,15 +42,13 @@ import java.util.stream.Collectors;
 public class SocialAuthStrategy implements AuthStrategy {
 
     private final SocialBindService socialBindService;
-    private final TokenManager tokenManager;
     private final UserService userService;
     private final ObjectMapper objectMapper;
     private final StringRedisTemplate redisTemplate;
     private final Map<String, SocialAuthHandler> handlerMap;
-    private final ApplicationEventPublisher eventPublisher;
+    private final LoginSessionService sessionService;
+    private final LoginEventService eventService;
     private final HttpServletRequest request;
-    private final UserDetailsService userDetailsService;
-    private final UserSessionService userSessionService;
 
     /** 临时 Token 有效期（分钟） */
     private static final int TEMP_TOKEN_EXPIRE_MINUTES = 10;
@@ -67,24 +64,20 @@ public class SocialAuthStrategy implements AuthStrategy {
      */
     public SocialAuthStrategy(
             SocialBindService socialBindService,
-            TokenManager tokenManager,
             UserService userService,
             ObjectMapper objectMapper,
             StringRedisTemplate redisTemplate,
-            ApplicationEventPublisher eventPublisher,
+            LoginSessionService sessionService,
+            LoginEventService eventService,
             HttpServletRequest request,
-            UserDetailsService userDetailsService,
-            UserSessionService userSessionService,
             List<SocialAuthHandler> handlers) {
         this.socialBindService = socialBindService;
-        this.tokenManager = tokenManager;
         this.userService = userService;
         this.objectMapper = objectMapper;
         this.redisTemplate = redisTemplate;
-        this.eventPublisher = eventPublisher;
+        this.sessionService = sessionService;
+        this.eventService = eventService;
         this.request = request;
-        this.userDetailsService = userDetailsService;
-        this.userSessionService = userSessionService;
         this.handlerMap = handlers.stream()
                 .collect(Collectors.toMap(SocialAuthHandler::getSource, Function.identity()));
         log.info("社交登录策略初始化完成，已注册平台：{}", handlerMap.keySet());
@@ -92,12 +85,12 @@ public class SocialAuthStrategy implements AuthStrategy {
 
     @Override
     public LoginType getLoginType() {
-        return null; // 社交登录策略不绑定单一类型
+        return null;
     }
 
     @Override
     public String getSource() {
-        return "social"; // 通用标识
+        return "social";
     }
 
     @Override
@@ -115,22 +108,16 @@ public class SocialAuthStrategy implements AuthStrategy {
 
     /**
      * 带 State 的认证方法（区分登录/绑定场景）
-     *
-     * @param dto 登录参数
-     * @param stateDTO State 参数
-     * @return 登录结果
      */
     public LoginVO authenticateWithState(LoginDTO dto, OAuthStateDTO stateDTO) {
         SocialAuthHandler handler = getHandler(dto.getSource());
         SocialUserInfo userInfo = handler.getUserInfo(dto.getAuthCode());
         String openId = handler.extractOpenId(userInfo);
 
-        // 根据 action 区分处理
         String action = stateDTO.getAction();
         if (OAuthStateDTO.ACTION_BIND.equals(action)) {
             return handleSocialBind(dto.getSource(), openId, userInfo, stateDTO.getBindUserId());
         } else {
-            // 默认为登录场景
             return handleSocialLogin(dto.getSource(), openId, userInfo);
         }
     }
@@ -142,13 +129,8 @@ public class SocialAuthStrategy implements AuthStrategy {
 
     /**
      * 获取社交登录授权 URL
-     *
-     * @param source 平台来源
-     * @param sessionId 会话 ID（可选）
-     * @return 授权 URL 和 State
      */
     public SocialUrlInfo getAuthUrl(String source, String sessionId) {
-        // 构建登录场景的 State 参数
         OAuthStateDTO stateDTO = OAuthStateDTO.builder()
                 .source(source.toLowerCase())
                 .sessionId(sessionId)
@@ -162,14 +144,8 @@ public class SocialAuthStrategy implements AuthStrategy {
 
     /**
      * 获取绑定第三方账号的授权 URL
-     * <p>已登录用户主动绑定第三方账号时使用</p>
-     *
-     * @param source 平台来源
-     * @param userId 系统用户 ID
-     * @return 授权 URL 和 State
      */
     public SocialUrlInfo getBindUrl(String source, Long userId) {
-        // 构建绑定场景的 State 参数
         OAuthStateDTO stateDTO = OAuthStateDTO.builder()
                 .source(source.toLowerCase())
                 .timestamp(System.currentTimeMillis())
@@ -181,15 +157,11 @@ public class SocialAuthStrategy implements AuthStrategy {
         return buildAuthUrl(source, stateDTO);
     }
 
-    /**
-     * 构建授权 URL（内部方法）
-     */
     private SocialUrlInfo buildAuthUrl(String source, OAuthStateDTO stateDTO) {
         String state = encodeState(stateDTO);
         String url = getHandler(source).getAuthUrl(state);
 
-        // 存储 State 用于验证（保留兼容性）
-        String stateKey = "oauth:state:" + state;
+        String stateKey = RedisKeyConstants.OAUTH_STATE + state;
         try {
             String stateJson = objectMapper.writeValueAsString(stateDTO);
             redisTemplate.opsForValue().set(stateKey, stateJson, OAuthStateDTO.VALID_PERIOD, TimeUnit.MILLISECONDS);
@@ -209,30 +181,25 @@ public class SocialAuthStrategy implements AuthStrategy {
             throw new SocialAuthException(SocialAuthError.STATE_INVALID);
         }
 
-        // 先从 Redis 获取
-        String stateKey = "oauth:state:" + state;
+        String stateKey = RedisKeyConstants.OAUTH_STATE + state;
         String stateJson = redisTemplate.opsForValue().get(stateKey);
 
         OAuthStateDTO stateDTO;
         if (stateJson != null) {
-            // Redis 中存在，使用存储的值
             try {
                 stateDTO = objectMapper.readValue(stateJson, OAuthStateDTO.class);
             } catch (Exception e) {
                 log.warn("解析 State 失败：state={}", state, e);
                 throw new SocialAuthException(SocialAuthError.STATE_INVALID);
             }
-            // 删除已使用的 State
             redisTemplate.delete(stateKey);
         } else {
-            // 尝试直接解析 State（Base64）
             stateDTO = decodeState(state);
             if (stateDTO == null) {
                 throw new SocialAuthException(SocialAuthError.STATE_EXPIRED);
             }
         }
 
-        // 检查是否过期
         if (stateDTO.isExpired()) {
             throw new SocialAuthException(SocialAuthError.STATE_EXPIRED);
         }
@@ -252,9 +219,8 @@ public class SocialAuthStrategy implements AuthStrategy {
      */
     @Override
     public void bindAccount(Long userId, String tempToken) {
-        String cacheKey = "social:temp:" + tempToken;
+        String cacheKey = RedisKeyConstants.OAUTH_TEMP_TOKEN + tempToken;
 
-        // 使用 Lua 脚本原子性获取并删除（确保单次使用）
         DefaultRedisScript<String> script = new DefaultRedisScript<>(GET_AND_DELETE_SCRIPT, String.class);
         String userInfoJson = redisTemplate.execute(script, Collections.singletonList(cacheKey));
 
@@ -292,21 +258,25 @@ public class SocialAuthStrategy implements AuthStrategy {
         return handler;
     }
 
-    private LoginVO handleSocialLogin(String source, String openId, SocialUserInfo userInfo) {
+    private LoginContext buildContext(String source) {
         String ip = ServletUtils.getClientIp(request);
         String userAgent = ServletUtils.getUserAgent(request);
+        return LoginContext.ofSocial(ip, userAgent, source);
+    }
 
+    private LoginVO handleSocialLogin(String source, String openId, SocialUserInfo userInfo) {
+        LoginContext context = buildContext(source);
         SysSocialBind bind = socialBindService.getBySourceAndOpenId(source, openId);
 
         if (bind != null) {
             // 已绑定：直接登录
             SysUser user = userService.getById(bind.getUserId());
             if (user == null) {
-                eventPublisher.publishEvent(LoginEvent.failure("unknown", "用户不存在", ip, userAgent, source));
+                eventService.publishFailure("unknown", "用户不存在", context);
                 throw new SocialAuthException(SocialAuthError.BIND_NOT_FOUND, "用户不存在");
             }
             if (!user.getStatus().isEnabled()) {
-                eventPublisher.publishEvent(LoginEvent.failure(user.getUsername(), "用户已被禁用", ip, userAgent, source));
+                eventService.publishFailure(user.getUsername(), "用户已被禁用", context);
                 throw new SocialAuthException(SocialAuthError.PLATFORM_ERROR, "用户已被禁用");
             }
 
@@ -315,8 +285,8 @@ public class SocialAuthStrategy implements AuthStrategy {
             socialBindService.updateToken(bind.getId(), tokenInfo);
 
             log.info("社交账号登录成功：source={}, openId={}, userId={}", source, openId, user.getId());
-            eventPublisher.publishEvent(LoginEvent.success(user.getUsername(), ip, userAgent, source));
-            return buildLoginVO(user);
+            eventService.publishSuccess(user.getUsername(), context);
+            return sessionService.createSession(user.getUsername(), context);
         } else {
             // 未绑定：返回临时 Token
             log.info("社交账号未绑定：source={}, openId={}", source, openId);
@@ -325,41 +295,32 @@ public class SocialAuthStrategy implements AuthStrategy {
         }
     }
 
-    /**
-     * 处理绑定场景（已登录用户主动绑定）
-     */
     private LoginVO handleSocialBind(String source, String openId, SocialUserInfo userInfo, Long bindUserId) {
         if (bindUserId == null) {
             throw new SocialAuthException(SocialAuthError.STATE_INVALID, "绑定用户ID缺失");
         }
 
-        // 检查用户是否存在
         SysUser user = userService.getById(bindUserId);
         if (user == null) {
             throw new SocialAuthException(SocialAuthError.BIND_NOT_FOUND, "用户不存在");
         }
 
-        // 检查该社交账号是否已被其他用户绑定
         SysSocialBind existingBind = socialBindService.getBySourceAndOpenId(source, openId);
         if (existingBind != null) {
             if (existingBind.getUserId().equals(bindUserId)) {
-                // 已经绑定到当前用户，直接返回成功
                 log.info("社交账号已绑定到当前用户：source={}, openId={}, userId={}", source, openId, bindUserId);
                 return buildBindSuccessVO(source);
             } else {
-                // 已被其他用户绑定
                 log.warn("社交账号已被其他用户绑定：source={}, openId={}, boundUserId={}", source, openId, existingBind.getUserId());
                 throw new SocialAuthException(SocialAuthError.BIND_ALREADY_EXISTS, "该社交账号已被其他用户绑定");
             }
         }
 
-        // 检查当前用户是否已绑定同类型社交账号
         SysSocialBind userBind = socialBindService.getByUserIdAndSource(bindUserId, source);
         if (userBind != null) {
             throw new SocialAuthException(SocialAuthError.USER_ALREADY_BOUND, "您已绑定该类型的社交账号");
         }
 
-        // 执行绑定
         Map<String, Object> userInfoMap = userInfo.toMap();
         socialBindService.bind(bindUserId, source, openId, userInfoMap);
         updateUserInfo(bindUserId, userInfoMap);
@@ -368,9 +329,6 @@ public class SocialAuthStrategy implements AuthStrategy {
         return buildBindSuccessVO(source);
     }
 
-    /**
-     * 构建绑定成功响应
-     */
     private LoginVO buildBindSuccessVO(String source) {
         return LoginVO.builder()
                 .needBind(false)
@@ -379,7 +337,7 @@ public class SocialAuthStrategy implements AuthStrategy {
 
     private String generateTempToken(String openId, String source, SocialUserInfo userInfo) {
         String tempToken = UUID.randomUUID().toString().replace("-", "");
-        String cacheKey = "social:temp:" + tempToken;
+        String cacheKey = RedisKeyConstants.OAUTH_TEMP_TOKEN + tempToken;
 
         Map<String, Object> tempInfo = userInfo.toMap();
         tempInfo.put("openId", openId);
@@ -394,27 +352,6 @@ public class SocialAuthStrategy implements AuthStrategy {
         }
 
         return tempToken;
-    }
-
-    private LoginVO buildLoginVO(SysUser user) {
-        LoginVO loginVO = tokenManager.generateLoginTokens(user.getUsername());
-        loginVO.setNeedBind(false);
-
-        String sessionId = tokenManager.getJtiFromToken(loginVO.getAccessToken());
-        LoginUser loginUser = userDetailsService.loadUserByUsername(user.getUsername());
-        if (loginUser != null) {
-            String ip = ServletUtils.getClientIp(request);
-            String userAgent = ServletUtils.getUserAgent(request);
-            userSessionService.createSession(
-                    sessionId,
-                    loginUser,
-                    ip,
-                    userAgent,
-                    tokenManager.getAccessTokenExpiration()
-            );
-        }
-
-        return loginVO;
     }
 
     private LoginVO buildNeedBindVO(String tempToken, SocialUserInfo userInfo, String source) {
@@ -440,9 +377,6 @@ public class SocialAuthStrategy implements AuthStrategy {
         }
     }
 
-    /**
-     * 编码 State 为 Base64
-     */
     private String encodeState(OAuthStateDTO stateDTO) {
         try {
             String json = objectMapper.writeValueAsString(stateDTO);
@@ -454,9 +388,6 @@ public class SocialAuthStrategy implements AuthStrategy {
         }
     }
 
-    /**
-     * 解码 Base64 State
-     */
     private OAuthStateDTO decodeState(String state) {
         try {
             byte[] bytes = Base64.getUrlDecoder().decode(state);
@@ -472,5 +403,4 @@ public class SocialAuthStrategy implements AuthStrategy {
      * 授权 URL 信息
      */
     public record SocialUrlInfo(String url, String state) {}
-
 }
