@@ -5,6 +5,7 @@ import cn.swiftadmin.common.core.enums.YesNo;
 import cn.swiftadmin.common.core.exception.BusinessException;
 import cn.swiftadmin.common.core.result.PasswordStrengthResult;
 import cn.swiftadmin.common.core.service.PasswordValidator;
+import cn.swiftadmin.common.mybatis.annotation.DataScope;
 import cn.swiftadmin.common.mybatis.annotation.DataScopeValidate;
 import com.mybatisflex.core.paginate.Page;
 import cn.swiftadmin.common.core.util.BeanCopyUtils;
@@ -23,6 +24,7 @@ import cn.swiftadmin.system.mapper.SysUserRoleMapper;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.update.UpdateChain;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +45,7 @@ import static cn.swiftadmin.system.api.entity.table.SysDeptTableDef.SYS_DEPT;
  * @author zhangpengju
  * @since 2026-03-10
  */
+@Slf4j
 @Service
 public class UserManageServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements UserManageService {
 
@@ -60,11 +63,12 @@ public class UserManageServiceImpl extends ServiceImpl<SysUserMapper, SysUser> i
     }
 
     @Override
+    @DataScope(userAlias = "u")
     public Page<UserVO> page(UserQueryDTO query) {
         QueryWrapper queryWrapper = QueryWrapper.create()
                 .select(SYS_USER.ALL_COLUMNS, SYS_DEPT.NAME.as(UserVO.FIELD_DEPT_NAME))
-                .from(SYS_USER)
-                .leftJoin(SYS_DEPT).on(SYS_USER.DEPT_ID.eq(SYS_DEPT.ID))
+                .from(SYS_USER.as("u"))
+                .leftJoin(SYS_DEPT.as("d")).on(SYS_USER.DEPT_ID.eq(SYS_DEPT.ID))
                 .where(SYS_USER.USERNAME.like(PageHelper.likeIfPresent(query.getUsername())))
                 .and(SYS_USER.NICKNAME.like(PageHelper.likeIfPresent(query.getNickname())))
                 .and(SYS_USER.PHONE.like(PageHelper.likeIfPresent(query.getPhone())))
@@ -74,7 +78,8 @@ public class UserManageServiceImpl extends ServiceImpl<SysUserMapper, SysUser> i
                 .and(SYS_USER.CREATE_TIME.le(query.getCreateTimeEnd(), query.getCreateTimeEnd() != null))
                 .orderBy(SYS_USER.CREATE_TIME.desc());
 
-        // 使用 paginateAs 直接映射到 UserVO，解决关联字段映射问题
+        // 数据权限由 @DataScope 注解自动处理，无需手动调用
+
         return mapper
                 .paginateAs(PageHelper.of(query.getPage(), query.getPageSize()), queryWrapper, UserVO.class);
     }
@@ -219,10 +224,9 @@ public class UserManageServiceImpl extends ServiceImpl<SysUserMapper, SysUser> i
         userRoleMapper.deleteByQuery(QueryWrapper.create().where(SYS_USER_ROLE.USER_ID.eq(userId)));
 
         if (!CollectionUtils.isEmpty(roleIds)) {
-            List<SysUserRole> userRoles = roleIds.stream()
-                    .map(roleId -> SysUserRole.builder().userId(userId).roleId(roleId).build())
-                    .collect(Collectors.toList());
-            userRoleMapper.insertBatch(userRoles);
+            for (Long roleId : roleIds) {
+                userRoleMapper.insertUserRole(userId, roleId);
+            }
         }
     }
 

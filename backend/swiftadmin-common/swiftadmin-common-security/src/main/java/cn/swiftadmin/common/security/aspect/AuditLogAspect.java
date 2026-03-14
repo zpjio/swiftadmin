@@ -4,6 +4,7 @@ import cn.swiftadmin.common.security.annotation.AuditIgnore;
 import cn.swiftadmin.common.security.annotation.AuditLog;
 import cn.swiftadmin.common.security.domain.LoginUser;
 import cn.swiftadmin.common.security.event.AuditLogEvent;
+import cn.swiftadmin.common.security.util.SecurityUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -12,8 +13,6 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -128,7 +127,7 @@ public class AuditLogAspect {
             }
 
             // 操作用户
-            LoginUser loginUser = getLoginUser();
+            LoginUser loginUser = SecurityUtils.getLoginUser();
             if (loginUser != null) {
                 logData.put("operUserId", loginUser.getUserId());
                 logData.put("operUserName", loginUser.getUsername());
@@ -362,17 +361,6 @@ public class AuditLogAspect {
             }
         }
         return result.toString();
-    }
-
-    /**
-     * 获取当前登录用户
-     */
-    private LoginUser getLoginUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof LoginUser) {
-            return (LoginUser) authentication.getPrincipal();
-        }
-        return null;
     }
 
     /**

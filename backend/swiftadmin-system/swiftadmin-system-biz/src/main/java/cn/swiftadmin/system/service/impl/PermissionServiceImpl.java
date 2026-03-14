@@ -47,11 +47,13 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     public Set<String> getPermissionsByUserId(Long userId) {
-        // 获取用户直接关联的角色ID
+        // 获取用户直接关联的角色ID（只查询启用状态的角色）
         QueryWrapper roleQuery = QueryWrapper.create()
                 .select(SYS_USER_ROLE.ROLE_ID)
                 .from(SYS_USER_ROLE)
-                .where(SYS_USER_ROLE.USER_ID.eq(userId));
+                .innerJoin(SYS_ROLE).on(SYS_USER_ROLE.ROLE_ID.eq(SYS_ROLE.ID))
+                .where(SYS_USER_ROLE.USER_ID.eq(userId))
+                .and(SYS_ROLE.STATUS.eq(CommonStatus.ENABLED));
 
         List<Long> roleIds = roleMapper.selectListByQueryAs(roleQuery, Long.class);
 
@@ -87,6 +89,8 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     public Integer getDataScopeByUserId(Long userId) {
+        log.info("=== getDataScopeByUserId called, userId={} ===", userId);
+
         // 获取用户所有角色的数据权限范围，取最大范围（数值最小）
         QueryWrapper queryWrapper = QueryWrapper.create()
                 .select(SYS_ROLE.DATA_SCOPE)
@@ -96,14 +100,19 @@ public class PermissionServiceImpl implements PermissionService {
                 .and(SYS_ROLE.STATUS.eq(1))
                 .orderBy(SYS_ROLE.DATA_SCOPE.asc());
 
+        log.info("执行查询: {}", queryWrapper.toSQL());
         List<Integer> dataScopes = roleMapper.selectListByQueryAs(queryWrapper, Integer.class);
+        log.info("查询结果 dataScopes: {}", dataScopes);
 
         if (CollectionUtils.isEmpty(dataScopes)) {
+            log.info("dataScopes 为空，返回默认值 DATA_SCOPE_SELF={}", DATA_SCOPE_SELF);
             return DATA_SCOPE_SELF; // 默认仅本人
         }
 
         // 返回最小的dataScope（权限范围最大）
-        return dataScopes.get(0);
+        Integer result = dataScopes.get(0);
+        log.info("返回 dataScope: {}", result);
+        return result;
     }
 
     @Override
@@ -144,11 +153,12 @@ public class PermissionServiceImpl implements PermissionService {
         loginUser.setDeptId(user.getDeptId());
         loginUser.setStatus(user.getStatus() != null ? user.getStatus().getCode() : null);
 
-        // 查询部门名称
+        // 查询部门名称和祖级路径
         if (user.getDeptId() != null) {
             SysDept dept = deptService.getById(user.getDeptId());
             if (dept != null) {
                 loginUser.setDeptName(dept.getName());
+                loginUser.setDeptAncestors(dept.getAncestors());
             }
         }
 

@@ -58,6 +58,24 @@ const router = createRouter({
 // 是否已添加动态路由
 let isDynamicRoutesAdded = false
 
+// 保存动态路由名称，用于重置时删除
+const dynamicRouteNames: string[] = []
+
+/**
+ * 重置动态路由状态
+ * 在用户登出时调用，确保下一个用户能重新加载菜单
+ */
+export function resetRouter() {
+  // 删除所有动态添加的路由
+  dynamicRouteNames.forEach((name) => {
+    router.removeRoute(name)
+  })
+  dynamicRouteNames.length = 0
+
+  // 重置标志
+  isDynamicRoutesAdded = false
+}
+
 // 路由守卫
 router.beforeEach(async (to, from, next) => {
   // 设置页面标题
@@ -99,6 +117,10 @@ router.beforeEach(async (to, from, next) => {
       if (dynamicRoutes.length > 0) {
         dynamicRoutes.forEach((route) => {
           router.addRoute('Layout', route)
+          // 保存路由名称，用于登出时删除
+          if (route.name) {
+            dynamicRouteNames.push(route.name as string)
+          }
         })
       }
 
@@ -131,10 +153,11 @@ router.beforeEach(async (to, from, next) => {
 
 /**
  * 提取所有权限标识
+ * 从菜单树中提取所有权限标识，用于前端权限判断
  */
 function extractPermissions(menus: any[]): string[] {
   const permissions: string[] = []
-  
+
   menus.forEach((menu) => {
     if (menu.permission) {
       permissions.push(menu.permission)
@@ -143,12 +166,7 @@ function extractPermissions(menus: any[]): string[] {
       permissions.push(...extractPermissions(menu.children))
     }
   })
-  
-  // 添加超级管理员权限标识
-  if (permissions.length === 0) {
-    permissions.push('*:*:*')
-  }
-  
+
   return permissions
 }
 

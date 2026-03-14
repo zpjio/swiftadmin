@@ -4,6 +4,7 @@ import cn.swiftadmin.common.security.annotation.OperationLog;
 import cn.swiftadmin.common.security.domain.LoginUser;
 import cn.swiftadmin.common.security.event.OperationLogEvent;
 import cn.swiftadmin.common.core.util.ServletUtils;
+import cn.swiftadmin.common.security.util.SecurityUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -15,8 +16,6 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -96,7 +95,7 @@ public class OperationLogAspect {
         }
 
         // 获取当前用户
-        LoginUser loginUser = getLoginUser();
+        LoginUser loginUser = SecurityUtils.getLoginUser();
         if (loginUser != null) {
             logData.put("operName", loginUser.getUsername());
             logData.put("deptName", loginUser.getNickname());
@@ -207,35 +206,6 @@ public class OperationLogAspect {
             log.warn("获取请求参数失败", e);
             return "";
         }
-    }
-
-    /**
-     * 获取当前登录用户
-     */
-    private LoginUser getLoginUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof LoginUser) {
-            return (LoginUser) authentication.getPrincipal();
-        }
-        return null;
-    }
-
-    /**
-     * 获取客户端IP
-     */
-    private String getClientIp(HttpServletRequest request) {
-        String ip = request.getHeader("X-Forwarded-For");
-        if (!StringUtils.hasText(ip) || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("X-Real-IP");
-        }
-        if (!StringUtils.hasText(ip) || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr();
-        }
-        // 多个代理时取第一个IP
-        if (ip != null && ip.contains(",")) {
-            ip = ip.split(",")[0].trim();
-        }
-        return ip;
     }
 
     /**

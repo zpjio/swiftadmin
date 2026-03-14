@@ -1,5 +1,24 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios'
+import { createDiscreteApi } from 'naive-ui'
 import { showMessage } from './status'
+
+// 使用 naive-ui 的 createDiscreteApi 创建全局消息实例
+const { message: naiveMessage } = createDiscreteApi(['message'])
+
+/**
+ * 显示错误消息
+ */
+function showErrorMessage(msg: string) {
+  naiveMessage.error(msg)
+}
+
+/**
+ * 扩展的请求配置，支持静默模式
+ */
+export interface RequestOptions extends AxiosRequestConfig {
+  /** 静默模式，不显示错误提示 */
+  silent?: boolean
+}
 
 /**
  * 后端统一响应格式
@@ -47,6 +66,7 @@ service.interceptors.response.use(
     }
 
     const res = response.data
+    const silent = (response.config as RequestOptions).silent
 
     console.log('[Response] URL:', response.config.url, 'Code:', res.code, 'Data:', res.data ? 'has data' : 'null')
 
@@ -60,6 +80,10 @@ service.interceptors.response.use(
       }
 
       const msg = showMessage(res.code, res.message)
+      // 静默模式不显示错误消息
+      if (!silent) {
+        showErrorMessage(msg)
+      }
       return Promise.reject(new Error(msg))
     }
 
@@ -68,8 +92,13 @@ service.interceptors.response.use(
   },
   (error) => {
     console.error('[Response Error]', error.response?.data)
+    const silent = (error.config as RequestOptions)?.silent
     const responseData = error.response?.data
     const message = responseData?.message || error.message || '网络错误'
+    // 静默模式不显示错误消息
+    if (!silent) {
+      showErrorMessage(message)
+    }
     return Promise.reject(new Error(message))
   }
 )
@@ -88,19 +117,19 @@ function filterParams(params?: any): any {
 }
 
 // 封装请求方法
-export function get<T = any>(url: string, params?: any, config?: AxiosRequestConfig): Promise<T> {
+export function get<T = any>(url: string, params?: any, config?: RequestOptions): Promise<T> {
   return service.get(url, { params: filterParams(params), ...config })
 }
 
-export function post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+export function post<T = any>(url: string, data?: any, config?: RequestOptions): Promise<T> {
   return service.post(url, data, config)
 }
 
-export function put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+export function put<T = any>(url: string, data?: any, config?: RequestOptions): Promise<T> {
   return service.put(url, data, config)
 }
 
-export function del<T = any>(url: string, params?: any, config?: AxiosRequestConfig): Promise<T> {
+export function del<T = any>(url: string, params?: any, config?: RequestOptions): Promise<T> {
   return service.delete(url, { params, ...config })
 }
 

@@ -9,11 +9,13 @@ import cn.swiftadmin.system.api.dto.RoleDTO;
 import cn.swiftadmin.system.api.dto.RoleQueryDTO;
 import cn.swiftadmin.system.api.entity.SysRole;
 import cn.swiftadmin.system.api.entity.SysRoleMenu;
+import cn.swiftadmin.system.api.entity.SysRoleDept;
 import cn.swiftadmin.system.api.service.PermissionCacheRefreshService;
 import cn.swiftadmin.system.api.service.RoleService;
 import cn.swiftadmin.system.api.vo.RoleVO;
 import cn.swiftadmin.system.mapper.SysRoleMapper;
 import cn.swiftadmin.system.mapper.SysRoleMenuMapper;
+import cn.swiftadmin.system.mapper.SysRoleDeptMapper;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.update.UpdateChain;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
@@ -28,6 +30,7 @@ import java.util.stream.Collectors;
 
 import static cn.swiftadmin.system.api.entity.table.SysRoleTableDef.SYS_ROLE;
 import static cn.swiftadmin.system.api.entity.table.SysRoleMenuTableDef.SYS_ROLE_MENU;
+import static cn.swiftadmin.system.api.entity.table.SysRoleDeptTableDef.SYS_ROLE_DEPT;
 import static cn.swiftadmin.system.api.entity.table.SysUserRoleTableDef.SYS_USER_ROLE;
 
 /**
@@ -40,11 +43,14 @@ import static cn.swiftadmin.system.api.entity.table.SysUserRoleTableDef.SYS_USER
 public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> implements RoleService {
 
     private final SysRoleMenuMapper roleMenuMapper;
+    private final SysRoleDeptMapper roleDeptMapper;
     private final PermissionCacheRefreshService cacheRefreshService;
 
     public RoleServiceImpl(SysRoleMenuMapper roleMenuMapper,
+                          SysRoleDeptMapper roleDeptMapper,
                           PermissionCacheRefreshService cacheRefreshService) {
         this.roleMenuMapper = roleMenuMapper;
+        this.roleDeptMapper = roleDeptMapper;
         this.cacheRefreshService = cacheRefreshService;
     }
 
@@ -67,6 +73,7 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
         }
         RoleVO vo = BeanCopyUtils.copy(role, RoleVO::new);
         vo.setMenuIds(getMenuIdsByRoleId(id));
+        vo.setDeptIds(getDeptIdsByRoleId(id));
         return vo;
     }
 
@@ -104,6 +111,11 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
         // 分配菜单权限
         if (!CollectionUtils.isEmpty(dto.getMenuIds())) {
             assignMenus(role.getId(), dto.getMenuIds());
+        }
+
+        // 分配数据权限（自定义）
+        if (dto.getDataScope() != null && dto.getDataScope() == 2 && !CollectionUtils.isEmpty(dto.getDeptIds())) {
+            assignDepts(role.getId(), dto.getDeptIds());
         }
 
         return role.getId();
@@ -148,6 +160,17 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
         if (dto.getMenuIds() != null) {
             assignMenus(dto.getId(), dto.getMenuIds());
         }
+
+        // 更新数据权限
+        if (dto.getDataScope() != null) {
+            if (dto.getDataScope() == 2) {
+                // 自定义数据权限，无论 deptIds 是否为空都要更新（会清除旧的关联）
+                assignDepts(dto.getId(), dto.getDeptIds() != null ? dto.getDeptIds() : List.of());
+            } else {
+                // 如果数据范围不是自定义，清除原有的部门关联
+                roleDeptMapper.deleteByQuery(QueryWrapper.create().where(SYS_ROLE_DEPT.ROLE_ID.eq(dto.getId())));
+            }
+        }
     }
 
     @Override
@@ -159,6 +182,7 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
 
             mapper.deleteBatchByIds(ids);
             roleMenuMapper.deleteByQuery(QueryWrapper.create().where(SYS_ROLE_MENU.ROLE_ID.in(ids)));
+            roleDeptMapper.deleteByQuery(QueryWrapper.create().where(SYS_ROLE_DEPT.ROLE_ID.in(ids)));
         }
     }
 
@@ -168,10 +192,9 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
         roleMenuMapper.deleteByQuery(QueryWrapper.create().where(SYS_ROLE_MENU.ROLE_ID.eq(roleId)));
 
         if (!CollectionUtils.isEmpty(menuIds)) {
-            List<SysRoleMenu> roleMenus = menuIds.stream()
-                    .map(menuId -> SysRoleMenu.builder().roleId(roleId).menuId(menuId).build())
-                    .collect(Collectors.toList());
-            roleMenuMapper.insertBatch(roleMenus);
+            for (Long menuId : menuIds) {
+                roleMenuMapper.insertRoleMenu(roleId, menuId);
+            }
         }
 
         // 清除拥有该角色的用户权限缓存
@@ -211,6 +234,35 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
                                 .where(SYS_ROLE_MENU.ROLE_ID.eq(roleId)))
                 .stream()
                 .map(SysRoleMenu::getMenuId)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void assignDepts(Long roleId, List<Long> deptIds) {
+        // 先删除原有的关联
+        roleDeptMapper.deleteByQuery(QueryWrapper.create().where(SYS_ROLE_DEPT.ROLE_ID.eq(roleId)));
+
+        // 保存新的关联
+        if (!CollectionUtils.isEmpty(deptIds)) {
+            for (Long deptId : deptIds) {
+                roleDeptMapper.insertRoleDept(roleId, deptId);
+            }
+        }
+
+        // 清除拥有该角色的用户权限缓存
+        cacheRefreshService.clearCacheByRoleId(roleId);
+    }
+
+    @Override
+    public List<Long> getDeptIdsByRoleId(Long roleId) {
+        return roleDeptMapper.selectListByQuery(
+                        QueryWrapper.create()
+                                .select(SYS_ROLE_DEPT.DEPT_ID)
+                                .from(SYS_ROLE_DEPT)
+                                .where(SYS_ROLE_DEPT.ROLE_ID.eq(roleId)))
+                .stream()
+                .map(SysRoleDept::getDeptId)
                 .collect(Collectors.toList());
     }
 

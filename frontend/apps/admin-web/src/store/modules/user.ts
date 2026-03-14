@@ -3,6 +3,7 @@ import { ref } from 'vue'
 
 import type { MenuVO } from '@/api/menu'
 import { refreshPermissionApi, checkPermissionRefreshApi } from '@/api/auth'
+import { resetRouter } from '@/router'
 
 export interface UserInfo {
   id: number
@@ -55,8 +56,11 @@ export const useUserStore = defineStore('user', () => {
     userInfo.value = null
     roles.value = []
     permissions.value = []
+    userMenus.value = [] // 清除菜单
     localStorage.removeItem('token')
     localStorage.removeItem('refreshToken')
+    // 重置路由状态，确保下一个用户能重新加载菜单
+    resetRouter()
   }
 
   // 初始化 Token

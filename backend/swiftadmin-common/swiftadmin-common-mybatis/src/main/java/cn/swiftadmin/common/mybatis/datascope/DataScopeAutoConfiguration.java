@@ -1,29 +1,31 @@
 package cn.swiftadmin.common.mybatis.datascope;
 
+import cn.swiftadmin.common.mybatis.aspect.DataScopeAspect;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
 /**
  * 数据权限自动配置
- * <p>配置数据权限拦截器和工厂</p>
  *
  * @author zhangpengju
  * @since 2026-03-11
  */
 @Slf4j
 @Configuration
+@EnableAspectJAutoProxy(proxyTargetClass = true, exposeProxy = true)
 public class DataScopeAutoConfiguration {
 
     /**
-     * 数据权限拦截器
+     * 数据权限切面
      */
     @Bean
     @ConditionalOnMissingBean
-    public DataScopeInterceptor dataScopeInterceptor() {
-        log.info("注册数据权限拦截器");
-        return new DataScopeInterceptor();
+    public DataScopeAspect dataScopeAspect() {
+        log.info("注册数据权限切面");
+        return new DataScopeAspect();
     }
 
 }

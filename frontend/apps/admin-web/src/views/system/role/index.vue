@@ -101,6 +101,28 @@
             :options="dataScopeOptions"
           />
         </NFormItem>
+        <!-- 自定义数据权限 - 部门选择 -->
+        <NFormItem v-if="!isAdminRole && formData.dataScope === 2" label="数据权限" path="deptIds">
+          <div class="w-full">
+            <NSpace style="margin-bottom: 8px;">
+              <NButton size="small" @click="handleSelectAllDept">全选</NButton>
+              <NButton size="small" @click="handleUnselectAllDept">取消全选</NButton>
+            </NSpace>
+            <div class="dept-tree-container">
+              <NTree
+                ref="deptTreeRef"
+                :data="deptTreeData"
+                :checked-keys="formData.deptIds"
+                @update:checked-keys="handleDeptCheckedChange"
+                checkable
+                block-line
+                cascade
+                key-field="key"
+                label-field="label"
+              />
+            </div>
+          </div>
+        </NFormItem>
         <NFormItem label="备注" path="description">
           <NInput v-model:value="formData.description" type="textarea" placeholder="请输入备注" />
         </NFormItem>
@@ -154,8 +176,10 @@ import { reactive, ref, h, onMounted, computed, watch } from 'vue'
 import { useMessage, useDialog, type DataTableColumns, type FormInst, type FormRules, type TreeOption } from 'naive-ui'
 import { getRolePageApi, getRoleDetailApi, createRoleApi, updateRoleApi, deleteRoleApi, assignMenusApi } from '@/api/role'
 import { getMenuTreeApi } from '@/api/menu'
+import { getDeptTreeApi } from '@/api/dept'
 import type { RoleVO, RoleDTO, RoleQuery } from '@/api/role'
 import type { MenuVO } from '@/api/menu'
+import type { DeptVO } from '@/api/dept'
 import { generateRoleCode } from '@/utils/codeGenerator'
 import { usePermission } from '@/composables'
 
@@ -241,11 +265,10 @@ const columns: DataTableColumns<RoleVO> = [
     render: (row) => {
       const buttons: any[] = []
       const isAdmin = row.code === 'admin'
-      if (hasPermission('system:role:edit')) {
+      // 超级管理员角色不能编辑、分配权限、删除
+      if (hasPermission('system:role:edit') && !isAdmin) {
         buttons.push(h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#1890ff', cursor: 'pointer' }, onClick: () => handleEdit(row) }, '编辑'))
-        if (!isAdmin) {
-          buttons.push(h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#52c41a', cursor: 'pointer' }, onClick: () => handlePermission(row) }, '分配权限'))
-        }
+        buttons.push(h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#52c41a', cursor: 'pointer' }, onClick: () => handlePermission(row) }, '分配权限'))
       }
       if (hasPermission('system:role:delete') && !isAdmin) {
         buttons.push(h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer' }, onClick: () => handleDelete(row) }, '删除'))
@@ -269,6 +292,7 @@ const formData = reactive<RoleDTO>({
   description: '',
   status: 1,
   dataScope: 5,
+  deptIds: [],
 })
 
 // 计算生成的编码预览
@@ -317,6 +341,60 @@ const permissionForm = reactive({
   roleId: 0,
   menuIds: [] as number[],
 })
+
+// 部门树相关
+const deptTreeRef = ref<any>(null)
+const deptTreeData = ref<TreeOption[]>([])
+const allDeptIds = ref<number[]>([])
+
+// 加载部门树
+const loadDeptTree = async () => {
+  try {
+    const res = await getDeptTreeApi()
+    const deptData = res as DeptVO[]
+    deptTreeData.value = convertDeptToTree(deptData)
+    allDeptIds.value = getAllDeptIds(deptData)
+  } catch (error) {
+    console.error('加载部门树失败:', error)
+  }
+}
+
+// 获取所有部门ID
+const getAllDeptIds = (depts: DeptVO[]): number[] => {
+  const ids: number[] = []
+  const traverse = (items: DeptVO[]) => {
+    items.forEach((item) => {
+      ids.push(item.id)
+      if (item.children) traverse(item.children)
+    })
+  }
+  traverse(depts)
+  return ids
+}
+
+// 转换部门数据为树形结构
+const convertDeptToTree = (depts: DeptVO[]): TreeOption[] => {
+  return depts.map((dept) => ({
+    key: dept.id,
+    label: dept.name,
+    children: dept.children ? convertDeptToTree(dept.children) : undefined,
+  }))
+}
+
+// 部门选中变化
+const handleDeptCheckedChange = (keys: Array<string | number>) => {
+  formData.deptIds = keys as number[]
+}
+
+// 全选部门
+const handleSelectAllDept = () => {
+  formData.deptIds = [...allDeptIds.value]
+}
+
+// 取消全选部门
+const handleUnselectAllDept = () => {
+  formData.deptIds = []
+}
 
 // 加载菜单树
 const loadMenuTree = async () => {
@@ -442,6 +520,7 @@ const handleAdd = () => {
     description: '',
     status: 1,
     dataScope: 5,
+    deptIds: [],
   })
   showModal.value = true
 }
@@ -457,8 +536,9 @@ const handleEdit = async (row: RoleVO) => {
       name: detail.name,
       code: detail.code,
       description: detail.description,
-      status: detail.status,
-      dataScope: detail.dataScope,
+      status: detail.status ?? 1,
+      dataScope: detail.dataScope ?? 5,
+      deptIds: detail.deptIds || [],
     })
     showModal.value = true
   } catch (error: any) {
@@ -583,6 +663,7 @@ const onChecked = (rowKeys: (string | number)[]) => {
 onMounted(() => {
   loadData()
   loadMenuTree()
+  loadDeptTree()
 })
 </script>
 
@@ -605,6 +686,14 @@ onMounted(() => {
 
 .menu-tree-container {
   max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 8px;
+}
+
+.dept-tree-container {
+  max-height: 300px;
   overflow-y: auto;
   border: 1px solid #e0e0e0;
   border-radius: 4px;

@@ -41,6 +41,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     /** 缓存有效期（分钟） */
     private static final int CACHE_EXPIRE_MINUTES = 30;
 
+    /** 数据权限范围常量 */
+    private static final int DATA_SCOPE_ALL = 1;
+    private static final int DATA_SCOPE_CUSTOM = 2;
+    private static final int DATA_SCOPE_SELF = 5;
+
     /**
      * 根据用户名加载用户信息
      */
@@ -171,11 +176,16 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         loginUser.setDeptId(user.getDeptId());
         loginUser.setStatus(user.getStatus() != null ? user.getStatus().getCode() : null);
 
-        // 查询部门名称
+        // 设置超级管理员标识
+        boolean isSuperAdmin = user.getIsSuper() != null && user.getIsSuper().isYes();
+        loginUser.setSuperAdmin(isSuperAdmin);
+
+        // 查询部门名称和祖级路径
         if (user.getDeptId() != null) {
             SysDept dept = deptService.getById(user.getDeptId());
             if (dept != null) {
                 loginUser.setDeptName(dept.getName());
+                loginUser.setDeptAncestors(dept.getAncestors());
             }
         }
 
@@ -190,6 +200,27 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             log.warn("加载用户权限失败: userId={}", user.getId(), e);
             loginUser.setPermissions(Set.of());
             loginUser.setRoles(Set.of());
+        }
+
+        // 设置数据权限范围
+        log.debug("设置数据权限: userId={}, isSuperAdmin={}", user.getId(), isSuperAdmin);
+        if (isSuperAdmin) {
+            // 超级管理员拥有全部数据权限
+            loginUser.setDataScope(DATA_SCOPE_ALL);
+        } else {
+            try {
+                Integer dataScope = permissionService.getDataScopeByUserId(user.getId());
+                loginUser.setDataScope(dataScope);
+
+                // 如果是自定义数据权限，加载自定义部门ID列表
+                if (dataScope != null && dataScope == DATA_SCOPE_CUSTOM) {
+                    java.util.List<Long> customDeptIds = permissionService.getCustomDeptIdsByUserId(user.getId());
+                    loginUser.setCustomDeptIds(customDeptIds);
+                }
+            } catch (Exception e) {
+                log.warn("加载数据权限失败: userId={}", user.getId(), e);
+                loginUser.setDataScope(DATA_SCOPE_SELF); // 默认仅本人
+            }
         }
 
         return loginUser;

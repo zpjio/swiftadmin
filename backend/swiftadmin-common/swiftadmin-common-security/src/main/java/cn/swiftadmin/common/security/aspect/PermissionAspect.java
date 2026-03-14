@@ -4,13 +4,12 @@ import cn.swiftadmin.common.security.annotation.RequiresPermission;
 import cn.swiftadmin.common.security.annotation.RequiresRole;
 import cn.swiftadmin.common.security.domain.LoginUser;
 import cn.swiftadmin.common.security.exception.PermissionDeniedException;
+import cn.swiftadmin.common.security.util.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -39,7 +38,7 @@ public class PermissionAspect {
         Method method = signature.getMethod();
         RequiresPermission annotation = method.getAnnotation(RequiresPermission.class);
 
-        LoginUser loginUser = getLoginUser();
+        LoginUser loginUser = SecurityUtils.getLoginUser();
         String[] permissions = annotation.value();
 
         if (loginUser == null) {
@@ -81,7 +80,7 @@ public class PermissionAspect {
         Method method = signature.getMethod();
         RequiresRole annotation = method.getAnnotation(RequiresRole.class);
 
-        LoginUser loginUser = getLoginUser();
+        LoginUser loginUser = SecurityUtils.getLoginUser();
         String[] roles = annotation.value();
 
         if (loginUser == null) {
@@ -112,17 +111,6 @@ public class PermissionAspect {
         }
 
         return joinPoint.proceed();
-    }
-
-    /**
-     * 获取当前登录用户
-     */
-    private LoginUser getLoginUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof LoginUser) {
-            return (LoginUser) authentication.getPrincipal();
-        }
-        return null;
     }
 
     /**

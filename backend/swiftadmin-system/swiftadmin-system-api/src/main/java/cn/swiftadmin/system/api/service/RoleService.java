@@ -95,4 +95,20 @@ public interface RoleService extends IService<SysRole> {
      */
     List<Long> getMenuIdsByRoleId(Long roleId);
 
+    /**
+     * 分配数据权限（自定义部门）
+     *
+     * @param roleId 角色 ID
+     * @param deptIds 部门 ID 列表
+     */
+    void assignDepts(Long roleId, List<Long> deptIds);
+
+    /**
+     * 根据角色 ID 获取部门 ID 列表
+     *
+     * @param roleId 角色 ID
+     * @return 部门 ID 列表
+     */
+    List<Long> getDeptIdsByRoleId(Long roleId);
+
 }

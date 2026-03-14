@@ -360,6 +360,9 @@ const handleUserAction = async (key: string) => {
     } catch (error) {
       console.error('登出失败:', error)
     } finally {
+      // 重置标签页状态
+      tagsStore.resetViews()
+      // 清除用户状态和路由
       userStore.logout()
       router.push('/login')
       message.success('已退出登录')

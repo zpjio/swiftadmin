@@ -69,8 +69,8 @@
 
     <!-- 新增/编辑弹窗 -->
     <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 700px;">
-      <NAlert v-if="isSuperAdmin" type="warning" style="margin-bottom: 16px;">
-        超级管理员拥有系统全部权限，角色和状态不可修改
+      <NAlert v-if="isSuperAdminEditingSelf" type="info" style="margin-bottom: 16px;">
+        您正在编辑自己的基本信息，用户名、角色、状态不可修改
       </NAlert>
       <NForm :model="formData" :rules="computedFormRules" ref="formRef" label-placement="left" label-width="80">
         <NFormItem label="用户名" path="username">
@@ -86,6 +86,7 @@
             placeholder="请选择部门"
             clearable
             default-expand-all
+            :disabled="isSuperAdminEditingSelf"
           />
         </NFormItem>
         <NFormItem label="角色" path="roleIds">
@@ -171,10 +172,15 @@ import type { DeptVO } from '@/api/dept'
 import type { RoleVO } from '@/api/role'
 
 import { usePermission } from '@/composables'
+import { useUserStore } from '@/store'
 
 const message = useMessage()
 const dialog = useDialog()
 const { hasPermission } = usePermission()
+const userStore = useUserStore()
+
+// 当前登录用户ID
+const currentUserId = computed(() => userStore.userInfo?.id)
 
 const loading = ref(false)
 const tableData = ref<UserVO[]>([])
@@ -251,13 +257,17 @@ const columns: DataTableColumns<UserVO> = [
     fixed: 'right',
     render: (row) => {
       const isSuperAdmin = row.username === 'admin'
+      const isSelf = row.id === currentUserId.value
       const buttons: any[] = []
-      if (hasPermission('system:user:edit')) {
+      // 超级管理员可以编辑自己（基本信息的），其他用户不能编辑超级管理员
+      if (hasPermission('system:user:edit') && (!isSuperAdmin || isSelf)) {
         buttons.push(h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#1890ff', cursor: 'pointer' }, onClick: () => handleEdit(row) }, '编辑'))
       }
-      if (hasPermission('system:user:resetPassword')) {
+      // 重置密码：超级管理员不能被重置（包括自己），其他人正常
+      if (hasPermission('system:user:resetPwd') && !isSuperAdmin) {
         buttons.push(h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#faad14', cursor: 'pointer' }, onClick: () => handleResetPassword(row) }, '重置密码'))
       }
+      // 删除：超级管理员不能被删除
       if (hasPermission('system:user:delete') && !isSuperAdmin) {
         buttons.push(h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer' }, onClick: () => handleDelete(row) }, '删除'))
       }
@@ -288,6 +298,11 @@ const formData = reactive<UserDTO>({
 
 // 判断是否为超级管理员
 const isSuperAdmin = computed(() => formData.username === 'admin')
+
+// 判断是否是超级管理员编辑自己
+const isSuperAdminEditingSelf = computed(() => {
+  return isSuperAdmin.value && formData.id === currentUserId.value
+})
 
 // 动态表单验证规则
 const computedFormRules = computed<FormRules>(() => ({
@@ -324,10 +339,12 @@ const resetPasswordRules: FormRules = {
 // 加载部门树
 const loadDeptTree = async () => {
   try {
-    const res = await getDeptTreeApi()
+    // 使用静默模式，权限不足时不显示错误提示
+    const res = await getDeptTreeApi(undefined, true)
     deptSelectTreeData.value = convertDeptTree(res as DeptVO[])
   } catch (error) {
-    console.error('加载部门树失败:', error)
+    // 权限不足时静默处理
+    console.debug('加载部门树失败，可能缺少权限')
   }
 }
 
@@ -343,10 +360,12 @@ const convertDeptTree = (items: DeptVO[]): TreeSelectOption[] => {
 // 加载角色列表
 const loadRoleList = async () => {
   try {
-    const res = await getRoleListApi()
+    // 使用静默模式，权限不足时不显示错误提示
+    const res = await getRoleListApi(true)
     roleOptions.value = (res as RoleVO[]).map((item) => ({ label: item.name, value: item.id }))
   } catch (error) {
-    console.error('加载角色列表失败:', error)
+    // 权限不足时静默处理
+    console.debug('加载角色列表失败，可能缺少权限')
   }
 }
 

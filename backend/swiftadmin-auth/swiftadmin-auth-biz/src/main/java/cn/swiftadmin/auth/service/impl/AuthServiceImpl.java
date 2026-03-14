@@ -14,6 +14,7 @@ import cn.swiftadmin.common.core.util.ServletUtils;
 import cn.swiftadmin.common.security.domain.LoginUser;
 import cn.swiftadmin.common.security.service.PermissionWarmupService;
 import cn.swiftadmin.common.security.service.UserSessionService;
+import cn.swiftadmin.common.security.util.SecurityUtils;
 import cn.swiftadmin.system.api.entity.SysUser;
 import cn.swiftadmin.system.api.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,7 +22,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -82,8 +82,8 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void logout() {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof LoginUser loginUser) {
+        LoginUser loginUser = SecurityUtils.getLoginUser();
+        if (loginUser != null) {
             // 1. 获取当前请求的 Token 并加入黑名单
             String token = getTokenFromRequest();
             if (token != null) {

@@ -5,6 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
 /**
  * SwiftAdmin 启动类
@@ -14,7 +16,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @since 2026-03-09
  */
 @SpringBootApplication
+@ComponentScan(basePackages = "cn.swiftadmin")
 @MapperScan({"cn.swiftadmin.system.mapper", "cn.swiftadmin.auth.mapper", "cn.swiftadmin.message.mapper"})
+@EnableAspectJAutoProxy(proxyTargetClass = true, exposeProxy = true)
 public class SwiftAdminApplication {
 
     private static final Logger logger = LoggerFactory.getLogger(SwiftAdminApplication.class);

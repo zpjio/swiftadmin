@@ -86,6 +86,13 @@ public class LoginUser implements UserDetails {
         return superAdmin || (dataScope != null && dataScope == 1);
     }
 
+    /**
+     * 判断是否需要数据权限过滤
+     */
+    public boolean needDataScopeFilter() {
+        return !superAdmin && dataScope != null && dataScope != 1;
+    }
+
     @Override
     @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {

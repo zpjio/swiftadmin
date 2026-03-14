@@ -33,9 +33,11 @@ export interface DeptDTO {
 
 /**
  * 获取部门树
+ * @param status 状态过滤
+ * @param silent 静默模式，权限不足时不显示错误提示
  */
-export function getDeptTreeApi(status?: number) {
-  return get<DeptVO[]>('/system/dept/tree', { status })
+export function getDeptTreeApi(status?: number, silent?: boolean) {
+  return get<DeptVO[]>('/system/dept/tree', { status }, { silent })
 }
 
 /**

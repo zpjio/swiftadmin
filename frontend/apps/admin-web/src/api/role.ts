@@ -58,9 +58,10 @@ export function getRoleDetailApi(id: number) {
 
 /**
  * 获取角色列表（下拉选择）
+ * @param silent 静默模式，权限不足时不显示错误提示
  */
-export function getRoleListApi() {
-  return get<RoleVO[]>('/system/role/list')
+export function getRoleListApi(silent?: boolean) {
+  return get<RoleVO[]>('/system/role/list', undefined, { silent })
 }
 
 /**
