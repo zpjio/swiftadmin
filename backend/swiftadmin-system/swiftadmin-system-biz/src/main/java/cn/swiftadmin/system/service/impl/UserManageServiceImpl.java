@@ -7,6 +7,7 @@ import cn.swiftadmin.common.core.result.PasswordStrengthResult;
 import cn.swiftadmin.common.core.service.PasswordValidator;
 import cn.swiftadmin.common.mybatis.annotation.DataScope;
 import cn.swiftadmin.common.mybatis.annotation.DataScopeValidate;
+import cn.swiftadmin.common.mybatis.util.QueryWrappers;
 import com.mybatisflex.core.paginate.Page;
 import cn.swiftadmin.common.core.util.BeanCopyUtils;
 import cn.swiftadmin.common.mybatis.util.PageHelper;
@@ -63,9 +64,9 @@ public class UserManageServiceImpl extends ServiceImpl<SysUserMapper, SysUser> i
     }
 
     @Override
-    @DataScope(userAlias = "u")
+    @DataScope(userAlias = "u", userIdField = "id")
     public Page<UserVO> page(UserQueryDTO query) {
-        QueryWrapper queryWrapper = QueryWrapper.create()
+        QueryWrapper queryWrapper = QueryWrappers.create()
                 .select(SYS_USER.ALL_COLUMNS, SYS_DEPT.NAME.as(UserVO.FIELD_DEPT_NAME))
                 .from(SYS_USER.as("u"))
                 .leftJoin(SYS_DEPT.as("d")).on(SYS_USER.DEPT_ID.eq(SYS_DEPT.ID))
@@ -77,8 +78,6 @@ public class UserManageServiceImpl extends ServiceImpl<SysUserMapper, SysUser> i
                 .and(SYS_USER.CREATE_TIME.ge(query.getCreateTimeBegin(), query.getCreateTimeBegin() != null))
                 .and(SYS_USER.CREATE_TIME.le(query.getCreateTimeEnd(), query.getCreateTimeEnd() != null))
                 .orderBy(SYS_USER.CREATE_TIME.desc());
-
-        // 数据权限由 @DataScope 注解自动处理，无需手动调用
 
         return mapper
                 .paginateAs(PageHelper.of(query.getPage(), query.getPageSize()), queryWrapper, UserVO.class);

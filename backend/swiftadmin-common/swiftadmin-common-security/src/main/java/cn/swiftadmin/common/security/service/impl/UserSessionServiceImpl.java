@@ -115,25 +115,26 @@ public class UserSessionServiceImpl implements UserSessionService {
     @Override
     public boolean removeSession(String sessionId) {
         String tokenKey = RedisKeyConstants.loginToken(sessionId);
-        String json = stringRedisTemplate.opsForValue().get(tokenKey);
+        String extraKey = RedisKeyConstants.loginSessionExtra(sessionId);
+        String json = stringRedisTemplate.opsForValue().getAndDelete(tokenKey);
 
         if (json != null) {
             try {
                 LoginUser loginUser = objectMapper.readValue(json, LoginUser.class);
-                stringRedisTemplate.delete(tokenKey);
-                stringRedisTemplate.delete(RedisKeyConstants.loginSessionExtra(sessionId));
+                stringRedisTemplate.delete(extraKey);
                 if (loginUser != null && loginUser.getUserId() != null) {
                     stringRedisTemplate.opsForSet().remove(RedisKeyConstants.USER_TOKENS + loginUser.getUserId(), sessionId);
                 }
-                log.debug("删除用户会话: sessionId={}", sessionId);
+                log.info("删除用户会话成功: sessionId={}, userId={}", sessionId, loginUser != null ? loginUser.getUserId() : null);
                 return true;
             } catch (JsonProcessingException e) {
                 log.error("反序列化 LoginUser 失败", e);
             }
         }
 
-        stringRedisTemplate.delete(tokenKey);
-        stringRedisTemplate.delete(RedisKeyConstants.loginSessionExtra(sessionId));
+        // 清理可能残留的 key
+        stringRedisTemplate.delete(extraKey);
+        log.debug("会话不存在或已过期: sessionId={}", sessionId);
         return false;
     }
 
@@ -141,9 +142,23 @@ public class UserSessionServiceImpl implements UserSessionService {
     public List<String> getUserSessionIds(Long userId) {
         Set<String> tokens = stringRedisTemplate.opsForSet().members(RedisKeyConstants.USER_TOKENS + userId);
         if (CollectionUtils.isEmpty(tokens)) {
+            log.debug("用户 {} 没有活跃会话", userId);
             return new ArrayList<>();
         }
-        return new ArrayList<>(tokens);
+        // 过滤掉已过期的会话
+        List<String> validSessions = new ArrayList<>();
+        for (String sessionId : tokens) {
+            Boolean exists = stringRedisTemplate.hasKey(RedisKeyConstants.loginToken(sessionId));
+            if (Boolean.TRUE.equals(exists)) {
+                validSessions.add(sessionId);
+            } else {
+                // 清理过期会话记录
+                stringRedisTemplate.opsForSet().remove(RedisKeyConstants.USER_TOKENS + userId, sessionId);
+                log.debug("清理过期会话记录: userId={}, sessionId={}", userId, sessionId);
+            }
+        }
+        log.debug("用户 {} 有效会话数: {}", userId, validSessions.size());
+        return validSessions;
     }
 
     @Override

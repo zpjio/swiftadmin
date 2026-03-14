@@ -10,19 +10,22 @@ import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.reflect.MethodSignature;
 
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * 数据权限切面
- * <p>拦截标注了 @DataScope 注解的方法，自动应用数据权限过滤</p>
+ * <p>拦截标注了 @DataScope 注解的方法，通过 ThreadLocal 传递配置，在 QueryWrapper 创建时自动应用权限过滤</p>
  *
  * <h3>使用方式：</h3>
  * <pre>
- * &#64;DataScope(userAlias = "u")
+ * &#64;DataScope(userAlias = "u", userIdField = "id")
  * public Page&lt;UserVO&gt; page(UserQueryDTO query) {
- *     QueryWrapper queryWrapper = QueryWrapper.create()
+ *     QueryWrapper qw = QueryWrappers.create()
+ *         .select(...)
  *         .from(SYS_USER.as("u"))
- *         ...
+ *         ...;
+ *     return mapper.paginateAs(page, qw, UserVO.class);
  * }
  * </pre>
  *
@@ -39,7 +42,12 @@ public class DataScopeAspect {
     private static final int SCOPE_DEPT_AND_CHILD = 4;
     private static final int SCOPE_SELF = 5;
 
+    /** 忽略数据权限标记 */
     private static final ThreadLocal<Boolean> IGNORE_FLAG = new ThreadLocal<>();
+
+    /** 当前方法的 @DataScope 配置 */
+    private static final ThreadLocal<DataScopeConfig> DATA_SCOPE_CONFIG = new ThreadLocal<>();
+
     private static SecurityContextHolder contextHolder;
 
     public static void setContextHolder(SecurityContextHolder holder) {
@@ -52,30 +60,27 @@ public class DataScopeAspect {
             return;
         }
 
-        DataScopeUser user = getCurrentUser();
-        if (user == null || !user.needFilter()) {
-            return;
-        }
-
         MethodSignature signature = (MethodSignature) point.getSignature();
         Method method = signature.getMethod();
         DataScope dataScope = method.getAnnotation(DataScope.class);
 
-        for (Object arg : point.getArgs()) {
-            if (arg instanceof QueryWrapper) {
-                applyDataScope((QueryWrapper) arg, user, dataScope);
-                return;
-            }
-        }
-
-        log.warn("未找到 QueryWrapper 参数，数据权限未生效: {}", method.getName());
+        // 存储注解配置到 ThreadLocal
+        DATA_SCOPE_CONFIG.set(new DataScopeConfig(
+                dataScope.userAlias(),
+                dataScope.deptIdField(),
+                dataScope.userIdField()
+        ));
     }
 
     @After("@annotation(cn.swiftadmin.common.mybatis.annotation.DataScope)")
     public void doAfter() {
         IGNORE_FLAG.remove();
+        DATA_SCOPE_CONFIG.remove();
     }
 
+    /**
+     * 跳过数据权限执行
+     */
     public static <T> T withoutDataScope(java.util.function.Supplier<T> supplier) {
         IGNORE_FLAG.set(Boolean.TRUE);
         try {
@@ -85,6 +90,9 @@ public class DataScopeAspect {
         }
     }
 
+    /**
+     * 跳过数据权限执行
+     */
     public static void withoutDataScope(Runnable runnable) {
         IGNORE_FLAG.set(Boolean.TRUE);
         try {
@@ -94,13 +102,52 @@ public class DataScopeAspect {
         }
     }
 
-    private DataScopeUser getCurrentUser() {
-        return contextHolder != null ? contextHolder.getCurrentUser() : null;
+    /**
+     * 应用当前方法 @DataScope 注解配置的数据权限
+     * <p>由 QueryWrappers.create() 自动调用</p>
+     */
+    @SuppressWarnings("unchecked")
+    public static void applyCurrentDataScope(QueryWrapper qw) {
+        if (Boolean.TRUE.equals(IGNORE_FLAG.get())) {
+            return;
+        }
+
+        DataScopeUser user = getCurrentUser();
+        if (user == null || !user.needFilter()) {
+            return;
+        }
+
+        DataScopeConfig config = DATA_SCOPE_CONFIG.get();
+        if (config == null) {
+            log.debug("未找到 @DataScope 配置，跳过数据权限过滤");
+            return;
+        }
+
+        applyDataScopeInternal(qw, user, config.userAlias, config.deptIdField, config.userIdField);
+    }
+
+    /**
+     * 手动应用数据权限（不依赖注解）
+     */
+    @SuppressWarnings("unchecked")
+    public static void applyDataScope(QueryWrapper qw, String userAlias, String deptIdField, String userIdField) {
+        if (Boolean.TRUE.equals(IGNORE_FLAG.get())) {
+            return;
+        }
+
+        DataScopeUser user = getCurrentUser();
+        if (user == null || !user.needFilter()) {
+            return;
+        }
+
+        applyDataScopeInternal(qw, user, userAlias, deptIdField, userIdField);
     }
 
     @SuppressWarnings("unchecked")
-    private void applyDataScope(QueryWrapper qw, DataScopeUser user, DataScope ds) {
-        String deptColumn = ds.userAlias() + "." + ds.deptIdField();
+    private static void applyDataScopeInternal(QueryWrapper qw, DataScopeUser user,
+                                                String userAlias, String deptIdField, String userIdField) {
+        String deptColumn = userAlias + "." + deptIdField;
+        String userColumn = userAlias + "." + userIdField;
 
         switch (user.scope) {
             case SCOPE_CUSTOM -> {
@@ -117,15 +164,15 @@ public class DataScopeAspect {
             case SCOPE_DEPT_AND_CHILD -> applyDeptAndChild(qw, user, deptColumn);
             case SCOPE_SELF -> {
                 if (user.userId != null) {
-                    qw.and(ds.userAlias() + "." + ds.userIdField() + " = ?", user.userId);
+                    qw.and(userColumn + " = ?", user.userId);
                 }
             }
         }
-        log.debug("数据权限过滤: scope={}", user.scope);
+        log.debug("数据权限过滤: scope={}, userId={}", user.scope, user.userId);
     }
 
     @SuppressWarnings("unchecked")
-    private void applyDeptAndChild(QueryWrapper qw, DataScopeUser user, String deptColumn) {
+    private static void applyDeptAndChild(QueryWrapper qw, DataScopeUser user, String deptColumn) {
         if (user.deptId == null) return;
         if (user.deptAncestors != null && !user.deptAncestors.isEmpty()) {
             String pattern = user.deptAncestors + "," + user.deptId;
@@ -136,14 +183,16 @@ public class DataScopeAspect {
         }
     }
 
-    private String placeholders(int count) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < count; i++) {
-            if (i > 0) sb.append(", ");
-            sb.append("?");
-        }
-        return sb.toString();
+    private static String placeholders(int count) {
+        return String.join(", ", Collections.nCopies(count, "?"));
     }
+
+    private static DataScopeUser getCurrentUser() {
+        return contextHolder != null ? contextHolder.getCurrentUser() : null;
+    }
+
+    /** @DataScope 注解配置 */
+    private record DataScopeConfig(String userAlias, String deptIdField, String userIdField) {}
 
     public interface SecurityContextHolder {
         DataScopeUser getCurrentUser();

@@ -30,7 +30,16 @@ public class SpringSecurityContextHolder implements SecurityContextHolder {
     @Override
     public DataScopeUser getCurrentUser() {
         LoginUser user = SecurityUtils.getLoginUser();
-        if (user == null || user.isSuperAdmin() || user.hasAllDataScope()) {
+        if (user == null) {
+            log.debug("getCurrentUser: LoginUser is null");
+            return null;
+        }
+        if (user.isSuperAdmin()) {
+            log.debug("getCurrentUser: user is superAdmin, skip filter");
+            return null;
+        }
+        if (user.hasAllDataScope()) {
+            log.debug("getCurrentUser: user hasAllDataScope, skip filter");
             return null;
         }
 
@@ -44,6 +53,10 @@ public class SpringSecurityContextHolder implements SecurityContextHolder {
         if (customDeptIds != null && !customDeptIds.isEmpty()) {
             dsUser.setCustomDeptIds(customDeptIds);
         }
+
+        log.debug("getCurrentUser: userId={}, deptId={}, deptAncestors={}, scope={}, customDeptIds={}",
+                user.getUserId(), user.getDeptId(), user.getDeptAncestors(),
+                user.getDataScope(), customDeptIds);
 
         return dsUser;
     }

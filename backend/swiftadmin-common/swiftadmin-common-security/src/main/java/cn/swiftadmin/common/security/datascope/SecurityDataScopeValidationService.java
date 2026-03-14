@@ -1,9 +1,11 @@
 package cn.swiftadmin.common.security.datascope;
 
 import cn.swiftadmin.common.mybatis.service.DataScopeValidationService;
+import cn.swiftadmin.common.mybatis.service.UserInfoQueryService;
 import cn.swiftadmin.common.security.domain.LoginUser;
 import cn.swiftadmin.common.security.util.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -20,6 +22,9 @@ import java.util.List;
 public class SecurityDataScopeValidationService implements DataScopeValidationService {
 
     private static final int SCOPE_SELF = 5;
+
+    @Autowired(required = false)
+    private UserInfoQueryService userInfoQueryService;
 
     @Override
     public boolean canAccessUserData(Long targetUserId) {
@@ -95,8 +100,11 @@ public class SecurityDataScopeValidationService implements DataScopeValidationSe
         if (targetDeptId.equals(user.getDeptId())) {
             return true;
         }
-        String ancestors = user.getDeptAncestors();
-        return ancestors != null && ancestors.contains(targetDeptId.toString());
+        if (userInfoQueryService != null) {
+            return userInfoQueryService.isChildDeptOrSelf(targetDeptId, user.getDeptId());
+        }
+        log.warn("UserInfoQueryService 未注入，无法校验子部门权限");
+        return false;
     }
 
     private boolean isChildOfTargetDept(Long currentDeptId, Long targetDeptId, String ancestors) {

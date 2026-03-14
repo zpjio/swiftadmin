@@ -26,4 +26,22 @@ public interface UserInfoQueryService {
      */
     String getUsernameByUserId(Long userId);
 
+    /**
+     * 获取部门的祖级路径
+     *
+     * @param deptId 部门ID
+     * @return 祖级路径（逗号分隔），不存在返回 null
+     */
+    String getDeptAncestors(Long deptId);
+
+    /**
+     * 判断目标部门是否是当前部门的子部门（或自身）
+     * <p>用于"本部门及以下"数据权限校验</p>
+     *
+     * @param targetDeptId 目标部门ID
+     * @param currentDeptId 当前部门ID
+     * @return 是子部门或自身返回 true
+     */
+    boolean isChildDeptOrSelf(Long targetDeptId, Long currentDeptId);
+
 }
