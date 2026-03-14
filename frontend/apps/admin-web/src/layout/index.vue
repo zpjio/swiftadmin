@@ -15,17 +15,19 @@
         <span v-if="!collapsed">SwiftAdmin</span>
         <span v-else>SA</span>
       </div>
-      <NMenu
-        :options="menuOptions"
-        :collapsed="collapsed"
-        :collapsed-width="64"
-        :collapsed-icon-size="22"
-        :indent="18"
-        :value="currentRoute"
-        :expanded-keys="expandedKeys"
-        @update:value="handleMenuClick"
-        @update:expanded-keys="handleExpandKeysChange"
-      />
+      <NScrollbar class="menu-scrollbar">
+        <NMenu
+          :options="menuOptions"
+          :collapsed="collapsed"
+          :collapsed-width="64"
+          :collapsed-icon-size="22"
+          :indent="18"
+          :value="currentRoute"
+          :expanded-keys="expandedKeys"
+          @update:value="handleMenuClick"
+          @update:expanded-keys="handleExpandKeysChange"
+        />
+      </NScrollbar>
     </NLayoutSider>
     
     <NLayout>
@@ -44,11 +46,7 @@
               <icon-mdi-weather-night v-else />
             </template>
           </NButton>
-          <NButton quaternary>
-            <template #icon>
-              <icon-mdi-bell />
-            </template>
-          </NButton>
+          <Notification />
           <NDropdown :options="userDropdownOptions" @select="handleUserAction">
             <NButton quaternary class="user-info">
               <img v-if="userAvatar" :src="userAvatar" class="w-6 h-6 rounded-full object-cover" />
@@ -87,6 +85,7 @@ import { toggleTheme, isDark } from '@/utils/theme'
 import { normalizeIconName } from '@/utils/icon'
 import { Icon } from '@iconify/vue'
 import TagsView from '@/components/TagsView/index.vue'
+import Notification from '@/components/Notification/index.vue'
 import type { MenuOption, DropdownOption } from 'naive-ui'
 
 const router = useRouter()
@@ -381,6 +380,10 @@ const handleUserAction = async (key: string) => {
   border-bottom: 1px solid #eee;
   cursor: pointer;
   user-select: none;
+}
+
+.menu-scrollbar {
+  height: calc(100vh - 64px);
 }
 
 .user-info {

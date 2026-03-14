@@ -29,6 +29,7 @@ spring:
     locations: classpath:db/migration
     validate-on-migrate: true
     baseline-on-migrate: true
+    placeholder-replacement: false
 
   # Redis 配置（开发环境使用嵌入式或本地 Redis）
   data:

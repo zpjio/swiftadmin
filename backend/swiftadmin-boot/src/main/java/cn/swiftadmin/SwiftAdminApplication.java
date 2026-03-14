@@ -14,7 +14,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @since 2026-03-09
  */
 @SpringBootApplication
-@MapperScan({"cn.swiftadmin.system.mapper", "cn.swiftadmin.auth.mapper"})
+@MapperScan({"cn.swiftadmin.system.mapper", "cn.swiftadmin.auth.mapper", "cn.swiftadmin.message.mapper"})
 public class SwiftAdminApplication {
 
     private static final Logger logger = LoggerFactory.getLogger(SwiftAdminApplication.class);

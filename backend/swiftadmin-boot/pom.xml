@@ -33,6 +33,12 @@
             <artifactId>swiftadmin-system-biz</artifactId>
         </dependency>
 
+        <!-- Message Biz -->
+        <dependency>
+            <groupId>cn.swiftadmin</groupId>
+            <artifactId>swiftadmin-message-biz</artifactId>
+        </dependency>
+
         <!-- Common Security -->
         <dependency>
             <groupId>cn.swiftadmin</groupId>

@@ -97,10 +97,10 @@ const handleSubmit = async () => {
       })
       
       // 保存新的 Token
-      if (res && res.data) {
-        localStorage.setItem('token', res.data.accessToken)
-        if (res.data.refreshToken) {
-          localStorage.setItem('refreshToken', res.data.refreshToken)
+      if (res && res.accessToken) {
+        localStorage.setItem('token', res.accessToken)
+        if (res.refreshToken) {
+          localStorage.setItem('refreshToken', res.refreshToken)
         }
       }
       localStorage.removeItem('tempToken')

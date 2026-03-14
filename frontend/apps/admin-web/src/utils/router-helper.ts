@@ -130,6 +130,11 @@ function loadComponent(component?: string | null) {
     'monitor/loginlog/index': () => import('@/views/monitor/loginlog/index.vue'),
     'monitor/online/index': () => import('@/views/system/online/index.vue'),
     'profile/index': () => import('@/views/profile/index.vue'),
+    // 消息模块
+    'views/message/template/index': () => import('@/views/message/template/index.vue'),
+    'views/message/channel/index': () => import('@/views/message/channel/index.vue'),
+    'views/message/inbox/index': () => import('@/views/message/inbox/index.vue'),
+    'views/message/record/index': () => import('@/views/message/record/index.vue'),
   }
 
   return componentMap[component] || (() => import('@/views/error/404.vue'))
