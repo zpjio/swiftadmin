@@ -20,6 +20,9 @@ public class OperLogQueryDTO extends PageQuery {
     /** 操作标题 */
     private String title;
 
+    /** 模块名称 */
+    private String module;
+
     /** 操作人员 */
     private String operName;
 

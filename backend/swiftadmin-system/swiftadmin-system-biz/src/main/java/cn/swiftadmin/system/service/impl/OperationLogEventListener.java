@@ -34,10 +34,12 @@ public class OperationLogEventListener {
 
             SysOperLog operLog = SysOperLog.builder()
                     .title(getString(logData, "title"))
+                    .module(getString(logData, "module"))
                     .businessType(getInteger(logData, "businessType"))
                     .method(getString(logData, "method"))
                     .requestMethod(getString(logData, "requestMethod"))
                     .operatorType(getInteger(logData, "operatorType"))
+                    .operUserId(getLong(logData, "operUserId"))
                     .operName(getString(logData, "operName"))
                     .deptName(getString(logData, "deptName"))
                     .operUrl(getString(logData, "operUrl"))
@@ -45,6 +47,14 @@ public class OperationLogEventListener {
                     .operLocation(getString(logData, "operLocation"))
                     .operParam(getString(logData, "operParam"))
                     .jsonResult(getString(logData, "jsonResult"))
+                    // 审计功能字段
+                    .tableName(getString(logData, "tableName"))
+                    .recordId(getString(logData, "recordId"))
+                    .recordName(getString(logData, "recordName"))
+                    .beforeData(getString(logData, "beforeData"))
+                    .afterData(getString(logData, "afterData"))
+                    .changedFields(getString(logData, "changedFields"))
+                    // 执行信息
                     .status(getInteger(logData, "status"))
                     .errorMsg(getString(logData, "errorMsg"))
                     .operTime((LocalDateTime) logData.get("operTime"))

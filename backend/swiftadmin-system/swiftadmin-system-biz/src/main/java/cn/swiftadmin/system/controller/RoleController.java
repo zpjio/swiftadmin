@@ -2,9 +2,11 @@ package cn.swiftadmin.system.controller;
 
 import com.mybatisflex.core.paginate.Page;
 import cn.swiftadmin.common.core.result.R;
+import cn.swiftadmin.common.security.annotation.OperationLog;
 import cn.swiftadmin.common.security.annotation.RequiresPermission;
 import cn.swiftadmin.system.api.dto.RoleDTO;
 import cn.swiftadmin.system.api.dto.RoleQueryDTO;
+import cn.swiftadmin.system.api.entity.SysRole;
 import cn.swiftadmin.system.api.service.RoleService;
 import cn.swiftadmin.system.api.vo.RoleVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -65,6 +67,8 @@ public class RoleController {
     @Operation(summary = "创建角色", description = "新增系统角色")
     @PostMapping
     @RequiresPermission("system:role:add")
+    @OperationLog(title = "角色管理", module = "系统管理", businessType = OperationLog.BusinessType.INSERT,
+            entityClass = SysRole.class, isSaveAfterData = true)
     public R<Long> create(@Valid @RequestBody RoleDTO dto) {
         return R.ok(roleService.create(dto));
     }
@@ -75,9 +79,10 @@ public class RoleController {
     @Operation(summary = "更新角色", description = "修改角色信息")
     @PutMapping
     @RequiresPermission("system:role:edit")
-    public R<Void> update(@Valid @RequestBody RoleDTO dto) {
-        roleService.update(dto);
-        return R.ok();
+    @OperationLog(title = "角色管理", module = "系统管理", businessType = OperationLog.BusinessType.UPDATE,
+            entityClass = SysRole.class, isSaveBeforeData = true, isSaveAfterData = true)
+    public R<SysRole> update(@Valid @RequestBody RoleDTO dto) {
+        return R.ok(roleService.update(dto));
     }
 
     /**
@@ -86,6 +91,8 @@ public class RoleController {
     @Operation(summary = "批量删除角色", description = "批量删除角色")
     @DeleteMapping("/{ids}")
     @RequiresPermission("system:role:delete")
+    @OperationLog(title = "角色管理", module = "系统管理", businessType = OperationLog.BusinessType.DELETE,
+            entityClass = SysRole.class, isSaveBeforeData = true)
     public R<Void> delete(@PathVariable List<Long> ids) {
         roleService.delete(ids);
         return R.ok();
@@ -97,6 +104,7 @@ public class RoleController {
     @Operation(summary = "分配菜单权限", description = "为角色分配菜单权限")
     @PutMapping("/menu")
     @RequiresPermission("system:role:edit")
+    @OperationLog(title = "角色管理", module = "系统管理", businessType = OperationLog.BusinessType.GRANT)
     public R<Void> assignMenus(@RequestParam Long roleId, @RequestParam List<Long> menuIds) {
         roleService.assignMenus(roleId, menuIds);
         return R.ok();

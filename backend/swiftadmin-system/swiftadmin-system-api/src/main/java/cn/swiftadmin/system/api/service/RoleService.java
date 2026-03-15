@@ -52,8 +52,9 @@ public interface RoleService extends IService<SysRole> {
      * 更新角色
      *
      * @param dto 角色信息
+     * @return 更新后的角色实体
      */
-    void update(RoleDTO dto);
+    SysRole update(RoleDTO dto);
 
     /**
      * 删除角色

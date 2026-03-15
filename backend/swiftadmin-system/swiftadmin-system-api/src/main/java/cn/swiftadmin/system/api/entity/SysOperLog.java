@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 
 /**
  * 操作日志实体
+ * <p>合并审计日志功能，统一记录操作行为和数据变更</p>
  *
  * @author zhangpengju
  * @since 2026-03-10
@@ -32,6 +33,10 @@ public class SysOperLog {
     @Column
     private String title;
 
+    /** 模块名称 */
+    @Column
+    private String module;
+
     /** 业务类型：0=其它，1=新增，2=修改，3=删除，4=授权，5=导出，6=导入，7=强退，8=生成代码，9=清空数据 */
     @Column
     private Integer businessType;
@@ -47,6 +52,10 @@ public class SysOperLog {
     /** 操作类别：0=其它，1=后台用户，2=手机端用户 */
     @Column
     private Integer operatorType;
+
+    /** 操作用户ID */
+    @Column
+    private Long operUserId;
 
     /** 操作人员 */
     @Column
@@ -75,6 +84,30 @@ public class SysOperLog {
     /** 返回参数 */
     @Column
     private String jsonResult;
+
+    /** 操作表名（审计功能） */
+    @Column
+    private String tableName;
+
+    /** 记录ID（审计功能） */
+    @Column
+    private String recordId;
+
+    /** 记录名称/描述（审计功能） */
+    @Column
+    private String recordName;
+
+    /** 变更前数据（审计功能，JSON） */
+    @Column
+    private String beforeData;
+
+    /** 变更后数据（审计功能，JSON） */
+    @Column
+    private String afterData;
+
+    /** 变更字段详情（审计功能，JSON） */
+    @Column
+    private String changedFields;
 
     /** 操作状态：0=正常，1=异常 */
     @Column

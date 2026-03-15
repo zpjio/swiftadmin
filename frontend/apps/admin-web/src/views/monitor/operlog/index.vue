@@ -11,6 +11,14 @@
             class="w-48"
           />
         </NFormItem>
+        <NFormItem label="模块名称" path="module">
+          <NInput
+            v-model:value="queryForm.module"
+            placeholder="请输入模块名称"
+            clearable
+            class="w-48"
+          />
+        </NFormItem>
         <NFormItem label="操作人员" path="operName">
           <NInput
             v-model:value="queryForm.operName"
@@ -103,10 +111,11 @@
     </NCard>
 
     <!-- 详情弹窗 -->
-    <NModal v-model:show="showDetailModal" preset="dialog" title="操作日志详情" :closable="true" class="w-[800px]">
+    <NModal v-model:show="showDetailModal" preset="dialog" title="操作日志详情" :closable="true" class="w-[900px]">
       <NDescriptions :column="2" bordered>
         <NDescriptionsItem label="日志 ID">{{ currentDetail?.id }}</NDescriptionsItem>
         <NDescriptionsItem label="操作标题">{{ currentDetail?.title }}</NDescriptionsItem>
+        <NDescriptionsItem label="模块名称">{{ currentDetail?.module || '-' }}</NDescriptionsItem>
         <NDescriptionsItem label="业务类型">
           {{ getBusinessTypeLabel(currentDetail?.businessType) }}
         </NDescriptionsItem>
@@ -126,6 +135,23 @@
         <NDescriptionsItem label="操作时间" :span="2">
           {{ currentDetail?.operTime }}
         </NDescriptionsItem>
+
+        <!-- 审计信息 -->
+        <template v-if="currentDetail?.tableName">
+          <NDescriptionsItem label="操作表名">{{ currentDetail?.tableName }}</NDescriptionsItem>
+          <NDescriptionsItem label="记录 ID">{{ currentDetail?.recordId || '-' }}</NDescriptionsItem>
+          <NDescriptionsItem label="记录名称" :span="2">{{ currentDetail?.recordName || '-' }}</NDescriptionsItem>
+          <NDescriptionsItem label="变更前数据" :span="2" v-if="currentDetail?.beforeData">
+            <NCode :code="formatJson(currentDetail?.beforeData)" language="json" :wrap="true" />
+          </NDescriptionsItem>
+          <NDescriptionsItem label="变更后数据" :span="2" v-if="currentDetail?.afterData">
+            <NCode :code="formatJson(currentDetail?.afterData)" language="json" :wrap="true" />
+          </NDescriptionsItem>
+          <NDescriptionsItem label="变更字段" :span="2" v-if="currentDetail?.changedFields">
+            <NCode :code="formatJson(currentDetail?.changedFields)" language="json" :wrap="true" />
+          </NDescriptionsItem>
+        </template>
+
         <NDescriptionsItem label="请求参数" :span="2">
           <NCode :code="formatJson(currentDetail?.operParam)" language="json" :wrap="true" />
         </NDescriptionsItem>
@@ -160,6 +186,7 @@ const queryForm = reactive<OperLogQuery & { dateRange?: [number, number] }>({
   page: 1,
   pageSize: 10,
   title: '',
+  module: '',
   operName: '',
   businessType: undefined,
   status: undefined,
@@ -324,6 +351,7 @@ const handleSearch = () => {
 // 重置
 const handleReset = () => {
   queryForm.title = ''
+  queryForm.module = ''
   queryForm.operName = ''
   queryForm.businessType = undefined
   queryForm.status = undefined

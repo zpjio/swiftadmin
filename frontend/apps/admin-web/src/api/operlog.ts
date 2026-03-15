@@ -7,10 +7,12 @@ import type { PageResult } from '@/types'
 export interface OperLogVO {
   id: number
   title: string
+  module: string
   businessType: number
   method: string
   requestMethod: string
   operatorType: number
+  operUserId: number
   operName: string
   deptName: string
   operUrl: string
@@ -22,6 +24,13 @@ export interface OperLogVO {
   errorMsg: string
   operTime: string
   costTime: number
+  // 审计功能字段
+  tableName: string
+  recordId: string
+  recordName: string
+  beforeData: string
+  afterData: string
+  changedFields: string
 }
 
 /**
@@ -31,6 +40,7 @@ export interface OperLogQuery {
   page?: number
   pageSize?: number
   title?: string
+  module?: string
   operName?: string
   businessType?: number
   status?: number

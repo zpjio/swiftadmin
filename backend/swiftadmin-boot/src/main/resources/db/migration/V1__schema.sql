@@ -222,52 +222,46 @@ CREATE INDEX idx_dict_data_status ON sys_dict_data(status);
 -- 四、日志表
 -- ============================================
 
--- 操作日志表
+-- 操作日志表（合并审计日志功能）
 CREATE TABLE sys_oper_log (
     id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '日志ID',
+    -- 基础信息
     title VARCHAR(100) COMMENT '操作标题',
+    module VARCHAR(50) COMMENT '模块名称',
     business_type TINYINT DEFAULT 0 COMMENT '业务类型：0=其它，1=新增，2=修改，3=删除，4=授权，5=导出，6=导入，7=强退，8=生成代码，9=清空数据',
     method VARCHAR(200) COMMENT '方法名称',
     request_method VARCHAR(20) COMMENT '请求方式',
     operator_type TINYINT DEFAULT 0 COMMENT '操作类别：0=其它，1=后台用户，2=手机端用户',
+    -- 操作人信息
+    oper_user_id BIGINT COMMENT '操作用户ID',
     oper_name VARCHAR(50) COMMENT '操作人员',
     dept_name VARCHAR(50) COMMENT '部门名称',
-    oper_url VARCHAR(500) COMMENT '请求URL',
     oper_ip VARCHAR(128) COMMENT '主机地址',
     oper_location VARCHAR(255) COMMENT '操作地点',
+    -- 请求信息
+    oper_url VARCHAR(500) COMMENT '请求URL',
     oper_param TEXT COMMENT '请求参数',
     json_result TEXT COMMENT '返回参数',
-    status TINYINT DEFAULT 0 COMMENT '操作状态：0=正常，1=异常',
-    error_msg TEXT COMMENT '错误消息',
-    oper_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间',
-    cost_time BIGINT DEFAULT 0 COMMENT '消耗时间(毫秒)',
-    INDEX idx_oper_name (oper_name),
-    INDEX idx_oper_time (oper_time),
-    INDEX idx_business_type (business_type)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作日志记录表';
-
--- 审计日志表
-CREATE TABLE sys_audit_log (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '日志ID',
-    module VARCHAR(50) NOT NULL COMMENT '模块名称',
-    operation VARCHAR(50) NOT NULL COMMENT '操作类型（INSERT/UPDATE/DELETE）',
-    table_name VARCHAR(100) COMMENT '表名',
+    -- 数据变更（审计功能）
+    table_name VARCHAR(100) COMMENT '操作表名',
     record_id VARCHAR(100) COMMENT '记录ID',
     record_name VARCHAR(200) COMMENT '记录名称/描述',
     before_data TEXT COMMENT '变更前数据（JSON）',
     after_data TEXT COMMENT '变更后数据（JSON）',
     changed_fields TEXT COMMENT '变更字段详情（JSON）',
-    oper_user_id BIGINT COMMENT '操作用户ID',
-    oper_user_name VARCHAR(50) COMMENT '操作用户名',
-    oper_ip VARCHAR(128) COMMENT '操作IP',
+    -- 执行信息
+    status TINYINT DEFAULT 0 COMMENT '操作状态：0=正常，1=异常',
+    error_msg TEXT COMMENT '错误消息',
     oper_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间',
+    cost_time BIGINT DEFAULT 0 COMMENT '消耗时间(毫秒)',
+    -- 索引
+    INDEX idx_oper_name (oper_name),
+    INDEX idx_oper_time (oper_time),
+    INDEX idx_business_type (business_type),
     INDEX idx_module (module),
-    INDEX idx_operation (operation),
-    INDEX idx_table_name (table_name),
-    INDEX idx_record_id (record_id),
-    INDEX idx_oper_user_id (oper_user_id),
-    INDEX idx_oper_time (oper_time)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='审计日志表';
+    INDEX idx_table_record (table_name, record_id),
+    INDEX idx_oper_user_id (oper_user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作日志记录表';
 
 -- ============================================
 -- 五、文件管理表

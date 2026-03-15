@@ -5,6 +5,7 @@ import java.lang.annotation.*;
 /**
  * 操作日志注解
  * <p>标注在 Controller 方法上，自动记录操作日志</p>
+ * <p>支持记录数据变更（审计功能）</p>
  *
  * @author zhangpengju
  * @since 2026-03-10
@@ -18,6 +19,11 @@ public @interface OperationLog {
      * 操作标题
      */
     String title() default "";
+
+    /**
+     * 模块名称
+     */
+    String module() default "";
 
     /**
      * 业务类型
@@ -43,6 +49,28 @@ public @interface OperationLog {
      * 排除指定的请求参数
      */
     String[] excludeParamNames() default {};
+
+    // ==================== 审计功能属性 ====================
+
+    /**
+     * 实体类（用于获取表名）
+     */
+    Class<?> entityClass() default void.class;
+
+    /**
+     * 是否记录变更前数据
+     */
+    boolean isSaveBeforeData() default false;
+
+    /**
+     * 是否记录变更后数据
+     */
+    boolean isSaveAfterData() default false;
+
+    /**
+     * 忽略的字段名
+     */
+    String[] ignoreFields() default {"createTime", "updateTime", "deleted"};
 
     /**
      * 业务类型枚举

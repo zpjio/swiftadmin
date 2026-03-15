@@ -123,7 +123,7 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void update(RoleDTO dto) {
+    public SysRole update(RoleDTO dto) {
         if (dto.getId() == null) {
             throw new BusinessException(400, "角色 ID 不能为空");
         }
@@ -171,6 +171,9 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
                 roleDeptMapper.deleteByQuery(QueryWrapper.create().where(SYS_ROLE_DEPT.ROLE_ID.eq(dto.getId())));
             }
         }
+
+        // 返回更新后的角色实体
+        return getById(dto.getId());
     }
 
     @Override
