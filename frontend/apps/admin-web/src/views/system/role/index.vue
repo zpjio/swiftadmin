@@ -227,7 +227,12 @@ const pagination = reactive({
 // 表格列定义
 const columns: DataTableColumns<RoleVO> = [
   { type: 'selection' },
-  { title: 'ID', key: 'id', width: 80 },
+  {
+    title: '序号',
+    key: 'index',
+    width: 60,
+    render: (_row, index) => (pagination.page - 1) * pagination.pageSize + index + 1,
+  },
   {
     title: '角色名称',
     key: 'name',

@@ -24,7 +24,7 @@ import java.time.LocalDateTime;
 public class SysFile {
 
     /** 文件ID */
-    @Id(keyType = KeyType.Auto)
+    @Id(keyType = KeyType.Generator, value = "snowFlakeId")
     private Long id;
 
     /** 文件名称（原始文件名） */

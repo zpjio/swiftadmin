@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
 @Table("sys_login_log")
 public class SysLoginLog {
 
-    @Id(keyType = KeyType.Auto)
+    @Id(keyType = KeyType.Generator, value = "snowFlakeId")
     private Long id;
 
     @Column

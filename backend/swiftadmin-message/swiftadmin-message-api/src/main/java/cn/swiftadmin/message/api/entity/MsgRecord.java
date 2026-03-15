@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 public class MsgRecord {
 
     /** 主键 ID */
-    @Id(keyType = KeyType.Auto)
+    @Id(keyType = KeyType.Generator, value = "snowFlakeId")
     private Long id;
 
     /** 消息ID（UUID） */

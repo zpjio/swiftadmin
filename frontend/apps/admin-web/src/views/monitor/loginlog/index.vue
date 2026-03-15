@@ -136,7 +136,12 @@ const statusOptions = [
 
 const columns: DataTableColumns = [
   { type: 'selection', fixed: 'left' },
-  { title: 'ID', key: 'id', width: 80 },
+  {
+    title: '序号',
+    key: 'index',
+    width: 60,
+    render: (_row, index) => (pagination.page - 1) * pagination.pageSize + index + 1,
+  },
   { title: '用户名', key: 'username', width: 120, ellipsis: { tooltip: true } },
   {
     title: '状态',

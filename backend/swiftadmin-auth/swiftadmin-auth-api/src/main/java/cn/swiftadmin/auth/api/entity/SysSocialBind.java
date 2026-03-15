@@ -32,7 +32,7 @@ import java.time.LocalDateTime;
 public class SysSocialBind {
 
     /** 主键 ID */
-    @Id(keyType = KeyType.Auto)
+    @Id(keyType = KeyType.Generator, value = "snowFlakeId")
     private Long id;
 
     /** 系统用户 ID */

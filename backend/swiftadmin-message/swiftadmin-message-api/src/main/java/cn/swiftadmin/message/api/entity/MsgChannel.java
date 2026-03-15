@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 public class MsgChannel {
 
     /** 主键 ID */
-    @Id(keyType = KeyType.Auto)
+    @Id(keyType = KeyType.Generator, value = "snowFlakeId")
     private Long id;
 
     /** 渠道名称 */

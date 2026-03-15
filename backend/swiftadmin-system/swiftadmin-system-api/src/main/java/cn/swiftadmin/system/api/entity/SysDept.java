@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
 public class SysDept {
 
     /** 部门 ID */
-    @Id(keyType = KeyType.Auto)
+    @Id(keyType = KeyType.Generator, value = "snowFlakeId")
     private Long id;
 
     /** 父部门 ID */

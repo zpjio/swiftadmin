@@ -37,6 +37,13 @@ mybatis-flex:
   configuration:
     map-underscore-to-camel-case: true
 
+# 雪花ID生成器配置
+swiftadmin:
+  id-generator:
+    enabled: true                       # 是否启用雪花ID生成器
+    # worker-id: 0                      # 工作机器ID (0-31)，分布式环境需唯一，不配置则自动生成
+    # datacenter-id: 0                  # 数据中心ID (0-31)，分布式环境需唯一，不配置则自动生成
+
 # 认证安全配置
 auth:
   security:

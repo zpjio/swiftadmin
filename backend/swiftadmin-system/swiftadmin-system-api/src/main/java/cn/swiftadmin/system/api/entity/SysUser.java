@@ -32,7 +32,7 @@ import java.time.LocalDateTime;
 public class SysUser {
 
     /** 用户 ID */
-    @Id(keyType = KeyType.Auto)
+    @Id(keyType = KeyType.Generator, value = "snowFlakeId")
     private Long id;
 
     /** 用户名（登录账号） */

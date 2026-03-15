@@ -11,7 +11,7 @@
 
 -- 用户表
 CREATE TABLE sys_user (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGINT NOT NULL PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
     password VARCHAR(100) NOT NULL,
     nickname VARCHAR(50),
@@ -40,7 +40,7 @@ CREATE INDEX idx_sys_user_lock_time ON sys_user(lock_time);
 
 -- 角色表
 CREATE TABLE sys_role (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGINT NOT NULL PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
     code VARCHAR(50) NOT NULL UNIQUE,
     description VARCHAR(255),
@@ -53,7 +53,7 @@ CREATE TABLE sys_role (
 
 -- 菜单表
 CREATE TABLE sys_menu (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGINT NOT NULL PRIMARY KEY,
     parent_id BIGINT DEFAULT 0,
     name VARCHAR(50) NOT NULL,
     path VARCHAR(255),
@@ -72,7 +72,7 @@ CREATE INDEX idx_menu_parent ON sys_menu(parent_id);
 
 -- 部门表
 CREATE TABLE sys_dept (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGINT NOT NULL PRIMARY KEY,
     parent_id BIGINT DEFAULT 0,
     ancestors VARCHAR(255) COMMENT '祖级路径(逗号分隔)',
     name VARCHAR(50) NOT NULL,
@@ -119,7 +119,7 @@ CREATE INDEX idx_role_dept_dept ON sys_role_dept(dept_id);
 
 -- 登录日志表
 CREATE TABLE sys_login_log (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGINT NOT NULL PRIMARY KEY,
     username VARCHAR(50),
     ip_address VARCHAR(50),
     user_agent TEXT,
@@ -130,7 +130,7 @@ CREATE TABLE sys_login_log (
 
 -- 短信验证码表
 CREATE TABLE sys_sms_code (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键 ID',
+    id BIGINT NOT NULL PRIMARY KEY COMMENT '主键 ID',
     phone VARCHAR(20) NOT NULL COMMENT '手机号',
     code VARCHAR(6) NOT NULL COMMENT '验证码',
     scene VARCHAR(20) NOT NULL COMMENT '使用场景：login|register|bind',
@@ -145,7 +145,7 @@ CREATE INDEX idx_sms_expire_at ON sys_sms_code(expire_at);
 
 -- 用户社交账号绑定表
 CREATE TABLE sys_social_bind (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键 ID',
+    id BIGINT NOT NULL PRIMARY KEY COMMENT '主键 ID',
     user_id BIGINT NOT NULL COMMENT '系统用户 ID',
     source VARCHAR(20) NOT NULL COMMENT '来源：wecom|dingtalk|feishu',
     open_id VARCHAR(100) NOT NULL COMMENT '第三方用户 ID',
@@ -163,7 +163,7 @@ CREATE INDEX idx_social_user_id ON sys_social_bind(user_id);
 
 -- 密码历史记录表
 CREATE TABLE sys_password_history (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键 ID',
+    id BIGINT NOT NULL PRIMARY KEY COMMENT '主键 ID',
     user_id BIGINT NOT NULL COMMENT '用户 ID',
     password_hash VARCHAR(100) NOT NULL COMMENT '密码哈希值（BCrypt）',
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
@@ -177,7 +177,7 @@ CREATE INDEX idx_password_history_user ON sys_password_history(user_id);
 
 -- 系统配置表
 CREATE TABLE sys_config (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键 ID',
+    id BIGINT NOT NULL PRIMARY KEY COMMENT '主键 ID',
     config_key VARCHAR(50) NOT NULL UNIQUE COMMENT '配置键',
     config_value VARCHAR(500) NOT NULL COMMENT '配置值',
     config_name VARCHAR(100) NOT NULL COMMENT '配置名称',
@@ -191,7 +191,7 @@ CREATE INDEX idx_config_key ON sys_config(config_key);
 
 -- 字典类型表
 CREATE TABLE sys_dict_type (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGINT NOT NULL PRIMARY KEY,
     dict_name VARCHAR(100) NOT NULL COMMENT '字典名称',
     dict_type VARCHAR(100) NOT NULL UNIQUE COMMENT '字典类型',
     status SMALLINT DEFAULT 1 COMMENT '状态：1=正常，0=禁用',
@@ -203,7 +203,7 @@ CREATE TABLE sys_dict_type (
 
 -- 字典数据表
 CREATE TABLE sys_dict_data (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGINT NOT NULL PRIMARY KEY,
     dict_type VARCHAR(100) NOT NULL COMMENT '字典类型',
     dict_label VARCHAR(100) NOT NULL COMMENT '字典标签',
     dict_value VARCHAR(100) NOT NULL COMMENT '字典值',
@@ -224,7 +224,7 @@ CREATE INDEX idx_dict_data_status ON sys_dict_data(status);
 
 -- 操作日志表（合并审计日志功能）
 CREATE TABLE sys_oper_log (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '日志ID',
+    id BIGINT NOT NULL PRIMARY KEY COMMENT '日志ID',
     -- 基础信息
     title VARCHAR(100) COMMENT '操作标题',
     module VARCHAR(50) COMMENT '模块名称',
@@ -269,7 +269,7 @@ CREATE TABLE sys_oper_log (
 
 -- 系统文件表
 CREATE TABLE sys_file (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '文件ID',
+    id BIGINT NOT NULL PRIMARY KEY COMMENT '文件ID',
     file_name VARCHAR(255) NOT NULL COMMENT '文件名称（原始文件名）',
     storage_name VARCHAR(100) NOT NULL COMMENT '存储文件名（UUID）',
     file_path VARCHAR(500) NOT NULL COMMENT '文件路径',
@@ -301,7 +301,7 @@ CREATE TABLE sys_file (
 
 -- 用户协议版本表
 CREATE TABLE sys_agreement (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGINT NOT NULL PRIMARY KEY,
     type VARCHAR(20) NOT NULL COMMENT '协议类型：agreement=用户协议，privacy=隐私政策',
     version VARCHAR(20) NOT NULL COMMENT '版本号',
     title VARCHAR(100) NOT NULL COMMENT '协议标题',
@@ -319,7 +319,7 @@ CREATE TABLE sys_agreement (
 
 -- 用户协议同意记录表
 CREATE TABLE sys_user_agreement (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGINT NOT NULL PRIMARY KEY,
     user_id BIGINT NOT NULL COMMENT '用户 ID',
     agreement_id BIGINT NOT NULL COMMENT '协议版本 ID',
     agreement_type VARCHAR(20) NOT NULL COMMENT '协议类型：agreement=用户协议，privacy=隐私政策',
@@ -341,26 +341,26 @@ CREATE TABLE sys_user_agreement (
 -- ============================================
 
 -- 默认管理员账号 (密码：admin123, BCrypt 加密)
-INSERT INTO sys_user (username, password, nickname, email, phone, avatar, status, dept_id, is_super, login_fail_count, force_change_password)
-VALUES ('admin', '$2b$10$xNZHyOGnnUT0j3s0.AC9q..fbsKu/HJkTFSdK/wUfh5nuAo6VQovC', '超级管理员', 'admin@swiftadmin.cn', '13800000000', 'https://app-assets-oss.oss-cn-beijing.aliyuncs.com/qianzhou-app/static/image/avatar/41.jpg', 1, 1, 1, 0, 0);
+INSERT INTO sys_user (id, username, password, nickname, email, phone, avatar, status, dept_id, is_super, login_fail_count, force_change_password)
+VALUES (1, 'admin', '$2b$10$xNZHyOGnnUT0j3s0.AC9q..fbsKu/HJkTFSdK/wUfh5nuAo6VQovC', '超级管理员', 'admin@swiftadmin.cn', '13800000000', 'https://app-assets-oss.oss-cn-beijing.aliyuncs.com/qianzhou-app/static/image/avatar/41.jpg', 1, 1, 1, 0, 0);
 
 -- 默认角色
-INSERT INTO sys_role (name, code, description, data_scope, status)
-VALUES ('超级管理员', 'admin', '拥有系统全部权限', 1, 1);
+INSERT INTO sys_role (id, name, code, description, data_scope, status)
+VALUES (1, '超级管理员', 'admin', '拥有系统全部权限', 1, 1);
 
 -- 预置角色模板
-INSERT INTO sys_role (name, code, description, data_scope, status) VALUES
-('系统管理员', 'system_admin', '系统配置和用户管理', 1, 1),
-('部门经理', 'dept_manager', '部门管理和部门用户管理', 3, 1),
-('普通员工', 'employee', '基础功能使用权限', 5, 1),
-('访客', 'visitor', '仅有查看权限', 5, 1);
+INSERT INTO sys_role (id, name, code, description, data_scope, status) VALUES
+(2, '系统管理员', 'system_admin', '系统配置和用户管理', 1, 1),
+(3, '部门经理', 'dept_manager', '部门管理和部门用户管理', 3, 1),
+(4, '普通员工', 'employee', '基础功能使用权限', 5, 1),
+(5, '访客', 'visitor', '仅有查看权限', 5, 1);
 
 -- 关联管理员角色
 INSERT INTO sys_user_role (user_id, role_id) VALUES (1, 1);
 
 -- 默认部门
-INSERT INTO sys_dept (name, parent_id, ancestors, sort_order, leader, phone, email, status)
-VALUES ('总公司', 0, '0', 1, 'admin', '13800000000', 'admin@swiftadmin.cn', 1);
+INSERT INTO sys_dept (id, name, parent_id, ancestors, sort_order, leader, phone, email, status)
+VALUES (1, '总公司', 0, '0', 1, 'admin', '13800000000', 'admin@swiftadmin.cn', 1);
 
 -- ============================================
 -- 7.2 菜单权限数据
@@ -469,104 +469,104 @@ INSERT INTO sys_menu (id, parent_id, name, path, component, type, icon, sort_ord
 -- ============================================
 
 -- 用户状态字典
-INSERT INTO sys_dict_type (dict_name, dict_type, status, remark) VALUES
-('用户状态', 'sys_user_status', 1, '用户状态字典');
+INSERT INTO sys_dict_type (id, dict_name, dict_type, status, remark) VALUES
+(1, '用户状态', 'sys_user_status', 1, '用户状态字典');
 
-INSERT INTO sys_dict_data (dict_type, dict_label, dict_value, sort_order, status, remark) VALUES
-('sys_user_status', '正常', '1', 1, 1, '用户正常状态'),
-('sys_user_status', '禁用', '0', 2, 1, '用户禁用状态');
+INSERT INTO sys_dict_data (id, dict_type, dict_label, dict_value, sort_order, status, remark) VALUES
+(1, 'sys_user_status', '正常', '1', 1, 1, '用户正常状态'),
+(2, 'sys_user_status', '禁用', '0', 2, 1, '用户禁用状态');
 
 -- 性别字典
-INSERT INTO sys_dict_type (dict_name, dict_type, status, remark) VALUES
-('性别', 'sys_user_sex', 1, '性别字典');
+INSERT INTO sys_dict_type (id, dict_name, dict_type, status, remark) VALUES
+(2, '性别', 'sys_user_sex', 1, '性别字典');
 
-INSERT INTO sys_dict_data (dict_type, dict_label, dict_value, sort_order, status, remark) VALUES
-('sys_user_sex', '男', '1', 1, 1, '男性'),
-('sys_user_sex', '女', '2', 2, 1, '女性'),
-('sys_user_sex', '未知', '0', 3, 1, '未知性别');
+INSERT INTO sys_dict_data (id, dict_type, dict_label, dict_value, sort_order, status, remark) VALUES
+(3, 'sys_user_sex', '男', '1', 1, 1, '男性'),
+(4, 'sys_user_sex', '女', '2', 2, 1, '女性'),
+(5, 'sys_user_sex', '未知', '0', 3, 1, '未知性别');
 
 -- 菜单类型字典
-INSERT INTO sys_dict_type (dict_name, dict_type, status, remark) VALUES
-('菜单类型', 'sys_menu_type', 1, '菜单类型字典');
+INSERT INTO sys_dict_type (id, dict_name, dict_type, status, remark) VALUES
+(3, '菜单类型', 'sys_menu_type', 1, '菜单类型字典');
 
-INSERT INTO sys_dict_data (dict_type, dict_label, dict_value, sort_order, status, remark) VALUES
-('sys_menu_type', '目录', '1', 1, 1, '目录类型菜单'),
-('sys_menu_type', '菜单', '2', 2, 1, '页面类型菜单'),
-('sys_menu_type', '按钮', '3', 3, 1, '按钮类型权限');
+INSERT INTO sys_dict_data (id, dict_type, dict_label, dict_value, sort_order, status, remark) VALUES
+(6, 'sys_menu_type', '目录', '1', 1, 1, '目录类型菜单'),
+(7, 'sys_menu_type', '菜单', '2', 2, 1, '页面类型菜单'),
+(8, 'sys_menu_type', '按钮', '3', 3, 1, '按钮类型权限');
 
 -- 数据范围字典
-INSERT INTO sys_dict_type (dict_name, dict_type, status, remark) VALUES
-('数据范围', 'sys_data_scope', 1, '数据范围字典');
+INSERT INTO sys_dict_type (id, dict_name, dict_type, status, remark) VALUES
+(4, '数据范围', 'sys_data_scope', 1, '数据范围字典');
 
-INSERT INTO sys_dict_data (dict_type, dict_label, dict_value, sort_order, status, remark) VALUES
-('sys_data_scope', '全部数据', '1', 1, 1, '可查看所有数据'),
-('sys_data_scope', '自定义数据', '2', 2, 1, '可查看自定义部门数据'),
-('sys_data_scope', '本部门数据', '3', 3, 1, '仅可查看本部门数据'),
-('sys_data_scope', '本部门及以下', '4', 4, 1, '可查看本部门及子部门数据'),
-('sys_data_scope', '仅本人数据', '5', 5, 1, '仅可查看本人数据');
+INSERT INTO sys_dict_data (id, dict_type, dict_label, dict_value, sort_order, status, remark) VALUES
+(9, 'sys_data_scope', '全部数据', '1', 1, 1, '可查看所有数据'),
+(10, 'sys_data_scope', '自定义数据', '2', 2, 1, '可查看自定义部门数据'),
+(11, 'sys_data_scope', '本部门数据', '3', 3, 1, '仅可查看本部门数据'),
+(12, 'sys_data_scope', '本部门及以下', '4', 4, 1, '可查看本部门及子部门数据'),
+(13, 'sys_data_scope', '仅本人数据', '5', 5, 1, '仅可查看本人数据');
 
 -- 配置类型字典
-INSERT INTO sys_dict_type (dict_name, dict_type, status, remark) VALUES
-('配置类型', 'sys_config_type', 1, '系统配置类型字典');
+INSERT INTO sys_dict_type (id, dict_name, dict_type, status, remark) VALUES
+(5, '配置类型', 'sys_config_type', 1, '系统配置类型字典');
 
-INSERT INTO sys_dict_data (dict_type, dict_label, dict_value, sort_order, status, remark) VALUES
-('sys_config_type', '系统配置', 'system', 1, 1, '系统基础配置'),
-('sys_config_type', '密码策略', 'password', 2, 1, '密码安全策略配置'),
-('sys_config_type', '文件上传', 'upload', 3, 1, '文件上传相关配置'),
-('sys_config_type', '验证码', 'captcha', 4, 1, '验证码相关配置'),
-('sys_config_type', '登录配置', 'login', 5, 1, '登录相关配置'),
-('sys_config_type', '会话配置', 'session', 6, 1, '会话相关配置'),
-('sys_config_type', '日志配置', 'log', 7, 1, '日志相关配置'),
-('sys_config_type', '邮件服务', 'email', 8, 1, '邮件服务配置'),
-('sys_config_type', '短信服务', 'sms', 9, 1, '短信服务配置');
+INSERT INTO sys_dict_data (id, dict_type, dict_label, dict_value, sort_order, status, remark) VALUES
+(14, 'sys_config_type', '系统配置', 'system', 1, 1, '系统基础配置'),
+(15, 'sys_config_type', '密码策略', 'password', 2, 1, '密码安全策略配置'),
+(16, 'sys_config_type', '文件上传', 'upload', 3, 1, '文件上传相关配置'),
+(17, 'sys_config_type', '验证码', 'captcha', 4, 1, '验证码相关配置'),
+(18, 'sys_config_type', '登录配置', 'login', 5, 1, '登录相关配置'),
+(19, 'sys_config_type', '会话配置', 'session', 6, 1, '会话相关配置'),
+(20, 'sys_config_type', '日志配置', 'log', 7, 1, '日志相关配置'),
+(21, 'sys_config_type', '邮件服务', 'email', 8, 1, '邮件服务配置'),
+(22, 'sys_config_type', '短信服务', 'sms', 9, 1, '短信服务配置');
 
 -- ============================================
 -- 7.4 系统配置数据
 -- ============================================
 
 -- 密码策略配置
-INSERT INTO sys_config (config_key, config_value, config_name, config_type, remark) VALUES
-('password.expire_days', '90', '密码有效期（天）', 'password', '密码过期时间，超过此天数强制修改密码'),
-('password.history_count', '5', '密码历史检查数量', 'password', '修改密码时检查最近N次历史密码，防止重复'),
-('password.force_change_on_reset', 'true', '管理员重置后强制修改', 'password', '管理员重置密码后是否强制用户修改'),
-('password.min_length', '8', '密码最小长度', 'password', '密码最小长度要求'),
-('password.expire_warning_days', '7', '密码过期提前提醒天数', 'password', '密码过期前N天开始提醒');
+INSERT INTO sys_config (id, config_key, config_value, config_name, config_type, remark) VALUES
+(1, 'password.expire_days', '90', '密码有效期（天）', 'password', '密码过期时间，超过此天数强制修改密码'),
+(2, 'password.history_count', '5', '密码历史检查数量', 'password', '修改密码时检查最近N次历史密码，防止重复'),
+(3, 'password.force_change_on_reset', 'true', '管理员重置后强制修改', 'password', '管理员重置密码后是否强制用户修改'),
+(4, 'password.min_length', '8', '密码最小长度', 'password', '密码最小长度要求'),
+(5, 'password.expire_warning_days', '7', '密码过期提前提醒天数', 'password', '密码过期前N天开始提醒');
 
 -- 系统基础配置
-INSERT INTO sys_config (config_key, config_value, config_name, config_type, remark) VALUES
-('system.name', 'SwiftAdmin', '系统名称', 'system', '系统显示名称'),
-('system.version', '1.0.0', '系统版本', 'system', '系统版本号'),
-('system.copyright', '© 2026 SwiftAdmin. All rights reserved.', '版权信息', 'system', '页脚版权信息'),
-('system.logo', '/static/logo.png', '系统Logo', 'system', '系统Logo路径');
+INSERT INTO sys_config (id, config_key, config_value, config_name, config_type, remark) VALUES
+(6, 'system.name', 'SwiftAdmin', '系统名称', 'system', '系统显示名称'),
+(7, 'system.version', '1.0.0', '系统版本', 'system', '系统版本号'),
+(8, 'system.copyright', '© 2026 SwiftAdmin. All rights reserved.', '版权信息', 'system', '页脚版权信息'),
+(9, 'system.logo', '/static/logo.png', '系统Logo', 'system', '系统Logo路径');
 
 -- 文件上传配置
-INSERT INTO sys_config (config_key, config_value, config_name, config_type, remark) VALUES
-('upload.max_size', '10485760', '文件上传最大限制（字节）', 'upload', '单个文件上传最大限制，默认10MB'),
-('upload.allow_types', 'jpg,jpeg,png,gif,pdf,doc,docx,xls,xlsx', '允许上传的文件类型', 'upload', '允许上传的文件扩展名，逗号分隔'),
-('upload.save_path', '/upload', '文件保存路径', 'upload', '文件上传保存的根路径');
+INSERT INTO sys_config (id, config_key, config_value, config_name, config_type, remark) VALUES
+(10, 'upload.max_size', '10485760', '文件上传最大限制（字节）', 'upload', '单个文件上传最大限制，默认10MB'),
+(11, 'upload.allow_types', 'jpg,jpeg,png,gif,pdf,doc,docx,xls,xlsx', '允许上传的文件类型', 'upload', '允许上传的文件扩展名，逗号分隔'),
+(12, 'upload.save_path', '/upload', '文件保存路径', 'upload', '文件上传保存的根路径');
 
 -- 验证码配置
-INSERT INTO sys_config (config_key, config_value, config_name, config_type, remark) VALUES
-('captcha.enable', 'true', '验证码开关', 'captcha', '是否开启验证码验证'),
-('captcha.type', 'math', '验证码类型', 'captcha', '验证码类型：math=数学运算，char=字符'),
-('captcha.length', '4', '验证码长度', 'captcha', '验证码字符长度'),
-('captcha.expire_seconds', '300', '验证码有效期（秒）', 'captcha', '验证码过期时间');
+INSERT INTO sys_config (id, config_key, config_value, config_name, config_type, remark) VALUES
+(13, 'captcha.enable', 'true', '验证码开关', 'captcha', '是否开启验证码验证'),
+(14, 'captcha.type', 'math', '验证码类型', 'captcha', '验证码类型：math=数学运算，char=字符'),
+(15, 'captcha.length', '4', '验证码长度', 'captcha', '验证码字符长度'),
+(16, 'captcha.expire_seconds', '300', '验证码有效期（秒）', 'captcha', '验证码过期时间');
 
 -- 登录配置
-INSERT INTO sys_config (config_key, config_value, config_name, config_type, remark) VALUES
-('login.max_retry', '5', '登录最大重试次数', 'login', '登录失败最大重试次数'),
-('login.lock_minutes', '30', '账户锁定时间（分钟）', 'login', '超过最大重试次数后锁定时间'),
-('login.single_device', 'false', '单设备登录', 'login', '是否限制同一账号只能在一个设备登录');
+INSERT INTO sys_config (id, config_key, config_value, config_name, config_type, remark) VALUES
+(17, 'login.max_retry', '5', '登录最大重试次数', 'login', '登录失败最大重试次数'),
+(18, 'login.lock_minutes', '30', '账户锁定时间（分钟）', 'login', '超过最大重试次数后锁定时间'),
+(19, 'login.single_device', 'false', '单设备登录', 'login', '是否限制同一账号只能在一个设备登录');
 
 -- 会话配置
-INSERT INTO sys_config (config_key, config_value, config_name, config_type, remark) VALUES
-('session.timeout', '7200', '会话超时时间（秒）', 'session', '用户无操作会话超时时间'),
-('session.max_concurrent', '1', '最大并发会话数', 'session', '同一用户最大并发会话数');
+INSERT INTO sys_config (id, config_key, config_value, config_name, config_type, remark) VALUES
+(20, 'session.timeout', '7200', '会话超时时间（秒）', 'session', '用户无操作会话超时时间'),
+(21, 'session.max_concurrent', '1', '最大并发会话数', 'session', '同一用户最大并发会话数');
 
 -- 日志配置
-INSERT INTO sys_config (config_key, config_value, config_name, config_type, remark) VALUES
-('log.oper.keep_days', '90', '操作日志保留天数', 'log', '操作日志保留天数，超过自动清理'),
-('log.login.keep_days', '180', '登录日志保留天数', 'log', '登录日志保留天数，超过自动清理');
+INSERT INTO sys_config (id, config_key, config_value, config_name, config_type, remark) VALUES
+(22, 'log.oper.keep_days', '90', '操作日志保留天数', 'log', '操作日志保留天数，超过自动清理'),
+(23, 'log.login.keep_days', '180', '登录日志保留天数', 'log', '登录日志保留天数，超过自动清理');
 
 -- ============================================
 -- 7.5 角色菜单关联数据

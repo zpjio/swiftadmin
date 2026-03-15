@@ -27,7 +27,7 @@ import java.time.LocalDateTime;
 public class SysMenu {
 
     /** 菜单 ID */
-    @Id(keyType = KeyType.Auto)
+    @Id(keyType = KeyType.Generator, value = "snowFlakeId")
     private Long id;
 
     /** 父菜单 ID */

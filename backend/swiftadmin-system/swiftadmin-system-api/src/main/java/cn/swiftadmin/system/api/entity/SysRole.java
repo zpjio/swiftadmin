@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
 public class SysRole {
 
     /** 角色 ID */
-    @Id(keyType = KeyType.Auto)
+    @Id(keyType = KeyType.Generator, value = "snowFlakeId")
     private Long id;
 
     /** 角色名称 */

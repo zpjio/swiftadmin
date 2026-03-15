@@ -170,7 +170,12 @@ const rules = {
 
 const columns: DataTableColumns<ConfigVO> = [
   { type: 'selection', fixed: 'left' },
-  { title: 'ID', key: 'id', width: 80 },
+  {
+    title: '序号',
+    key: 'index',
+    width: 60,
+    render: (_row, index) => (pagination.page - 1) * pagination.pageSize + index + 1,
+  },
   { title: '配置名称', key: 'configName', width: 150, ellipsis: { tooltip: true } },
   { title: '配置键', key: 'configKey', width: 180, ellipsis: { tooltip: true } },
   { title: '配置值', key: 'configValue', width: 200, ellipsis: { tooltip: true } },

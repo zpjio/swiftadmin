@@ -263,7 +263,12 @@ const dataRules = {
 
 // 字典数据表格列
 const dataColumns: DataTableColumns<DictDataVO> = [
-  { title: 'ID', key: 'id', width: 80 },
+  {
+    title: '序号',
+    key: 'index',
+    width: 60,
+    render: (_row, index) => (dataPagination.page - 1) * dataPagination.pageSize + index + 1,
+  },
   { title: '数据标签', key: 'label', width: 120 },
   { title: '数据值', key: 'value', width: 120 },
   { title: '排序', key: 'sortOrder', width: 80 },

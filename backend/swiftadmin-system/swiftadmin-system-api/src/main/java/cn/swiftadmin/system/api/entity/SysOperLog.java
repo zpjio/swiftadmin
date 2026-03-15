@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
 public class SysOperLog {
 
     /** 日志ID */
-    @Id(keyType = KeyType.Auto)
+    @Id(keyType = KeyType.Generator, value = "snowFlakeId")
     private Long id;
 
     /** 操作标题 */

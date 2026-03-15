@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
 public class SysSmsCode {
 
     /** 主键 ID */
-    @Id(keyType = KeyType.Auto)
+    @Id(keyType = KeyType.Generator, value = "snowFlakeId")
     private Long id;
 
     /** 手机号 */

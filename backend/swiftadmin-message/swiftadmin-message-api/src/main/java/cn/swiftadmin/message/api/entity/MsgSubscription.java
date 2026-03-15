@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 public class MsgSubscription {
 
     /** 主键 ID */
-    @Id(keyType = KeyType.Auto)
+    @Id(keyType = KeyType.Generator, value = "snowFlakeId")
     private Long id;
 
     /** 用户ID */

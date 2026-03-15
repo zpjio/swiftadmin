@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
 public class SysDictType {
 
     /** 字典类型 ID */
-    @Id(keyType = KeyType.Auto)
+    @Id(keyType = KeyType.Generator, value = "snowFlakeId")
     private Long id;
 
     /** 字典名称 */

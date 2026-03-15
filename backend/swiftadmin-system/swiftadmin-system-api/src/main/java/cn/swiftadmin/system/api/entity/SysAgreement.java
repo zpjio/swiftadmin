@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 public class SysAgreement {
 
     /** 主键 ID */
-    @Id(keyType = KeyType.Auto)
+    @Id(keyType = KeyType.Generator, value = "snowFlakeId")
     private Long id;
 
     /** 协议类型：agreement=用户协议，privacy=隐私政策 */

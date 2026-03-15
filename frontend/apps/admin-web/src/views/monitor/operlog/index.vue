@@ -241,10 +241,10 @@ const statusOptions = [
 const columns: DataTableColumns = [
   { type: 'selection', fixed: 'left' },
   {
-    title: '日志 ID',
-    key: 'id',
-    width: 80,
-    ellipsis: { tooltip: true },
+    title: '序号',
+    key: 'index',
+    width: 60,
+    render: (_row, index) => (pagination.page - 1) * pagination.pageSize + index + 1,
   },
   {
     title: '操作标题',
