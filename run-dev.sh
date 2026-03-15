@@ -25,7 +25,7 @@ BACKEND_PORT=${BACKEND_PORT:-8080}
 FRONTEND_PORT=${FRONTEND_PORT:-5173}
 
 # 解析命令行参数
-KILL_PROCESS=false
+KILL_PROCESS=true
 START_FRONTEND=false
 SKIP_COMPILE=false
 
@@ -33,6 +33,10 @@ for arg in "$@"; do
     case $arg in
         -k|--kill)
             KILL_PROCESS=true
+            shift
+            ;;
+        --no-kill)
+            KILL_PROCESS=false
             shift
             ;;
         -f|--frontend)
@@ -47,16 +51,16 @@ for arg in "$@"; do
             echo "用法: ./run-dev.sh [选项]"
             echo ""
             echo "选项:"
-            echo "  -k, --kill          启动前终止已运行的进程"
+            echo "  -k, --kill          启动前终止已运行的进程 (默认开启)"
+            echo "  --no-kill           不终止已运行的进程"
             echo "  -f, --frontend      同时启动前端开发服务"
             echo "  -s, --skip-compile  跳过编译步骤"
             echo "  -h, --help          显示帮助信息"
             echo ""
             echo "示例:"
-            echo "  ./run-dev.sh              # 启动后端"
-            echo "  ./run-dev.sh -k           # 终止后端进程后重新启动"
+            echo "  ./run-dev.sh              # 终止后端进程后启动"
+            echo "  ./run-dev.sh --no-kill    # 不终止进程直接启动"
             echo "  ./run-dev.sh -f           # 同时启动前端和后端"
-            echo "  ./run-dev.sh -k -f        # 终止后重新启动前后端"
             exit 0
             ;;
         *)
@@ -79,7 +83,7 @@ kill_port_process() {
             sleep 1
             echo -e "${GREEN}✓ 已终止 $name 进程${NC}"
         else
-            echo -e "${YELLOW}   提示: 使用 -k 参数可自动终止${NC}"
+            echo -e "${YELLOW}   跳过终止 (--no-kill)${NC}"
         fi
     fi
 }
