@@ -4,8 +4,8 @@ import { get, post, put, del } from '@/utils/request'
  * 部门信息
  */
 export interface DeptVO {
-  id: number
-  parentId: number
+  id: string
+  parentId: string
   name: string
   sortOrder: number
   leader: string
@@ -21,8 +21,8 @@ export interface DeptVO {
  * 部门创建/更新参数
  */
 export interface DeptDTO {
-  id?: number
-  parentId: number
+  id?: string
+  parentId: string
   name: string
   sortOrder?: number
   leader?: string
@@ -43,7 +43,7 @@ export function getDeptTreeApi(status?: number, silent?: boolean) {
 /**
  * 获取部门详情
  */
-export function getDeptDetailApi(id: number) {
+export function getDeptDetailApi(id: string) {
   return get<DeptVO>(`/system/dept/${id}`)
 }
 
@@ -51,7 +51,7 @@ export function getDeptDetailApi(id: number) {
  * 创建部门
  */
 export function createDeptApi(data: DeptDTO) {
-  return post<number>('/system/dept', data)
+  return post<string>('/system/dept', data)
 }
 
 /**
@@ -64,13 +64,13 @@ export function updateDeptApi(data: DeptDTO) {
 /**
  * 删除部门
  */
-export function deleteDeptApi(id: number) {
+export function deleteDeptApi(id: string) {
   return del(`/system/dept/${id}`)
 }
 
 /**
  * 获取子部门 ID 列表
  */
-export function getDeptChildrenIdsApi(id: number) {
-  return get<number[]>(`/system/dept/${id}/children`)
+export function getDeptChildrenIdsApi(id: string) {
+  return get<string[]>(`/system/dept/${id}/children`)
 }

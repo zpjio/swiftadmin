@@ -16,6 +16,7 @@
         <module>swiftadmin-system</module>
         <module>swiftadmin-auth</module>
         <module>swiftadmin-message</module>
+        <module>swiftadmin-schedule</module>
         <module>swiftadmin-boot</module>
     </modules>
 
@@ -130,6 +131,16 @@
             <dependency>
                 <groupId>cn.swiftadmin</groupId>
                 <artifactId>swiftadmin-message-biz</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.swiftadmin</groupId>
+                <artifactId>swiftadmin-schedule-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.swiftadmin</groupId>
+                <artifactId>swiftadmin-schedule-biz</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

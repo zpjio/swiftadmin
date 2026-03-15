@@ -5,7 +5,7 @@ import type { PageResult } from '@/types'
  * 系统配置信息
  */
 export interface ConfigVO {
-  id: number
+  id: string
   configName: string
   configKey: string
   configValue: string
@@ -19,7 +19,7 @@ export interface ConfigVO {
  * 系统配置 DTO
  */
 export interface ConfigDTO {
-  id?: number
+  id?: string
   configName: string
   configKey: string
   configValue: string
@@ -48,7 +48,7 @@ export function getConfigPageApi(params: ConfigQuery) {
 /**
  * 获取配置详情
  */
-export function getConfigDetailApi(id: number) {
+export function getConfigDetailApi(id: string) {
   return get<ConfigVO>(`/system/config/${id}`)
 }
 
@@ -76,7 +76,7 @@ export function updateConfigApi(data: ConfigDTO) {
 /**
  * 批量删除配置
  */
-export function deleteConfigApi(ids: number[]) {
+export function deleteConfigApi(ids: string[]) {
   return del(`/system/config/${ids.join(',')}`)
 }
 

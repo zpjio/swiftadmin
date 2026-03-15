@@ -6,28 +6,31 @@
       :collapsed-width="64"
       :width="220"
       :collapsed="collapsed"
-      :native-scrollbar="false"
       show-trigger="bar"
       @collapse="collapsed = true"
       @expand="collapsed = false"
     >
-      <div class="logo" @click="router.push('/')">
-        <span v-if="!collapsed">SwiftAdmin</span>
-        <span v-else>SA</span>
+      <div class="sider-inner">
+        <div class="logo" @click="router.push('/')">
+          <span v-if="!collapsed">SwiftAdmin</span>
+          <span v-else>SA</span>
+        </div>
+        <div class="menu-wrapper">
+          <NScrollbar>
+            <NMenu
+              :options="menuOptions"
+              :collapsed="collapsed"
+              :collapsed-width="64"
+              :collapsed-icon-size="22"
+              :indent="18"
+              :value="currentRoute"
+              :expanded-keys="expandedKeys"
+              @update:value="handleMenuClick"
+              @update:expanded-keys="handleExpandKeysChange"
+            />
+          </NScrollbar>
+        </div>
       </div>
-      <NScrollbar class="menu-scrollbar">
-        <NMenu
-          :options="menuOptions"
-          :collapsed="collapsed"
-          :collapsed-width="64"
-          :collapsed-icon-size="22"
-          :indent="18"
-          :value="currentRoute"
-          :expanded-keys="expandedKeys"
-          @update:value="handleMenuClick"
-          @update:expanded-keys="handleExpandKeysChange"
-        />
-      </NScrollbar>
     </NLayoutSider>
     
     <NLayout>
@@ -372,8 +375,16 @@ const handleUserAction = async (key: string) => {
 </script>
 
 <style scoped>
+.sider-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
 .logo {
   height: 64px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -385,8 +396,9 @@ const handleUserAction = async (key: string) => {
   user-select: none;
 }
 
-.menu-scrollbar {
-  height: calc(100vh - 64px);
+.menu-wrapper {
+  flex: 1;
+  overflow: hidden;
 }
 
 .user-info {

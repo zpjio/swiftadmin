@@ -14,7 +14,7 @@ export type MessageStatus = 'pending' | 'sending' | 'success' | 'failed'
  * 消息渠道
  */
 export interface MessageChannel {
-  id: number
+  id: string
   channelName: string
   channelType: ChannelType
   channelCode: string
@@ -30,7 +30,7 @@ export interface MessageChannel {
  * 消息模板
  */
 export interface MessageTemplate {
-  id: number
+  id: string
   templateName: string
   templateCode: string
   channelType: ChannelType
@@ -72,11 +72,11 @@ export interface SendResult {
  * 消息发送记录
  */
 export interface MessageRecord {
-  id: number
+  id: string
   messageId: string
   channelType: ChannelType
-  channelId?: number
-  templateId?: number
+  channelId?: string
+  templateId?: string
   templateCode?: string
   toAddress: string
   subject?: string
@@ -97,7 +97,7 @@ export interface MessageRecord {
  * 站内信
  */
 export interface InboxMessage {
-  id: number
+  id: string
   messageId: string
   title: string
   content: string
@@ -106,7 +106,7 @@ export interface InboxMessage {
   isRead: number
   readTime?: string
   isStar: number
-  senderId?: number
+  senderId?: string
   senderName?: string
   expireTime?: string
   createTime: string
@@ -158,14 +158,14 @@ export function getMessageRecordPageApi(params: {
 /**
  * 获取发送记录详情
  */
-export function getMessageRecordDetailApi(id: number) {
+export function getMessageRecordDetailApi(id: string) {
   return get<MessageRecord>(`/message/record/${id}`)
 }
 
 /**
  * 重试发送
  */
-export function retryMessageApi(id: number) {
+export function retryMessageApi(id: string) {
   return post<SendResult>(`/message/record/retry/${id}`)
 }
 
@@ -188,7 +188,7 @@ export function getTemplatePageApi(params: {
 /**
  * 获取模板详情
  */
-export function getTemplateDetailApi(id: number) {
+export function getTemplateDetailApi(id: string) {
   return get<MessageTemplate>(`/message/template/${id}`)
 }
 
@@ -203,7 +203,7 @@ export function getTemplateByChannelApi(channelType: ChannelType) {
  * 创建模板
  */
 export function createTemplateApi(data: Partial<MessageTemplate>) {
-  return post<number>('/message/template', data)
+  return post<string>('/message/template', data)
 }
 
 /**
@@ -216,14 +216,14 @@ export function updateTemplateApi(data: Partial<MessageTemplate>) {
 /**
  * 删除模板
  */
-export function deleteTemplateApi(ids: number[]) {
+export function deleteTemplateApi(ids: string[]) {
   return del<void>(`/message/template/${ids.join(',')}`)
 }
 
 /**
  * 更新模板状态
  */
-export function updateTemplateStatusApi(id: number, status: number) {
+export function updateTemplateStatusApi(id: string, status: number) {
   return put<void>(`/message/template/${id}/status/${status}`)
 }
 
@@ -245,7 +245,7 @@ export function getChannelPageApi(params: {
 /**
  * 获取渠道详情
  */
-export function getChannelDetailApi(id: number) {
+export function getChannelDetailApi(id: string) {
   return get<MessageChannel>(`/message/channel/${id}`)
 }
 
@@ -253,7 +253,7 @@ export function getChannelDetailApi(id: number) {
  * 创建渠道
  */
 export function createChannelApi(data: Partial<MessageChannel>) {
-  return post<number>('/message/channel', data)
+  return post<string>('/message/channel', data)
 }
 
 /**
@@ -266,21 +266,21 @@ export function updateChannelApi(data: Partial<MessageChannel>) {
 /**
  * 删除渠道
  */
-export function deleteChannelApi(ids: number[]) {
+export function deleteChannelApi(ids: string[]) {
   return del<void>(`/message/channel/${ids.join(',')}`)
 }
 
 /**
  * 更新渠道状态
  */
-export function updateChannelStatusApi(id: number, status: number) {
+export function updateChannelStatusApi(id: string, status: number) {
   return put<void>(`/message/channel/${id}/status/${status}`)
 }
 
 /**
  * 测试渠道连接
  */
-export function testChannelApi(id: number) {
+export function testChannelApi(id: string) {
   return post<boolean>(`/message/channel/test/${id}`)
 }
 
@@ -303,7 +303,7 @@ export function getInboxPageApi(params: {
 /**
  * 获取站内信详情
  */
-export function getInboxDetailApi(id: number) {
+export function getInboxDetailApi(id: string) {
   return get<InboxMessage>(`/message/inbox/${id}`)
 }
 
@@ -326,13 +326,13 @@ export function sendInboxApi(data: {
   senderName?: string
   expireTime?: string
 }) {
-  return post<number>('/message/inbox/send', data)
+  return post<string>('/message/inbox/send', data)
 }
 
 /**
  * 标记消息已读
  */
-export function markInboxReadApi(ids: number[]) {
+export function markInboxReadApi(ids: string[]) {
   return put<void>('/message/inbox/read', ids)
 }
 
@@ -346,14 +346,14 @@ export function markAllInboxReadApi() {
 /**
  * 设置星标
  */
-export function setInboxStarApi(id: number, isStar: boolean) {
+export function setInboxStarApi(id: string, isStar: boolean) {
   return put<void>(`/message/inbox/${id}/star/${isStar}`)
 }
 
 /**
  * 删除站内信
  */
-export function deleteInboxApi(ids: number[]) {
+export function deleteInboxApi(ids: string[]) {
   return del<void>(`/message/inbox/${ids.join(',')}`)
 }
 
@@ -363,7 +363,7 @@ export function deleteInboxApi(ids: number[]) {
  * 消息订阅
  */
 export interface MessageSubscription {
-  id: number
+  id: string
   msgType: string
   channelType: ChannelType
   subscribed: number

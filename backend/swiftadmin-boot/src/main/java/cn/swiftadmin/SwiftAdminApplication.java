@@ -17,7 +17,7 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
  */
 @SpringBootApplication
 @ComponentScan(basePackages = "cn.swiftadmin")
-@MapperScan({"cn.swiftadmin.system.mapper", "cn.swiftadmin.auth.mapper", "cn.swiftadmin.message.mapper"})
+@MapperScan({"cn.swiftadmin.system.mapper", "cn.swiftadmin.auth.mapper", "cn.swiftadmin.message.mapper", "cn.swiftadmin.schedule.mapper"})
 @EnableAspectJAutoProxy(proxyTargetClass = true, exposeProxy = true)
 public class SwiftAdminApplication {
 

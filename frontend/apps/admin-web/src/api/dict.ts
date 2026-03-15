@@ -5,7 +5,7 @@ import type { PageResult } from '@/types'
  * 字典类型信息
  */
 export interface DictTypeVO {
-  id: number
+  id: string
   dictName: string
   dictType: string
   status: number
@@ -18,7 +18,7 @@ export interface DictTypeVO {
  * 字典数据信息
  */
 export interface DictDataVO {
-  id: number
+  id: string
   dictType: string
   label: string
   value: string
@@ -58,7 +58,7 @@ export interface DictDataQuery {
  * 字典类型 DTO
  */
 export interface DictTypeDTO {
-  id?: number
+  id?: string
   dictName: string
   dictType: string
   status: number
@@ -69,7 +69,7 @@ export interface DictTypeDTO {
  * 字典数据 DTO
  */
 export interface DictDataDTO {
-  id?: number
+  id?: string
   dictType: string
   label: string
   value: string
@@ -90,7 +90,7 @@ export function getDictTypePageApi(params: DictTypeQuery) {
 /**
  * 获取字典类型详情
  */
-export function getDictTypeDetailApi(id: number) {
+export function getDictTypeDetailApi(id: string) {
   return get<DictTypeVO>(`/system/dict-type/${id}`)
 }
 
@@ -111,7 +111,7 @@ export function updateDictTypeApi(data: DictTypeDTO) {
 /**
  * 删除字典类型
  */
-export function deleteDictTypeApi(ids: number[]) {
+export function deleteDictTypeApi(ids: string[]) {
   return del(`/system/dict-type/${ids.join(',')}`)
 }
 
@@ -125,7 +125,7 @@ export function getDictDataPageApi(params: DictDataQuery) {
 /**
  * 获取字典数据详情
  */
-export function getDictDataDetailApi(id: number) {
+export function getDictDataDetailApi(id: string) {
   return get<DictDataVO>(`/system/dict-data/${id}`)
 }
 
@@ -146,7 +146,7 @@ export function updateDictDataApi(data: DictDataDTO) {
 /**
  * 删除字典数据
  */
-export function deleteDictDataApi(ids: number[]) {
+export function deleteDictDataApi(ids: string[]) {
   return del(`/system/dict-data/${ids.join(',')}`)
 }
 

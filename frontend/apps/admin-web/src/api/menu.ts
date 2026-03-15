@@ -9,8 +9,8 @@ export type MenuType = 1 | 2 | 3 // 1-目录 2-菜单 3-按钮
  * 菜单信息
  */
 export interface MenuVO {
-  id: number
-  parentId: number
+  id: string
+  parentId: string
   name: string
   path: string
   component: string
@@ -28,8 +28,8 @@ export interface MenuVO {
  * 菜单树节点（简化版，用于选择）
  */
 export interface MenuTreeVO {
-  id: number
-  parentId: number
+  id: string
+  parentId: string
   label: string
   type: MenuType
   children?: MenuTreeVO[]
@@ -39,8 +39,8 @@ export interface MenuTreeVO {
  * 菜单创建/更新参数
  */
 export interface MenuDTO {
-  id?: number
-  parentId: number
+  id?: string
+  parentId: string
   name: string
   path?: string
   component?: string
@@ -68,7 +68,7 @@ export function getMenuTreeApi(status?: number) {
 /**
  * 获取菜单详情
  */
-export function getMenuDetailApi(id: number) {
+export function getMenuDetailApi(id: string) {
   return get<MenuVO>(`/system/menu/${id}`)
 }
 
@@ -90,7 +90,7 @@ export function getUserMenuApi() {
  * 创建菜单
  */
 export function createMenuApi(data: MenuDTO) {
-  return post<number>('/system/menu', data)
+  return post<string>('/system/menu', data)
 }
 
 /**
@@ -103,6 +103,6 @@ export function updateMenuApi(data: MenuDTO) {
 /**
  * 删除菜单
  */
-export function deleteMenuApi(id: number) {
+export function deleteMenuApi(id: string) {
   return del(`/system/menu/${id}`)
 }

@@ -5,7 +5,6 @@ import cn.swiftadmin.auth.api.service.SocialBindService;
 import cn.swiftadmin.auth.strategy.social.SocialAuthHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -16,6 +15,8 @@ import java.util.Map;
  * 社交 Token 自动刷新任务
  * <p>定期检查即将过期的 Token 并自动刷新</p>
  * <p>Token 解密由 AesGcmTypeHandler 自动处理</p>
+ * <p>注意：此任务已迁移到定时任务模块 (cn.swiftadmin.schedule.task.SocialTokenRefreshScheduleTask)</p>
+ * <p>原有的 @Scheduled 调度方式已禁用，改由统一调度器管理</p>
  *
  * @author zhangpengju
  * @since 2026-03-10
@@ -33,8 +34,10 @@ public class SocialTokenRefreshTask {
 
     /**
      * 每小时执行一次 Token 刷新检查
+     * <p>注意：此方法已迁移到定时任务模块管理，@Scheduled 注解已禁用</p>
+     * <p>如需启用此任务，请在定时任务管理中配置调度</p>
      */
-    @Scheduled(cron = "0 0 * * * ?")
+    // @Scheduled(cron = "0 0 * * * ?")  // 已迁移到定时任务模块，此处已禁用
     public void refreshExpiringTokens() {
         log.info("开始执行社交 Token 刷新任务");
 

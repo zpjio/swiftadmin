@@ -39,6 +39,12 @@
             <artifactId>swiftadmin-message-biz</artifactId>
         </dependency>
 
+        <!-- Schedule Biz -->
+        <dependency>
+            <groupId>cn.swiftadmin</groupId>
+            <artifactId>swiftadmin-schedule-biz</artifactId>
+        </dependency>
+
         <!-- Common Security -->
         <dependency>
             <groupId>cn.swiftadmin</groupId>

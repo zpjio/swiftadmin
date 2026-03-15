@@ -11,8 +11,8 @@ export interface UserQuery {
   phone?: string
   email?: string
   status?: number
-  deptId?: number
-  roleId?: number
+  deptId?: string
+  roleId?: string
   createTime?: [string, string]
 }
 
@@ -20,7 +20,7 @@ export interface UserQuery {
  * 用户信息
  */
 export interface UserVO {
-  id: number
+  id: string
   username: string
   nickname: string
   avatar: string
@@ -28,9 +28,9 @@ export interface UserVO {
   phone: string
   sex: number
   status: number
-  deptId: number
+  deptId: string
   deptName: string
-  roleIds: number[]
+  roleIds: string[]
   roleNames: string[]
   remark: string
   createTime: string
@@ -41,7 +41,7 @@ export interface UserVO {
  * 用户创建/更新参数
  */
 export interface UserDTO {
-  id?: number
+  id?: string
   username: string
   password?: string
   nickname: string
@@ -50,8 +50,8 @@ export interface UserDTO {
   phone?: string
   sex?: number
   status?: number
-  deptId?: number
-  roleIds?: number[]
+  deptId?: string
+  roleIds?: string[]
   remark?: string
 }
 
@@ -65,7 +65,7 @@ export function getUserPageApi(params: UserQuery) {
 /**
  * 获取用户详情
  */
-export function getUserDetailApi(id: number) {
+export function getUserDetailApi(id: string) {
   return get<UserVO>(`/system/user/${id}`)
 }
 
@@ -73,7 +73,7 @@ export function getUserDetailApi(id: number) {
  * 创建用户
  */
 export function createUserApi(data: UserDTO) {
-  return post<number>('/system/user', data)
+  return post<string>('/system/user', data)
 }
 
 /**
@@ -86,14 +86,14 @@ export function updateUserApi(data: UserDTO) {
 /**
  * 批量删除用户
  */
-export function deleteUserApi(ids: number[]) {
+export function deleteUserApi(ids: string[]) {
   return del(`/system/user/${ids.join(',')}`)
 }
 
 /**
  * 更新用户状态
  */
-export function updateUserStatusApi(userId: number, status: number) {
+export function updateUserStatusApi(userId: string, status: number) {
   return put('/system/user/status', null, {
     params: { userId, status },
   })
@@ -102,7 +102,7 @@ export function updateUserStatusApi(userId: number, status: number) {
 /**
  * 重置用户密码
  */
-export function resetPasswordApi(userId: number, password: string) {
+export function resetPasswordApi(userId: string, password: string) {
   return put('/system/user/reset-password', null, {
     params: { userId, password },
   })
@@ -111,7 +111,7 @@ export function resetPasswordApi(userId: number, password: string) {
 /**
  * 为用户分配角色
  */
-export function assignRolesApi(userId: number, roleIds: number[]) {
+export function assignRolesApi(userId: string, roleIds: string[]) {
   return put('/system/user/role', null, {
     params: { userId, roleIds },
   })

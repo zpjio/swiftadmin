@@ -5,7 +5,7 @@ import type { PageResult } from '@/types'
  * 登录日志信息
  */
 export interface LoginLogVO {
-  id: number
+  id: string
   username: string
   ipAddress: string
   userAgent: string
@@ -37,14 +37,14 @@ export function getLoginLogPageApi(params: LoginLogQuery) {
 /**
  * 获取登录日志详情
  */
-export function getLoginLogDetailApi(id: number) {
+export function getLoginLogDetailApi(id: string) {
   return get<LoginLogVO>(`/auth/loginlog/${id}`)
 }
 
 /**
  * 批量删除登录日志
  */
-export function deleteLoginLogApi(ids: number[]) {
+export function deleteLoginLogApi(ids: string[]) {
   return del(`/auth/loginlog/${ids.join(',')}`)
 }
 

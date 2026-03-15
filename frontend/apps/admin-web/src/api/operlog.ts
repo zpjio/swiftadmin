@@ -5,14 +5,14 @@ import type { PageResult } from '@/types'
  * 操作日志信息
  */
 export interface OperLogVO {
-  id: number
+  id: string
   title: string
   module: string
   businessType: number
   method: string
   requestMethod: string
   operatorType: number
-  operUserId: number
+  operUserId: string
   operName: string
   deptName: string
   operUrl: string
@@ -58,14 +58,14 @@ export function getOperLogPageApi(params: OperLogQuery) {
 /**
  * 获取操作日志详情
  */
-export function getOperLogDetailApi(id: number) {
+export function getOperLogDetailApi(id: string) {
   return get<OperLogVO>(`/system/operlog/${id}`)
 }
 
 /**
  * 批量删除操作日志
  */
-export function deleteOperLogApi(ids: number[]) {
+export function deleteOperLogApi(ids: string[]) {
   return del(`/system/operlog/${ids.join(',')}`)
 }
 

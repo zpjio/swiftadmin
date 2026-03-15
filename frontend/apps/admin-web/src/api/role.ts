@@ -16,14 +16,14 @@ export interface RoleQuery {
  * 角色信息
  */
 export interface RoleVO {
-  id: number
+  id: string
   name: string
   code: string
   description: string
   status: number
   dataScope: number
-  menuIds: number[]
-  deptIds: number[]
+  menuIds: string[]
+  deptIds: string[]
   createTime: string
   updateTime: string
 }
@@ -32,14 +32,14 @@ export interface RoleVO {
  * 角色创建/更新参数
  */
 export interface RoleDTO {
-  id?: number
+  id?: string
   name: string
   code: string
   description?: string
   status?: number
   dataScope?: number
-  menuIds?: number[]
-  deptIds?: number[]
+  menuIds?: string[]
+  deptIds?: string[]
 }
 
 /**
@@ -52,7 +52,7 @@ export function getRolePageApi(params: RoleQuery) {
 /**
  * 获取角色详情
  */
-export function getRoleDetailApi(id: number) {
+export function getRoleDetailApi(id: string) {
   return get<RoleVO>(`/system/role/${id}`)
 }
 
@@ -68,7 +68,7 @@ export function getRoleListApi(silent?: boolean) {
  * 创建角色
  */
 export function createRoleApi(data: RoleDTO) {
-  return post<number>('/system/role', data)
+  return post<string>('/system/role', data)
 }
 
 /**
@@ -81,14 +81,14 @@ export function updateRoleApi(data: RoleDTO) {
 /**
  * 批量删除角色
  */
-export function deleteRoleApi(ids: number[]) {
+export function deleteRoleApi(ids: string[]) {
   return del(`/system/role/${ids.join(',')}`)
 }
 
 /**
  * 为角色分配菜单权限
  */
-export function assignMenusApi(roleId: number, menuIds: number[]) {
+export function assignMenusApi(roleId: string, menuIds: string[]) {
   return put('/system/role/menu', null, {
     params: { roleId, menuIds },
   })

@@ -11,6 +11,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    CronEditor: typeof import('./components/schedule/CronEditor.vue')['default']
     HelloWorld: typeof import('./components/HelloWorld.vue')['default']
     IconMdiAccount: typeof import('~icons/mdi/account')['default']
     IconMdiBell: typeof import('~icons/mdi/bell')['default']
@@ -40,6 +41,7 @@ declare module 'vue' {
     NButton: typeof import('naive-ui')['NButton']
     NCard: typeof import('naive-ui')['NCard']
     NCheckbox: typeof import('naive-ui')['NCheckbox']
+    NCheckboxGroup: typeof import('naive-ui')['NCheckboxGroup']
     NCode: typeof import('naive-ui')['NCode']
     NConfigProvider: typeof import('naive-ui')['NConfigProvider']
     NDataTable: typeof import('naive-ui')['NDataTable']

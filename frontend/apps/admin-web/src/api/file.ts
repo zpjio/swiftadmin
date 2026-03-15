@@ -6,7 +6,7 @@ import type { PageResult } from '@/types'
  * 文件信息
  */
 export interface FileVO {
-  id: number
+  id: string
   fileName: string
   fileType: string
   fileSize: number
@@ -39,21 +39,21 @@ export function getFilePageApi(params: FileQuery) {
 /**
  * 获取文件详情
  */
-export function getFileDetailApi(id: number) {
+export function getFileDetailApi(id: string) {
   return get<FileVO>(`/system/file/${id}`)
 }
 
 /**
  * 批量删除文件
  */
-export function deleteFileApi(ids: number[]) {
+export function deleteFileApi(ids: string[]) {
   return del(`/system/file/${ids.join(',')}`)
 }
 
 /**
  * 下载文件
  */
-export async function downloadFileApi(id: number, fileName?: string) {
+export async function downloadFileApi(id: string, fileName?: string) {
   const response = await service.get(`/system/file/download/${id}`, {
     responseType: 'blob',
   })

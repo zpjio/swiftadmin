@@ -135,6 +135,9 @@ function loadComponent(component?: string | null) {
     'views/message/channel/index': () => import('@/views/message/channel/index.vue'),
     'views/message/inbox/index': () => import('@/views/message/inbox/index.vue'),
     'views/message/record/index': () => import('@/views/message/record/index.vue'),
+    // 定时任务模块
+    'schedule/job/index': () => import('@/views/schedule/job/index.vue'),
+    'schedule/log/index': () => import('@/views/schedule/log/index.vue'),
   }
 
   return componentMap[component] || (() => import('@/views/error/404.vue'))
