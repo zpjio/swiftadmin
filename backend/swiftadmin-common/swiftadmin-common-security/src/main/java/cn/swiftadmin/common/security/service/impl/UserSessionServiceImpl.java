@@ -139,6 +139,23 @@ public class UserSessionServiceImpl implements UserSessionService {
     }
 
     @Override
+    public int removeSessions(List<String> sessionIds) {
+        if (CollectionUtils.isEmpty(sessionIds)) {
+            return 0;
+        }
+
+        int successCount = 0;
+        for (String sessionId : sessionIds) {
+            if (removeSession(sessionId)) {
+                successCount++;
+            }
+        }
+
+        log.info("批量删除会话完成: 总数={}, 成功={}", sessionIds.size(), successCount);
+        return successCount;
+    }
+
+    @Override
     public List<String> getUserSessionIds(Long userId) {
         Set<String> tokens = stringRedisTemplate.opsForSet().members(RedisKeyConstants.USER_TOKENS + userId);
         if (CollectionUtils.isEmpty(tokens)) {
@@ -169,9 +186,8 @@ public class UserSessionServiceImpl implements UserSessionService {
 
         // 批量清理过期会话记录
         if (!expiredSessions.isEmpty()) {
-            for (String sessionId : expiredSessions) {
-                stringRedisTemplate.opsForSet().remove(RedisKeyConstants.USER_TOKENS + userId, sessionId);
-            }
+            String userTokensKey = RedisKeyConstants.USER_TOKENS + userId;
+            stringRedisTemplate.opsForSet().remove(userTokensKey, expiredSessions.toArray());
             log.debug("清理过期会话记录: userId={}, count={}", userId, expiredSessions.size());
         }
 

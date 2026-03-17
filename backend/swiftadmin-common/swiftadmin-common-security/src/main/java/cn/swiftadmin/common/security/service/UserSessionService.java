@@ -50,6 +50,14 @@ public interface UserSessionService {
     boolean removeSession(String sessionId);
 
     /**
+     * 批量删除会话
+     *
+     * @param sessionIds 会话ID列表
+     * @return 删除成功的数量
+     */
+    int removeSessions(List<String> sessionIds);
+
+    /**
      * 获取用户的所有会话ID
      *
      * @param userId 用户ID

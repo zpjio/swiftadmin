@@ -300,14 +300,23 @@ public class DeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impleme
      */
     private void updateChildrenAncestors(Long parentId, String parentAncestors) {
         List<SysDept> children = list(QueryWrapper.create().where(SYS_DEPT.PARENT_ID.eq(parentId)));
+        if (children.isEmpty()) {
+            return;
+        }
+
+        String newAncestors = parentAncestors + "," + parentId;
+        LocalDateTime now = LocalDateTime.now();
+
+        // 批量更新子部门的祖级路径
+        List<Long> childIds = children.stream().map(SysDept::getId).toList();
+        UpdateChain.of(SysDept.class)
+                .set(SYS_DEPT.ANCESTORS, newAncestors)
+                .set(SYS_DEPT.UPDATE_TIME, now)
+                .where(SYS_DEPT.ID.in(childIds))
+                .update();
+
+        // 递归更新子部门的子部门
         for (SysDept child : children) {
-            String newAncestors = parentAncestors + "," + parentId;
-            UpdateChain.of(SysDept.class)
-                    .set(SYS_DEPT.ANCESTORS, newAncestors)
-                    .set(SYS_DEPT.UPDATE_TIME, LocalDateTime.now())
-                    .where(SYS_DEPT.ID.eq(child.getId()))
-                    .update();
-            // 递归更新子部门的子部门
             updateChildrenAncestors(child.getId(), newAncestors);
         }
     }

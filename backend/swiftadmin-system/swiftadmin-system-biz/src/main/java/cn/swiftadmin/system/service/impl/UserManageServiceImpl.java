@@ -24,7 +24,7 @@ import cn.swiftadmin.system.mapper.SysUserMapper;
 import cn.swiftadmin.system.mapper.SysUserRoleMapper;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.update.UpdateChain;
-import com.mybatisflex.spring.service.impl.ServiceImpl;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -43,26 +43,22 @@ import static cn.swiftadmin.system.api.entity.table.SysDeptTableDef.SYS_DEPT;
 
 /**
  * 用户管理服务实现类
+ * <p>管理后台用户 CRUD 功能，包含数据权限校验和超级管理员保护</p>
+ * <p>底层操作委托给 {@link UserService}</p>
  *
  * @author zhangpengju
  * @since 2026-03-10
  */
 @Slf4j
 @Service
-public class UserManageServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements UserManageService {
+@RequiredArgsConstructor
+public class UserManageServiceImpl implements UserManageService {
 
+    private final SysUserMapper userMapper;
     private final SysUserRoleMapper userRoleMapper;
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final PasswordValidator passwordValidator;
-
-    public UserManageServiceImpl(SysUserRoleMapper userRoleMapper, UserService userService,
-                                  PasswordEncoder passwordEncoder, PasswordValidator passwordValidator) {
-        this.userRoleMapper = userRoleMapper;
-        this.userService = userService;
-        this.passwordEncoder = passwordEncoder;
-        this.passwordValidator = passwordValidator;
-    }
 
     @Override
     @DataScope(userAlias = "u", userIdField = "id")
@@ -80,13 +76,13 @@ public class UserManageServiceImpl extends ServiceImpl<SysUserMapper, SysUser> i
                 .and(SYS_USER.CREATE_TIME.le(query.getCreateTimeEnd(), query.getCreateTimeEnd() != null))
                 .orderBy(SYS_USER.CREATE_TIME.desc());
 
-        return mapper
+        return userMapper
                 .paginateAs(PageHelper.of(query.getPage(), query.getPageSize()), queryWrapper, UserVO.class);
     }
 
     @Override
     public UserVO getDetail(Long id) {
-        SysUser user = getById(id);
+        SysUser user = userService.getById(id);
         if (user == null) {
             return null;
         }
@@ -94,7 +90,7 @@ public class UserManageServiceImpl extends ServiceImpl<SysUserMapper, SysUser> i
         UserVO vo = BeanCopyUtils.copy(user, UserVO::new);
 
         // 获取用户角色
-        List<SysRole> roles = mapper.selectListByQueryAs(
+        List<SysRole> roles = userMapper.selectListByQueryAs(
                 QueryWrapper.create()
                         .select(SYS_ROLE.ID, SYS_ROLE.NAME)
                         .from(SYS_ROLE)
@@ -138,7 +134,7 @@ public class UserManageServiceImpl extends ServiceImpl<SysUserMapper, SysUser> i
                 .forceChangePassword(YesNo.NO)
                 .build();
 
-        save(user);
+        userService.save(user);
 
         if (!CollectionUtils.isEmpty(dto.getRoleIds())) {
             assignRoles(user.getId(), dto.getRoleIds());
@@ -155,7 +151,7 @@ public class UserManageServiceImpl extends ServiceImpl<SysUserMapper, SysUser> i
             throw new BusinessException(400, "用户 ID 不能为空");
         }
 
-        SysUser existing = getById(dto.getId());
+        SysUser existing = userService.getById(dto.getId());
         if (existing == null) {
             throw new BusinessException(404, "用户不存在");
         }
@@ -201,7 +197,7 @@ public class UserManageServiceImpl extends ServiceImpl<SysUserMapper, SysUser> i
         // 检查是否包含超级管理员
         checkSuperAdminProtection(ids);
 
-        mapper.deleteBatchByIds(ids);
+        userService.removeByIds(ids);
         userRoleMapper.deleteByQuery(QueryWrapper.create().where(SYS_USER_ROLE.USER_ID.in(ids)));
     }
 
@@ -224,9 +220,14 @@ public class UserManageServiceImpl extends ServiceImpl<SysUserMapper, SysUser> i
         userRoleMapper.deleteByQuery(QueryWrapper.create().where(SYS_USER_ROLE.USER_ID.eq(userId)));
 
         if (!CollectionUtils.isEmpty(roleIds)) {
-            for (Long roleId : roleIds) {
-                userRoleMapper.insertUserRole(userId, roleId);
-            }
+            // 批量插入优化
+            List<SysUserRole> userRoles = roleIds.stream()
+                    .map(roleId -> SysUserRole.builder()
+                            .userId(userId)
+                            .roleId(roleId)
+                            .build())
+                    .collect(Collectors.toList());
+            userRoleMapper.insertBatch(userRoles);
         }
     }
 
@@ -252,7 +253,7 @@ public class UserManageServiceImpl extends ServiceImpl<SysUserMapper, SysUser> i
      * @throws BusinessException 如果是超级管理员
      */
     private void checkSuperAdminProtection(Long userId) {
-        SysUser user = getById(userId);
+        SysUser user = userService.getById(userId);
         if (user != null && user.getIsSuper() == YesNo.YES) {
             throw new BusinessException(403, "超级管理员[" + user.getUsername() + "]不可进行此操作");
         }
@@ -266,7 +267,7 @@ public class UserManageServiceImpl extends ServiceImpl<SysUserMapper, SysUser> i
      * @throws BusinessException 如果无权限修改
      */
     private void checkSuperAdminModifyPermission(Long targetUserId) {
-        SysUser user = getById(targetUserId);
+        SysUser user = userService.getById(targetUserId);
         if (user != null && user.getIsSuper() == YesNo.YES) {
             Long currentUserId = SecurityUtils.getCurrentUserId();
             if (!targetUserId.equals(currentUserId)) {

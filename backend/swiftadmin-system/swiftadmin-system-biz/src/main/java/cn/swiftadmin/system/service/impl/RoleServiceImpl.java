@@ -195,9 +195,14 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
         roleMenuMapper.deleteByQuery(QueryWrapper.create().where(SYS_ROLE_MENU.ROLE_ID.eq(roleId)));
 
         if (!CollectionUtils.isEmpty(menuIds)) {
-            for (Long menuId : menuIds) {
-                roleMenuMapper.insertRoleMenu(roleId, menuId);
-            }
+            // 批量插入优化：构建实体列表，一次性插入
+            List<SysRoleMenu> roleMenus = menuIds.stream()
+                    .map(menuId -> SysRoleMenu.builder()
+                            .roleId(roleId)
+                            .menuId(menuId)
+                            .build())
+                    .collect(Collectors.toList());
+            roleMenuMapper.insertBatch(roleMenus);
         }
 
         // 清除拥有该角色的用户权限缓存
@@ -248,9 +253,14 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
 
         // 保存新的关联
         if (!CollectionUtils.isEmpty(deptIds)) {
-            for (Long deptId : deptIds) {
-                roleDeptMapper.insertRoleDept(roleId, deptId);
-            }
+            // 批量插入优化：构建实体列表，一次性插入
+            List<SysRoleDept> roleDepts = deptIds.stream()
+                    .map(deptId -> SysRoleDept.builder()
+                            .roleId(roleId)
+                            .deptId(deptId)
+                            .build())
+                    .collect(Collectors.toList());
+            roleDeptMapper.insertBatch(roleDepts);
         }
 
         // 清除拥有该角色的用户权限缓存

@@ -205,10 +205,8 @@ public class PermissionCacheRefreshServiceImpl implements PermissionCacheRefresh
         List<String> sessionIds = userSessionService.getUserSessionIds(userId);
         log.debug("用户 {} 的会话数量: {}", userId, sessionIds.size());
         if (!sessionIds.isEmpty()) {
-            for (String sessionId : sessionIds) {
-                userSessionService.removeSession(sessionId);
-            }
-            log.info("已删除用户 {} 的 {} 个会话", userId, sessionIds.size());
+            int deleted = userSessionService.removeSessions(sessionIds);
+            log.info("已删除用户 {} 的 {} 个会话", userId, deleted);
         }
     }
 }
