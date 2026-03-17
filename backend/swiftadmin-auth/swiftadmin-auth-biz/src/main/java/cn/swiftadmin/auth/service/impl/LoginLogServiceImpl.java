@@ -86,4 +86,27 @@ public class LoginLogServiceImpl extends ServiceImpl<SysLoginLogMapper, SysLogin
         mapper.deleteByQuery(QueryWrapper.create());
     }
 
+    @Override
+    public int deleteByLoginTimeBefore(LocalDateTime beforeTime, int batchSize) {
+        // 不分批或批次<=0，直接删除
+        if (batchSize <= 0) {
+            QueryWrapper queryWrapper = QueryWrapper.create()
+                    .where(SYS_LOGIN_LOG.LOGIN_TIME.lt(beforeTime));
+            return mapper.deleteByQuery(queryWrapper);
+        }
+
+        // 分批删除，避免大事务和锁表
+        int totalDeleted = 0;
+        int deleted;
+        do {
+            QueryWrapper queryWrapper = QueryWrapper.create()
+                    .where(SYS_LOGIN_LOG.LOGIN_TIME.lt(beforeTime))
+                    .limit(batchSize);
+            deleted = mapper.deleteByQuery(queryWrapper);
+            totalDeleted += deleted;
+        } while (deleted > 0);
+
+        return totalDeleted;
+    }
+
 }

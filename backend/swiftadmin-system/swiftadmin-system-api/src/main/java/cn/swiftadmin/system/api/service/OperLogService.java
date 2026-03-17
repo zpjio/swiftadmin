@@ -42,4 +42,13 @@ public interface OperLogService extends IService<SysOperLog> {
      */
     void clearAll();
 
+    /**
+     * 删除指定时间之前的操作日志
+     *
+     * @param beforeTime 截止时间
+     * @param batchSize 每批删除数量（<=0 表示不分批）
+     * @return 删除的记录数
+     */
+    int deleteByOperTimeBefore(java.time.LocalDateTime beforeTime, int batchSize);
+
 }

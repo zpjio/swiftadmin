@@ -12,6 +12,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static cn.swiftadmin.system.api.entity.table.SysOperLogTableDef.SYS_OPER_LOG;
@@ -56,6 +57,29 @@ public class OperLogServiceImpl extends ServiceImpl<SysOperLogMapper, SysOperLog
     @Override
     public void clearAll() {
         mapper.deleteByQuery(QueryWrapper.create());
+    }
+
+    @Override
+    public int deleteByOperTimeBefore(LocalDateTime beforeTime, int batchSize) {
+        // 不分批或批次<=0，直接删除
+        if (batchSize <= 0) {
+            QueryWrapper queryWrapper = QueryWrapper.create()
+                    .where(SYS_OPER_LOG.OPER_TIME.lt(beforeTime));
+            return mapper.deleteByQuery(queryWrapper);
+        }
+
+        // 分批删除，避免大事务和锁表
+        int totalDeleted = 0;
+        int deleted;
+        do {
+            QueryWrapper queryWrapper = QueryWrapper.create()
+                    .where(SYS_OPER_LOG.OPER_TIME.lt(beforeTime))
+                    .limit(batchSize);
+            deleted = mapper.deleteByQuery(queryWrapper);
+            totalDeleted += deleted;
+        } while (deleted > 0);
+
+        return totalDeleted;
     }
 
 }

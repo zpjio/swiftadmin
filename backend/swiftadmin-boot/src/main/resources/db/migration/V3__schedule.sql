@@ -131,3 +131,85 @@ INSERT INTO schedule_job (
     0                                       -- 未删除
 );
 
+-- 登录日志清理任务
+INSERT INTO schedule_job (
+    id,
+    job_name,
+    job_group,
+    bean_name,
+    method_name,
+    method_params,
+    job_type,
+    cron_expression,
+    timeout,
+    retry_times,
+    retry_interval,
+    status,
+    remark,
+    create_time,
+    update_time,
+    create_by,
+    update_by,
+    deleted
+) VALUES (
+    401,
+    '登录日志清理',
+    'CLEANUP',
+    'loginLogCleanupTask',
+    'execute',
+    NULL,
+    1,
+    '0 0 2 * * ?',                          -- Cron：每天凌晨2点执行
+    300,
+    3,                                      -- 重试次数
+    60,                                     -- 重试间隔（秒）
+    0,
+    '每天凌晨2点清理过期登录日志，保留天数由系统配置log.login.keep_days控制',
+    NOW(),
+    NOW(),
+    1,
+    1,
+    0
+);
+
+-- 操作日志清理任务
+INSERT INTO schedule_job (
+    id,
+    job_name,
+    job_group,
+    bean_name,
+    method_name,
+    method_params,
+    job_type,
+    cron_expression,
+    timeout,
+    retry_times,
+    retry_interval,
+    status,
+    remark,
+    create_time,
+    update_time,
+    create_by,
+    update_by,
+    deleted
+) VALUES (
+    402,
+    '操作日志清理',
+    'CLEANUP',
+    'operLogCleanupTask',
+    'execute',
+    NULL,
+    1,
+    '0 10 2 * * ?',                         -- Cron：每天凌晨2点10分执行
+    300,
+    3,
+    60,
+    0,
+    '每天凌晨2点10分清理过期操作日志，保留天数由系统配置log.oper.keep_days控制',
+    NOW(),
+    NOW(),
+    1,
+    1,
+    0
+);
+
