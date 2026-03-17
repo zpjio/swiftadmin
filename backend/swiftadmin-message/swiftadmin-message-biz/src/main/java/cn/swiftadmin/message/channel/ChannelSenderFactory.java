@@ -25,7 +25,7 @@ public class ChannelSenderFactory {
     public ChannelSenderFactory(List<ChannelSender> senderList) {
         this.senders = senderList.stream()
                 .collect(Collectors.toMap(ChannelSender::getChannelType, Function.identity()));
-        log.info("初始化渠道发送器: {}", senders.keySet());
+        log.debug("初始化渠道发送器: {}", senders.keySet());
     }
 
     /**

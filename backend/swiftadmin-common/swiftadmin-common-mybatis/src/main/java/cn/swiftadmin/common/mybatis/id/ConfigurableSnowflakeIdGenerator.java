@@ -164,7 +164,7 @@ public class ConfigurableSnowflakeIdGenerator implements IKeyGenerator {
         this.workerId = workerId;
         this.datacenterId = datacenterId;
 
-        log.info("雪花ID生成器初始化: workerId={}, datacenterId={}", workerId, datacenterId);
+        log.debug("雪花ID生成器初始化: workerId={}, datacenterId={}", workerId, datacenterId);
     }
 
     /**

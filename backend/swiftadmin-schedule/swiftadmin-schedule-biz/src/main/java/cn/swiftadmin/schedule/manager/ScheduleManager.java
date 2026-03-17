@@ -59,7 +59,7 @@ public class ScheduleManager {
         for (JobExecutor executor : executors) {
             executorMap.put(executor.getType(), executor);
         }
-        log.info("ScheduleManager initialized executors={}", executorMap.keySet());
+        log.debug("ScheduleManager initialized executors={}", executorMap.keySet());
     }
 
     /**

@@ -60,7 +60,7 @@ public class SnowflakeIdAutoConfiguration {
         // 注册到 KeyGeneratorFactory，覆盖默认的 snowFlakeId
         KeyGeneratorFactory.register("snowFlakeId", generator);
 
-        log.info("雪花ID生成器已注册: workerId={}, datacenterId={}",
+        log.debug("雪花ID生成器已注册: workerId={}, datacenterId={}",
                 generator.getWorkerId(), generator.getDatacenterId());
 
         return generator;

@@ -24,7 +24,7 @@ public class DataScopeAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public DataScopeAspect dataScopeAspect() {
-        log.info("注册数据权限切面");
+        log.debug("注册数据权限切面");
         return new DataScopeAspect();
     }
 

@@ -121,16 +121,13 @@ public class PasswordProperties {
      */
     @PostConstruct
     public void validate() {
-        log.info("开始验证密码策略配置参数...");
-
         validateRange("minLength", minLength, 1, 128, "最小密码长度");
         validateRange("maxLength", maxLength, minLength, 128, "最大密码长度");
         validateRange("maxSequentialChars", maxSequentialChars, 0, 10, "连续字符检测长度");
         validateRange("maxRepeatingChars", maxRepeatingChars, 0, 10, "重复字符检测长度");
         validateRange("historyCheckCount", historyCheckCount, 0, 20, "历史密码检查次数");
 
-        log.info("密码策略配置参数验证通过: minLength={}, maxLength={}, " +
-                        "requireUppercase={}, requireLowercase={}, requireDigit={}, requireSpecialChar={}",
+        log.debug("密码策略配置: minLength={}, maxLength={}, requireUppercase={}, requireLowercase={}, requireDigit={}, requireSpecialChar={}",
                 minLength, maxLength, requireUppercase, requireLowercase, requireDigit, requireSpecialChar);
     }
 

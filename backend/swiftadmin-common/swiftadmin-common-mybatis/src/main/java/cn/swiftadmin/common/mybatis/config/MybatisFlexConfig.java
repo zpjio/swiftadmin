@@ -1,6 +1,7 @@
 package cn.swiftadmin.common.mybatis.config;
 
 import cn.swiftadmin.common.mybatis.encrypt.AesGcmTypeHandler;
+import com.mybatisflex.core.FlexGlobalConfig;
 import com.mybatisflex.core.audit.AuditManager;
 import com.mybatisflex.spring.boot.MyBatisFlexCustomizer;
 import org.slf4j.Logger;
@@ -32,11 +33,13 @@ public class MybatisFlexConfig {
     @Bean
     public MyBatisFlexCustomizer myBatisFlexCustomizer() {
         return configuration -> {
-            // 1. 设置 AES 加密密钥（用于 TypeHandler 解密）
-            AesGcmTypeHandler.setSecretKey(tokenSecret);
-            log.info("AES-GCM 加密密钥配置完成");
+            // 1. 禁用 Banner
+            FlexGlobalConfig.getDefaultConfig().setPrintBanner(false);
 
-            // 2. 开启审计日志
+            // 2. 设置 AES 加密密钥（用于 TypeHandler 解密）
+            AesGcmTypeHandler.setSecretKey(tokenSecret);
+
+            // 3. 开启审计日志
             AuditManager.setAuditEnable(true);
             AuditManager.setMessageCollector(auditMessage -> {
                 // 输出 SQL 执行日志
@@ -51,7 +54,7 @@ public class MybatisFlexConfig {
                 }
             });
 
-            log.info("MyBatis-Flex 全局配置完成");
+            log.debug("MyBatis-Flex 配置完成");
         };
     }
 

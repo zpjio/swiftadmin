@@ -177,8 +177,6 @@ public class AuthSecurityProperties {
      */
     @PostConstruct
     public void validate() {
-        log.info("开始验证认证安全配置参数...");
-        
         validateRange("maxLoginFailCount", maxLoginFailCount, 1, 20, "最大登录失败次数");
         validateRange("lockMinutes", lockMinutes, 1, 1440, "账户锁定时间");
         validateRange("refreshIntervalSeconds", refreshIntervalSeconds, 1, 300, "Token 刷新间隔");
@@ -200,8 +198,8 @@ public class AuthSecurityProperties {
         validateRange("bindLockTimeoutSeconds", bindLockTimeoutSeconds, 1, 300, "绑定锁超时时间");
         validateRange("ipChangeThreshold", ipChangeThreshold, 1, 10, "IP 变化次数阈值");
         validateRange("ipChangeWindowMinutes", ipChangeWindowMinutes, 1, 1440, "IP 变化统计时间窗口");
-        
-        log.info("认证安全配置参数验证通过");
+
+        log.debug("认证安全配置参数验证通过");
     }
 
     /**
@@ -222,6 +220,5 @@ public class AuthSecurityProperties {
             log.error(message);
             throw new IllegalArgumentException(message);
         }
-        log.debug("配置参数验证通过：{} = {}", paramName, value);
     }
 }

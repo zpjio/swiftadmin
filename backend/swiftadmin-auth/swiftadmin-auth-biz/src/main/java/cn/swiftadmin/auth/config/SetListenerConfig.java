@@ -26,7 +26,7 @@ public class SetListenerConfig {
     @PostConstruct
     public void init() {
         SocialBindEncryptSetListener.setSecretKey(tokenSecret);
-        log.info("SocialBindEncryptSetListener 密钥配置完成");
+        log.debug("SocialBindEncryptSetListener 密钥配置完成");
     }
 
 }

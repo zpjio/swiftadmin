@@ -24,7 +24,7 @@ public class SpringSecurityContextHolder implements SecurityContextHolder {
     @PostConstruct
     public void init() {
         DataScopeAspect.setContextHolder(this);
-        log.info("数据权限上下文持有者初始化完成");
+        log.debug("数据权限上下文持有者初始化完成");
     }
 
     @Override

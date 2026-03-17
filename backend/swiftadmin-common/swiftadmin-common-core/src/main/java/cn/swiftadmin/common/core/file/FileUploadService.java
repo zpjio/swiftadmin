@@ -45,7 +45,6 @@ public class FileUploadService {
     public void init() {
         for (FileStorageStrategy strategy : storageStrategies) {
             strategyMap.put(strategy.getStorageType(), strategy);
-            log.info("注册文件存储策略：{}", strategy.getStorageType());
         }
 
         if (!strategyMap.containsKey(defaultStorageType)) {
@@ -56,7 +55,7 @@ public class FileUploadService {
         // 初始化文件扩展名限制
         initExtensionFilters();
 
-        log.info("文件上传服务初始化完成，默认存储策略：{}", defaultStorageType);
+        log.debug("文件上传服务初始化完成，存储策略：{}，默认：{}", strategyMap.keySet(), defaultStorageType);
     }
 
     /**
@@ -83,9 +82,6 @@ public class FileUploadService {
                     Arrays.asList(allowed.toLowerCase().split(","))
             );
         }
-
-        log.info("文件扩展名过滤初始化完成，禁止：{}，允许：{}",
-                forbiddenExtensions, allowedExtensions);
     }
 
     /**

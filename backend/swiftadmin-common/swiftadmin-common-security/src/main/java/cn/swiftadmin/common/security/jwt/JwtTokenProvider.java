@@ -55,8 +55,8 @@ public class JwtTokenProvider {
         this.jwtParser = Jwts.parser()
                 .verifyWith(this.secretKey)
                 .build();
-        
-        log.info("JWT Token Provider 初始化成功，密钥长度：{} 字节", keyBytes.length);
+
+        log.debug("JWT Token Provider 初始化完成，密钥长度：{} 字节", keyBytes.length);
     }
 
     /**

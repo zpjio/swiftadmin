@@ -80,7 +80,7 @@ public class SocialAuthStrategy implements AuthStrategy {
         this.request = request;
         this.handlerMap = handlers.stream()
                 .collect(Collectors.toMap(SocialAuthHandler::getSource, Function.identity()));
-        log.info("社交登录策略初始化完成，已注册平台：{}", handlerMap.keySet());
+        log.debug("社交登录策略初始化完成，已注册平台：{}", handlerMap.keySet());
     }
 
     /**

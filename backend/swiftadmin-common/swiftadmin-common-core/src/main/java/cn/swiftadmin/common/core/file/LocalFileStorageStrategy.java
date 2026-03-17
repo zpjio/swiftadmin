@@ -48,7 +48,7 @@ public class LocalFileStorageStrategy implements FileStorageStrategy {
                 Files.createDirectories(baseDir);
                 log.info("创建本地文件存储目录：{}", basePath);
             }
-            log.info("本地文件存储初始化完成，存储路径：{}", basePath);
+            log.debug("本地文件存储初始化完成，存储路径：{}", basePath);
         } catch (IOException e) {
             log.error("初始化本地文件存储目录失败", e);
             throw new FileStorageException("初始化本地文件存储目录失败", e);
