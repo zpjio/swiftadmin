@@ -173,6 +173,7 @@ import type { RoleVO } from '@/api/role'
 
 import { usePermission } from '@/composables'
 import { useUserStore } from '@/store'
+import { formatDateTime } from '@/utils/date'
 
 const message = useMessage()
 const dialog = useDialog()
@@ -184,7 +185,7 @@ const currentUserId = computed(() => userStore.userInfo?.id)
 
 const loading = ref(false)
 const tableData = ref<UserVO[]>([])
-const selectedRowKeys = ref<number[]>([])
+const selectedRowKeys = ref<string[]>([])
 const queryForm = reactive<UserQuery>({
   page: 1,
   pageSize: 10,
@@ -193,7 +194,7 @@ const queryForm = reactive<UserQuery>({
 // 部门选择树数据
 const deptSelectTreeData = ref<TreeSelectOption[]>([])
 // 角色选项
-const roleOptions = ref<{ label: string; value: number }[]>([])
+const roleOptions = ref<{ label: string; value: string }[]>([])
 
 const pagination = reactive({
   page: 1,
@@ -254,7 +255,7 @@ const columns: DataTableColumns<UserVO> = [
     render: (row) => h('span', { style: { color: row.status === 1 ? '#52c41a' : '#ff4d4f' } }, row.status === 1 ? '正常' : '禁用'),
   },
   { title: '部门', key: 'deptName', width: 120 },
-  { title: '创建时间', key: 'createTime', width: 180 },
+  { title: '创建时间', key: 'createTime', width: 180, render: (row) => formatDateTime(row.createTime) },
   {
     title: '操作',
     key: 'actions',
@@ -321,7 +322,7 @@ const showResetPasswordModal = ref(false)
 const resetPasswordLoading = ref(false)
 const resetPasswordFormRef = ref<FormInst | null>(null)
 const resetPasswordForm = reactive({
-  userId: 0,
+  userId: '' as string,
   password: '',
   confirmPassword: '',
 })
@@ -556,7 +557,7 @@ const handleSubmit = async () => {
 
 // 选择
 const onChecked = (rowKeys: (string | number)[]) => {
-  selectedRowKeys.value = rowKeys as number[]
+  selectedRowKeys.value = rowKeys.map(String)
 }
 
 onMounted(() => {

@@ -97,11 +97,13 @@ import { useMessage, type DataTableColumns } from 'naive-ui'
 import { getFilePageApi, deleteFileApi, downloadFileApi } from '@/api/file'
 import type { FileVO, FileQuery } from '@/api/file'
 import { getIconClass } from '@/utils/icon'
+import { buildAuthHeader } from '@/utils/auth'
+import { formatDateTime } from '@/utils/date'
 
 const message = useMessage()
 const loading = ref(false)
 const tableData = ref<FileVO[]>([])
-const selectedRowKeys = ref<number[]>([])
+const selectedRowKeys = ref<string[]>([])
 
 const queryForm = reactive<FileQuery>({
   page: 1,
@@ -140,9 +142,7 @@ const fileTypeOptions = [
 
 // 上传配置
 const uploadUrl = computed(() => `${import.meta.env.VITE_API_BASE_URL}/system/file/upload`)
-const uploadHeaders = computed(() => ({
-  Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
-}))
+const uploadHeaders = computed(() => buildAuthHeader())
 
 const columns: DataTableColumns = [
   { type: 'selection', fixed: 'left' },
@@ -166,7 +166,7 @@ const columns: DataTableColumns = [
   { title: '文件类型', key: 'fileType', width: 100 },
   { title: '文件大小', key: 'fileSize', width: 100, render: (row) => formatFileSize(row.fileSize) },
   { title: '存储路径', key: 'filePath', width: 200, ellipsis: { tooltip: true } },
-  { title: '上传时间', key: 'createTime', width: 160 },
+  { title: '上传时间', key: 'createTime', width: 160, render: (row) => formatDateTime(row.createTime) },
   {
     title: '操作',
     key: 'actions',
@@ -265,9 +265,6 @@ const handlePreview = (row: FileVO) => {
   }
   previewUrl.value = url
 
-  console.log('预览文件:', row)
-  console.log('预览URL:', previewUrl.value)
-
   const type = row.fileType?.toLowerCase() || ''
   if (type === 'image') {
     previewType.value = 'image'
@@ -289,7 +286,6 @@ const handlePreview = (row: FileVO) => {
     }
   }
 
-  console.log('预览类型:', previewType.value)
   showPreview.value = true
 }
 
@@ -301,8 +297,8 @@ const handleDownload = async (row: FileVO) => {
   }
 }
 
-const onCheckedRowKeysChange = (keys: number[]) => {
-  selectedRowKeys.value = keys
+const onCheckedRowKeysChange = (keys: (string | number)[]) => {
+  selectedRowKeys.value = keys.map(String)
 }
 
 const onPageChange = (page: number) => {

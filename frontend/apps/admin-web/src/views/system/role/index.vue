@@ -182,6 +182,7 @@ import type { MenuVO } from '@/api/menu'
 import type { DeptVO } from '@/api/dept'
 import { generateRoleCode } from '@/utils/codeGenerator'
 import { usePermission } from '@/composables'
+import { formatDateTime } from '@/utils/date'
 
 const message = useMessage()
 const dialog = useDialog()
@@ -189,7 +190,7 @@ const { hasPermission } = usePermission()
 
 const loading = ref(false)
 const tableData = ref<RoleVO[]>([])
-const selectedRowKeys = ref<number[]>([])
+const selectedRowKeys = ref<string[]>([])
 const queryForm = reactive<RoleQuery>({
   page: 1,
   pageSize: 10,
@@ -261,7 +262,7 @@ const columns: DataTableColumns<RoleVO> = [
     width: 80,
     render: (row) => h('span', { style: { color: row.status === 1 ? '#52c41a' : '#ff4d4f' } }, row.status === 1 ? '正常' : '禁用'),
   },
-  { title: '创建时间', key: 'createTime', width: 160 },
+  { title: '创建时间', key: 'createTime', width: 160, render: (row) => formatDateTime(row.createTime) },
   {
     title: '操作',
     key: 'actions',
@@ -339,18 +340,18 @@ const permissionLoading = ref(false)
 const currentRole = ref<RoleVO | null>(null)
 const menuTreeRef = ref<any>(null)
 const menuTreeData = ref<TreeOption[]>([])
-const allMenuIds = ref<number[]>([])
-const expandedMenuKeys = ref<number[]>([])
+const allMenuIds = ref<string[]>([])
+const expandedMenuKeys = ref<string[]>([])
 
 const permissionForm = reactive({
-  roleId: 0,
-  menuIds: [] as number[],
+  roleId: '' as string,
+  menuIds: [] as string[],
 })
 
 // 部门树相关
 const deptTreeRef = ref<any>(null)
 const deptTreeData = ref<TreeOption[]>([])
-const allDeptIds = ref<number[]>([])
+const allDeptIds = ref<string[]>([])
 
 // 加载部门树
 const loadDeptTree = async () => {
@@ -365,8 +366,8 @@ const loadDeptTree = async () => {
 }
 
 // 获取所有部门ID
-const getAllDeptIds = (depts: DeptVO[]): number[] => {
-  const ids: number[] = []
+const getAllDeptIds = (depts: DeptVO[]): string[] => {
+  const ids: string[] = []
   const traverse = (items: DeptVO[]) => {
     items.forEach((item) => {
       ids.push(item.id)
@@ -388,7 +389,7 @@ const convertDeptToTree = (depts: DeptVO[]): TreeOption[] => {
 
 // 部门选中变化
 const handleDeptCheckedChange = (keys: Array<string | number>) => {
-  formData.deptIds = keys as number[]
+  formData.deptIds = keys.map(String)
 }
 
 // 全选部门
@@ -414,8 +415,8 @@ const loadMenuTree = async () => {
 }
 
 // 获取所有菜单ID
-const getAllMenuIds = (menus: MenuVO[]): number[] => {
-  const ids: number[] = []
+const getAllMenuIds = (menus: MenuVO[]): string[] => {
+  const ids: string[] = []
   const traverse = (items: MenuVO[]) => {
     items.forEach((item) => {
       ids.push(item.id)
@@ -427,8 +428,8 @@ const getAllMenuIds = (menus: MenuVO[]): number[] => {
 }
 
 // 获取所有菜单ID用于展开
-const getAllMenuKeysForExpand = (menus: MenuVO[]): number[] => {
-  const keys: number[] = []
+const getAllMenuKeysForExpand = (menus: MenuVO[]): string[] => {
+  const keys: string[] = []
   const traverse = (items: MenuVO[]) => {
     items.forEach((item) => {
       if (item.children && item.children.length > 0) {
@@ -452,12 +453,12 @@ const convertMenuToTree = (menus: MenuVO[]): TreeOption[] => {
 
 // 菜单选中变化
 const handleMenuCheckedChange = (keys: Array<string | number>) => {
-  permissionForm.menuIds = keys as number[]
+  permissionForm.menuIds = keys.map(String)
 }
 
 // 菜单展开变化
 const handleMenuExpandedChange = (keys: Array<string | number>) => {
-  expandedMenuKeys.value = keys as number[]
+  expandedMenuKeys.value = keys.map(String)
 }
 
 // 全选菜单
@@ -662,7 +663,7 @@ const handleSubmit = async () => {
 
 // 选择
 const onChecked = (rowKeys: (string | number)[]) => {
-  selectedRowKeys.value = rowKeys as number[]
+  selectedRowKeys.value = rowKeys.map(String)
 }
 
 onMounted(() => {

@@ -81,8 +81,8 @@ const { hasPermission } = usePermission()
 
 const loading = ref(false)
 const tableData = ref<DeptVO[]>([])
-const expandedRowKeys = ref<number[]>([])
-const allDeptIds = ref<number[]>([])
+const expandedRowKeys = ref<string[]>([])
+const allDeptIds = ref<string[]>([])
 
 // 是否全部展开
 const isAllExpanded = computed(() => expandedRowKeys.value.length === allDeptIds.value.length)
@@ -98,7 +98,7 @@ const toggleExpandAll = () => {
 
 // 展开行变化
 const onExpandedRowKeysChange = (keys: (string | number)[]) => {
-  expandedRowKeys.value = keys as number[]
+  expandedRowKeys.value = keys.map(String)
 }
 
 // 表格列定义
@@ -149,8 +149,8 @@ const formRules: FormRules = {
 }
 
 // 获取所有部门ID（用于展开全部）
-const getAllDeptIds = (depts: DeptVO[]): number[] => {
-  const ids: number[] = []
+const getAllDeptIds = (depts: DeptVO[]): string[] => {
+  const ids: string[] = []
   const traverse = (items: DeptVO[]) => {
     items.forEach((item) => {
       if (item.children && item.children.length > 0) {

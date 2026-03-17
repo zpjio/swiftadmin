@@ -63,8 +63,8 @@
         <NDescriptionsItem label="主题" :span="2">{{ currentRecord?.subject || '-' }}</NDescriptionsItem>
         <NDescriptionsItem label="模板编码">{{ currentRecord?.templateCode || '-' }}</NDescriptionsItem>
         <NDescriptionsItem label="业务类型">{{ getBizTypeLabel(currentRecord?.bizType) || '-' }}</NDescriptionsItem>
-        <NDescriptionsItem label="发送时间">{{ currentRecord?.sendTime || '-' }}</NDescriptionsItem>
-        <NDescriptionsItem label="到达时间">{{ currentRecord?.arriveTime || '-' }}</NDescriptionsItem>
+        <NDescriptionsItem label="发送时间">{{ formatDateTime(currentRecord?.sendTime) }}</NDescriptionsItem>
+        <NDescriptionsItem label="到达时间">{{ formatDateTime(currentRecord?.arriveTime) }}</NDescriptionsItem>
         <NDescriptionsItem label="耗时">{{ currentRecord?.costTime ? currentRecord.costTime + 'ms' : '-' }}</NDescriptionsItem>
         <NDescriptionsItem label="重试次数">{{ currentRecord?.retryCount }}</NDescriptionsItem>
         <NDescriptionsItem label="消息内容" :span="2">
@@ -97,6 +97,7 @@ import {
   type MessageRecord,
 } from '@/api/message'
 import { useDict } from '@/composables/useDict'
+import { formatDateTime } from '@/utils/date'
 
 const message = useMessage()
 const loading = ref(false)
@@ -178,8 +179,8 @@ const columns: DataTableColumns<MessageRecord> = [
     render: (row) => h(NTag, { type: getStatusType(row.status) }, () => getStatusLabel(row.status)),
   },
   { title: '重试次数', key: 'retryCount', width: 80 },
-  { title: '发送时间', key: 'sendTime', width: 170 },
-  { title: '创建时间', key: 'createTime', width: 170 },
+  { title: '发送时间', key: 'sendTime', width: 170, render: (row) => formatDateTime(row.sendTime) },
+  { title: '创建时间', key: 'createTime', width: 170, render: (row) => formatDateTime(row.createTime) },
   {
     title: '操作',
     key: 'actions',

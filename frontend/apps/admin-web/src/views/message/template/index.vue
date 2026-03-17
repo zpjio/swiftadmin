@@ -115,6 +115,7 @@ import {
   type MessageTemplate,
 } from '@/api/message'
 import { useDict } from '@/composables/useDict'
+import { formatDateTime } from '@/utils/date'
 
 const message = useMessage()
 const dialog = useDialog()
@@ -198,7 +199,7 @@ const columns: DataTableColumns<MessageTemplate> = [
       }),
   },
   { title: '备注', key: 'remark', width: 200, ellipsis: { tooltip: true } },
-  { title: '创建时间', key: 'createTime', width: 170 },
+  { title: '创建时间', key: 'createTime', width: 170, render: (row) => formatDateTime(row.createTime) },
   {
     title: '操作',
     key: 'actions',

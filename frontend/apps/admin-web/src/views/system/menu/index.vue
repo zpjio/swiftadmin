@@ -248,13 +248,13 @@ const rawTreeData = ref<MenuVO[]>([])
 const menuSelectTreeData = ref<TreeSelectOption[]>([])
 
 // 选中的菜单
-const selectedKeys = ref<number[]>([])
+const selectedKeys = ref<string[]>([])
 const selectedMenu = ref<MenuVO | null>(null)
 const isEditing = ref(false)
 
 // 展开
-const expandedKeys = ref<number[]>([])
-const parentMenuIds = ref<number[]>([])
+const expandedKeys = ref<string[]>([])
+const parentMenuIds = ref<string[]>([])
 
 // 新增弹窗
 const showAddModal = ref(false)
@@ -283,8 +283,8 @@ const convertToTreeOptions = (menus: MenuVO[]): TreeOption[] => {
 }
 
 // 获取所有父级菜单ID
-const getParentMenuIds = (menus: MenuVO[]): number[] => {
-  const ids: number[] = []
+const getParentMenuIds = (menus: MenuVO[]): string[] => {
+  const ids: string[] = []
   const traverse = (items: MenuVO[]) => {
     items.forEach(item => {
       if (item.children && item.children.length > 0) {
@@ -316,14 +316,14 @@ const toggleExpandAll = () => {
 }
 
 const onExpand = (keys: (string | number)[]) => {
-  expandedKeys.value = keys as number[]
+  expandedKeys.value = keys.map(String)
 }
 
 // 选择节点
 const onSelect = async (keys: (string | number)[]) => {
-  selectedKeys.value = keys as number[]
+  selectedKeys.value = keys.map(String)
   if (keys.length > 0) {
-    const id = keys[0] as number
+    const id = String(keys[0])
     try {
       const detail = await getMenuDetailApi(id)
       selectedMenu.value = detail as MenuVO

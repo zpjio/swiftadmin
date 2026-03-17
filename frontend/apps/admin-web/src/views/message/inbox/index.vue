@@ -108,7 +108,7 @@
       <NDescriptions :column="1" label-placement="left" bordered>
         <NDescriptionsItem label="标题">{{ currentMessage?.title }}</NDescriptionsItem>
         <NDescriptionsItem label="发送者">{{ currentMessage?.senderName || '系统' }}</NDescriptionsItem>
-        <NDescriptionsItem label="发送时间">{{ currentMessage?.createTime }}</NDescriptionsItem>
+        <NDescriptionsItem label="发送时间">{{ formatDateTime(currentMessage?.createTime) }}</NDescriptionsItem>
         <NDescriptionsItem label="消息类型">{{ getMsgTypeLabel(currentMessage?.msgType) }}</NDescriptionsItem>
         <NDescriptionsItem label="内容">
           <div v-html="currentMessage?.content?.replace(/\n/g, '<br>')"></div>
@@ -139,6 +139,7 @@ import {
   type InboxMessage,
 } from '@/api/message'
 import { useDict } from '@/composables/useDict'
+import { formatDateTime } from '@/utils/date'
 
 const message = useMessage()
 const dialog = useDialog()
@@ -230,7 +231,7 @@ const columns: DataTableColumns<InboxMessage> = [
     render: (row) => h(NTag, { type: 'info', size: 'small' }, () => getMsgTypeLabel(row.msgType)),
   },
   { title: '发送者', key: 'senderName', width: 100 },
-  { title: '发送时间', key: 'createTime', width: 170 },
+  { title: '发送时间', key: 'createTime', width: 170, render: (row) => formatDateTime(row.createTime) },
   {
     title: '操作',
     key: 'actions',

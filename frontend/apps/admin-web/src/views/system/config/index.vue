@@ -116,7 +116,7 @@ const { hasPermission } = usePermission()
 const formRef = ref<any>(null)
 const loading = ref(false)
 const tableData = ref<ConfigVO[]>([])
-const selectedRowKeys = ref<number[]>([])
+const selectedRowKeys = ref<string[]>([])
 const showModal = ref(false)
 const saving = ref(false)
 const isEdit = ref(false)
@@ -322,7 +322,7 @@ const handleRefreshCache = async () => {
 }
 
 const onCheckedRowKeysChange = (keys: (string | number)[]) => {
-  selectedRowKeys.value = keys as number[]
+  selectedRowKeys.value = keys.map(String)
 }
 
 onMounted(() => {
