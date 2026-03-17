@@ -140,11 +140,11 @@ public class AuthServiceImpl implements AuthService {
 
         if (user == null) {
             log.warn("Token 刷新失败：用户不存在，username={}", SensitiveUtils.maskUsername(username));
-            throw new BusinessException(ErrorCode.USER_PASSWORD_ERROR.getCode(), "用户不存在");
+            throw new BusinessException(ErrorCode.LOGIN_FAILED.getCode(), "用户不存在");
         }
         if (!user.getStatus().isEnabled()) {
             log.warn("Token 刷新失败：用户已禁用，username={}", SensitiveUtils.maskUsername(username));
-            throw new BusinessException(ErrorCode.USER_DISABLED);
+            throw new BusinessException(ErrorCode.ACCOUNT_DISABLED);
         }
 
         // 7. 将旧的 Refresh Token 加入黑名单

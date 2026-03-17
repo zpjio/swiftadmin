@@ -61,7 +61,7 @@ public class SmsServiceImpl implements SmsService {
         String intervalKey = "sms:interval:" + phone;
         Boolean exists = redisTemplate.hasKey(intervalKey);
         if (Boolean.TRUE.equals(exists)) {
-            throw new BusinessException(ErrorCode.RATE_LIMIT_SEND_TOO_FREQUENT);
+            throw new BusinessException(ErrorCode.SEND_TOO_FREQUENT);
         }
 
         // 2. 检查 1 小时内发送次数（手机号维度）

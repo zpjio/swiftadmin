@@ -8,7 +8,6 @@ import cn.swiftadmin.auth.context.LoginContext;
 import cn.swiftadmin.auth.service.LoginEventService;
 import cn.swiftadmin.auth.service.LoginSessionService;
 import cn.swiftadmin.auth.service.LoginValidationService;
-import cn.swiftadmin.auth.util.TokenManager;
 import cn.swiftadmin.common.core.exception.BusinessException;
 import cn.swiftadmin.common.core.result.ErrorCode;
 import cn.swiftadmin.common.core.util.ServletUtils;
@@ -23,7 +22,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * 账号密码认证策略
- * <p>重构版：依赖注入从 11 个减少到 8 个，职责更清晰</p>
+ * <p>重构版：依赖注入从 11 个减少到 7 个，职责更清晰</p>
  *
  * @author zhangpengju
  * @since 2026-03-10
@@ -38,7 +37,6 @@ public class PasswordAuthStrategy implements AuthStrategy {
 
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
-    private final TokenManager tokenManager;
     private final ConfigService configService;
     private final AuthSecurityProperties securityProperties;
     private final LoginValidationService validationService;
@@ -68,7 +66,7 @@ public class PasswordAuthStrategy implements AuthStrategy {
             log.warn("LOGIN_FAILED username={} reason=USER_NOT_FOUND ip={}", 
                     SensitiveUtils.maskUsername(username), SensitiveUtils.maskIp(context.getIp()));
             eventService.publishFailure(username, "用户不存在", context);
-            throw new BusinessException(ErrorCode.USER_PASSWORD_ERROR);
+            throw new BusinessException(ErrorCode.LOGIN_FAILED);
         }
 
         // 3. 检查账户锁定
@@ -76,7 +74,7 @@ public class PasswordAuthStrategy implements AuthStrategy {
             log.warn("LOGIN_FAILED username={} reason=ACCOUNT_LOCKED ip={}", 
                     SensitiveUtils.maskUsername(username), SensitiveUtils.maskIp(context.getIp()));
             eventService.publishFailure(username, "账户已锁定", context);
-            throw new BusinessException(ErrorCode.USER_DISABLED.getCode(),
+            throw new BusinessException(ErrorCode.ACCOUNT_LOCKED.getCode(),
                     "账户已锁定，请稍后再试");
         }
 
@@ -93,7 +91,7 @@ public class PasswordAuthStrategy implements AuthStrategy {
             log.warn("LOGIN_FAILED username={} reason=USER_DISABLED status={} ip={}", 
                     SensitiveUtils.maskUsername(username), user.getStatus(), SensitiveUtils.maskIp(context.getIp()));
             eventService.publishFailure(username, "用户已禁用", context);
-            throw new BusinessException(ErrorCode.USER_DISABLED);
+            throw new BusinessException(ErrorCode.ACCOUNT_DISABLED);
         }
 
         // 7. 重置登录失败计数
@@ -122,7 +120,7 @@ public class PasswordAuthStrategy implements AuthStrategy {
         int remainingDays = userService.getPasswordRemainingDays(user);
         int warningDays = configService.getPasswordExpireWarningDays();
 
-        log.info("LOGIN_SUCCESS username={} ip={}", SensitiveUtils.maskUsername(username), SensitiveUtils.maskIp(ip));
+        log.info("LOGIN_SUCCESS username={} reason=AUTHENTICATED ip={}", SensitiveUtils.maskUsername(username), SensitiveUtils.maskIp(ip));
         eventService.publishSuccess(context);
 
         if (remainingDays <= warningDays && remainingDays > 0) {
@@ -156,7 +154,7 @@ public class PasswordAuthStrategy implements AuthStrategy {
                     SensitiveUtils.maskUsername(username), securityProperties.getLockMinutes(), 
                     SensitiveUtils.maskIp(context.getIp()));
             eventService.publishFailure(username, "账户已锁定", context);
-            throw new BusinessException(ErrorCode.USER_DISABLED.getCode(),
+            throw new BusinessException(ErrorCode.ACCOUNT_LOCKED.getCode(),
                     "账户已锁定，请稍后再试")
                     .withContext("username", username)
                     .withContext("failCount", failCount)
@@ -165,7 +163,7 @@ public class PasswordAuthStrategy implements AuthStrategy {
 
         eventService.publishFailure(username, "密码错误", context);
         // 对外统一消息，不暴露剩余次数
-        throw new BusinessException(ErrorCode.USER_PASSWORD_ERROR)
+        throw new BusinessException(ErrorCode.LOGIN_FAILED)
                 .withContext("username", username)
                 .withContext("failCount", failCount);
     }

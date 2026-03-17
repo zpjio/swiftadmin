@@ -1,5 +1,7 @@
 package cn.swiftadmin.schedule.manager;
 
+import cn.swiftadmin.common.core.exception.BusinessException;
+import cn.swiftadmin.common.core.result.ErrorCode;
 import cn.swiftadmin.schedule.api.entity.ScheduleJob;
 import cn.swiftadmin.schedule.api.entity.ScheduleJobLog;
 import cn.swiftadmin.schedule.api.enums.JobExecuteStatus;
@@ -8,19 +10,21 @@ import cn.swiftadmin.schedule.api.enums.JobType;
 import cn.swiftadmin.schedule.api.service.ScheduleJobLogService;
 import cn.swiftadmin.schedule.api.service.ScheduleJobService;
 import cn.swiftadmin.schedule.executor.JobExecutor;
-import cn.swiftadmin.schedule.executor.impl.BeanJobExecutor;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.support.CronExpression;
 import org.springframework.stereotype.Component;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -32,24 +36,28 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class ScheduleManager {
 
     private final ScheduleJobService jobService;
     private final ScheduleJobLogService logService;
-    private final Map<JobType, JobExecutor> executorMap;
+    private final List<JobExecutor> executors;
+
+    /** 执行器映射 */
+    private Map<JobType, JobExecutor> executorMap;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Autowired
-    public ScheduleManager(ScheduleJobService jobService,
-                           ScheduleJobLogService logService,
-                           List<JobExecutor> executors) {
-        this.jobService = jobService;
-        this.logService = logService;
-        this.executorMap = new ConcurrentHashMap<>();
+    /**
+     * 初始化执行器映射
+     */
+    @PostConstruct
+    public void init() {
+        executorMap = new ConcurrentHashMap<>();
         for (JobExecutor executor : executors) {
             executorMap.put(executor.getType(), executor);
         }
+        log.info("ScheduleManager initialized executors={}", executorMap.keySet());
     }
 
     /**
@@ -65,20 +73,19 @@ public class ScheduleManager {
                 return;
             }
 
-            Date now = new Date();
             for (ScheduleJob job : jobs) {
                 try {
                     // 检查任务是否需要执行
-                    if (shouldExecute(job, now)) {
+                    if (shouldExecute(job)) {
                         // 异步执行任务
-                        executeJob(job, JobExecuteStatus.RUNNING);
+                        executeJobAsync(job);
                     }
                 } catch (Exception e) {
-                    log.error("Error scheduling job: {}", job.getJobName(), e);
+                    log.error("SCHEDULE_ERROR job={} error={}", job.getJobName(), e.getMessage(), e);
                 }
             }
         } catch (Exception e) {
-            log.error("Error in schedule jobs", e);
+            log.error("SCHEDULE_ERROR error={}", e.getMessage(), e);
         }
     }
 
@@ -91,33 +98,42 @@ public class ScheduleManager {
     public Long triggerJob(Long jobId) {
         ScheduleJob job = jobService.getById(jobId);
         if (job == null) {
-            throw new IllegalArgumentException("Job not found: " + jobId);
+            throw new BusinessException(ErrorCode.JOB_NOT_FOUND);
         }
 
         if (JobStatus.PAUSED.getCode().equals(job.getStatus())) {
-            throw new IllegalArgumentException("Job is paused: " + job.getJobName());
+            throw new BusinessException(ErrorCode.JOB_PAUSED);
         }
 
-        return executeJob(job, JobExecuteStatus.RUNNING);
+        return executeJob(job);
+    }
+
+    /**
+     * 异步执行任务
+     *
+     * @param job 任务信息
+     */
+    private void executeJobAsync(ScheduleJob job) {
+        CompletableFuture.runAsync(() -> executeJob(job));
     }
 
     /**
      * 执行任务
      *
      * @param job 任务信息
-     * @param executeStatus 执行状态
      * @return 执行日志ID
      */
-    private Long executeJob(ScheduleJob job, JobExecuteStatus executeStatus) {
+    private Long executeJob(ScheduleJob job) {
         long startTime = System.currentTimeMillis();
-        Long logId = createJobLog(job, executeStatus);
+        Long logId = createJobLog(job, JobExecuteStatus.RUNNING);
 
         try {
             // 获取执行器（默认 Bean 类型，后续可扩展分布式等类型）
             JobType jobType = job.toJobType();
             JobExecutor executor = executorMap.get(jobType);
             if (executor == null) {
-                throw new IllegalStateException("No executor found for job type: " + jobType + ", job: " + job.getJobName());
+                throw new BusinessException(ErrorCode.JOB_EXECUTOR_NOT_FOUND.getCode(),
+                        "未找到任务执行器: " + jobType);
             }
 
             // 执行任务
@@ -128,12 +144,12 @@ public class ScheduleManager {
             String resultJson = objectMapper.writeValueAsString(result);
             logService.updateLog(logId, JobExecuteStatus.SUCCESS.getCode(), resultJson, null, null, costTime);
 
-            log.info("Job executed successfully: {}, cost: {}ms, result: {}", job.getJobName(), costTime, resultJson);
+            log.info("JOB_EXECUTED job={} status=SUCCESS cost={}ms", job.getJobName(), costTime);
             return logId;
 
         } catch (Exception e) {
             long costTime = System.currentTimeMillis() - startTime;
-            log.error("Job execution failed: {}, cost: {}ms", job.getJobName(), costTime, e);
+            log.error("JOB_EXECUTED job={} status=FAILED cost={}ms error={}", job.getJobName(), costTime, e.getMessage());
 
             // 记录失败日志
             logService.updateLog(logId, JobExecuteStatus.FAILED.getCode(), null,
@@ -141,7 +157,7 @@ public class ScheduleManager {
 
             // 判断是否需要重试
             if (job.getRetryTimes() != null && job.getRetryTimes() > 0) {
-                retryJob(job, logId, e);
+                retryJobAsync(job);
             }
 
             return logId;
@@ -149,18 +165,24 @@ public class ScheduleManager {
     }
 
     /**
+     * 异步重试任务
+     *
+     * @param job 任务信息
+     */
+    private void retryJobAsync(ScheduleJob job) {
+        CompletableFuture.runAsync(() -> retryJob(job));
+    }
+
+    /**
      * 重试任务
      *
      * @param job 任务信息
-     * @param originalLogId 原始日志ID
-     * @param originalError 原始错误
      */
-    private void retryJob(ScheduleJob job, Long originalLogId, Exception originalError) {
+    private void retryJob(ScheduleJob job) {
         int retryTimes = job.getRetryTimes();
         int retryInterval = job.getRetryInterval() != null ? job.getRetryInterval() : 0;
 
-        log.info("Starting retry for job: {}, retryTimes: {}, retryInterval: {}s",
-                job.getJobName(), retryTimes, retryInterval);
+        log.info("JOB_RETRY_START job={} retryTimes={} retryInterval={}s", job.getJobName(), retryTimes, retryInterval);
 
         for (int i = 1; i <= retryTimes; i++) {
             try {
@@ -185,13 +207,13 @@ public class ScheduleManager {
                 String resultJson = objectMapper.writeValueAsString(result);
                 logService.updateLog(logId, JobExecuteStatus.SUCCESS.getCode(), resultJson, null, null, costTime);
 
-                log.info("Job retry {} succeeded: {}, cost: {}ms", i, job.getJobName(), costTime);
+                log.info("JOB_RETRY_SUCCESS job={} attempt={} cost={}ms", job.getJobName(), i, costTime);
                 return;
 
             } catch (Exception e) {
-                log.warn("Job retry {} failed: {}, error: {}", i, job.getJobName(), e.getMessage());
+                log.warn("JOB_RETRY_FAILED job={} attempt={} error={}", job.getJobName(), i, e.getMessage());
                 if (i == retryTimes) {
-                    log.error("Job retry exhausted after {} attempts: {}", retryTimes, job.getJobName(), e);
+                    log.error("JOB_RETRY_EXHAUSTED job={} attempts={}", job.getJobName(), retryTimes, e);
                 }
             }
         }
@@ -222,10 +244,9 @@ public class ScheduleManager {
      * 判断任务是否应该执行
      *
      * @param job 任务信息
-     * @param now 当前时间
      * @return true=应该执行，false=不应该执行
      */
-    private boolean shouldExecute(ScheduleJob job, Date now) {
+    private boolean shouldExecute(ScheduleJob job) {
         try {
             CronExpression cronExpression = CronExpression.parse(job.getCronExpression());
 
@@ -240,7 +261,7 @@ public class ScheduleManager {
             return timeDiff >= 0 && timeDiff <= 5000;
 
         } catch (Exception e) {
-            log.error("Error checking if job should execute: {}", job.getJobName(), e);
+            log.error("JOB_CRON_ERROR job={} error={}", job.getJobName(), e.getMessage());
             return false;
         }
     }
@@ -252,11 +273,8 @@ public class ScheduleManager {
      * @return 堆栈字符串
      */
     private String getStackTrace(Exception e) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(e.getClass().getName()).append(": ").append(e.getMessage()).append("\n");
-        for (StackTraceElement element : e.getStackTrace()) {
-            sb.append("\tat ").append(element.toString()).append("\n");
-        }
-        return sb.toString();
+        StringWriter sw = new StringWriter();
+        e.printStackTrace(new PrintWriter(sw));
+        return sw.toString();
     }
 }

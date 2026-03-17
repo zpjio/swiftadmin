@@ -2,6 +2,8 @@ package cn.swiftadmin.common.core.exception;
 
 import cn.swiftadmin.common.core.result.ErrorCode;
 import cn.swiftadmin.common.core.result.R;
+import cn.swiftadmin.common.core.result.R.ErrorDetail;
+import cn.swiftadmin.common.core.result.R.FieldError;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -38,7 +41,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     @ResponseStatus(HttpStatus.OK)
     public R<Void> handleBusinessException(BusinessException e) {
-        log.warn("业务异常：{}", e.getMessage());
+        // 如果有上下文信息，记录到日志
+        if (!e.getContext().isEmpty()) {
+            log.warn("业务异常：code={}, message={}, context={}",
+                    e.getCode(), e.getMessage(), e.getContextAsString());
+        } else {
+            log.warn("业务异常：code={}, message={}", e.getCode(), e.getMessage());
+        }
         return R.fail(e.getCode(), e.getMessage());
     }
 
@@ -48,11 +57,19 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public R<Void> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-        String message = e.getBindingResult().getFieldErrors().stream()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+        List<FieldError> fieldErrors = e.getBindingResult().getFieldErrors().stream()
+                .map(error -> new FieldError(
+                        error.getField(),
+                        error.getDefaultMessage(),
+                        error.getRejectedValue()))
+                .collect(Collectors.toList());
+
+        String message = fieldErrors.stream()
+                .map(fe -> fe.getField() + ": " + fe.getMessage())
                 .collect(Collectors.joining("; "));
+
         log.warn("参数校验失败：{}", message);
-        return R.fail(ErrorCode.PARAM_INVALID, message);
+        return R.fail(ErrorCode.PARAM_INVALID, message, new ErrorDetail("PARAM", fieldErrors, false, null));
     }
 
     /**
@@ -61,11 +78,19 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BindException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public R<Void> handleBindException(BindException e) {
-        String message = e.getFieldErrors().stream()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+        List<FieldError> fieldErrors = e.getFieldErrors().stream()
+                .map(error -> new FieldError(
+                        error.getField(),
+                        error.getDefaultMessage(),
+                        error.getRejectedValue()))
+                .collect(Collectors.toList());
+
+        String message = fieldErrors.stream()
+                .map(fe -> fe.getField() + ": " + fe.getMessage())
                 .collect(Collectors.joining("; "));
+
         log.warn("参数绑定失败：{}", message);
-        return R.fail(ErrorCode.PARAM_INVALID, message);
+        return R.fail(ErrorCode.PARAM_INVALID, message, new ErrorDetail("PARAM", fieldErrors, false, null));
     }
 
     /**
@@ -75,7 +100,9 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public R<Void> handleMissingServletRequestParameterException(MissingServletRequestParameterException e) {
         log.warn("缺少必要参数：{}", e.getParameterName());
-        return R.fail(ErrorCode.PARAM_MISSING, "缺少必要参数: " + e.getParameterName());
+        ErrorDetail errorDetail = new ErrorDetail("PARAM", null, false, null);
+        errorDetail.addFieldError(e.getParameterName(), "缺少必要参数");
+        return R.fail(ErrorCode.PARAM_MISSING, "缺少必要参数: " + e.getParameterName(), errorDetail);
     }
 
     /**
@@ -87,7 +114,10 @@ public class GlobalExceptionHandler {
         String message = String.format("参数 '%s' 类型错误，期望类型: %s",
                 e.getName(), e.getRequiredType() != null ? e.getRequiredType().getSimpleName() : "未知");
         log.warn("参数类型不匹配：{}", message);
-        return R.fail(ErrorCode.PARAM_INVALID, message);
+
+        ErrorDetail errorDetail = new ErrorDetail("PARAM", null, false, null);
+        errorDetail.addFieldError(e.getName(), message, e.getValue());
+        return R.fail(ErrorCode.PARAM_INVALID, message, errorDetail);
     }
 
     /**
@@ -107,7 +137,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
     public R<Void> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
         log.warn("请求方式不支持：{} {}", e.getMethod(), e.getMessage());
-        return R.fail(405, "不支持的请求方式: " + e.getMethod());
+        return R.fail(ErrorCode.HTTP_METHOD_NOT_ALLOWED, "不支持的请求方式: " + e.getMethod());
     }
 
     /**
@@ -129,5 +159,4 @@ public class GlobalExceptionHandler {
         log.error("系统异常", e);
         return R.fail(ErrorCode.SYSTEM_ERROR);
     }
-
 }

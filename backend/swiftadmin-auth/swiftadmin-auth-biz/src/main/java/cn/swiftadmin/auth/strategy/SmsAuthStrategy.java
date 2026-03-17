@@ -53,7 +53,7 @@ public class SmsAuthStrategy implements AuthStrategy {
         if (!verified) {
             log.warn("SMS_VERIFY_FAILED phone={}", phone);
             eventService.publishFailure(phone, "验证码错误", context);
-            throw new BusinessException(ErrorCode.INVALID_SMS_CODE);
+            throw new BusinessException(ErrorCode.SMS_CODE_INVALID);
         }
 
         // 2. 查询用户
@@ -70,7 +70,7 @@ public class SmsAuthStrategy implements AuthStrategy {
         if (!user.getStatus().isEnabled()) {
             log.warn("USER_DISABLED phone={}", phone);
             eventService.publishFailure(user.getUsername(), "用户已禁用", context);
-            throw new BusinessException(ErrorCode.USER_DISABLED);
+            throw new BusinessException(ErrorCode.ACCOUNT_DISABLED);
         }
 
         // 4. 创建登录会话

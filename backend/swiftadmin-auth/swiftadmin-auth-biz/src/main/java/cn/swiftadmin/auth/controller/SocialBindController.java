@@ -136,7 +136,7 @@ public class SocialBindController {
             try {
                 userService.changePassword(user.getId(), verifyDTO.getPassword(), verifyDTO.getPassword());
             } catch (BusinessException e) {
-                throw new BusinessException(ErrorCode.USER_PASSWORD_ERROR);
+                throw new BusinessException(ErrorCode.LOGIN_FAILED);
             }
             return;
         }
@@ -144,7 +144,7 @@ public class SocialBindController {
         // 验证短信验证码
         if ("sms".equals(verifyDTO.getVerifyType()) && verifyDTO.getPhone() != null && verifyDTO.getSmsCode() != null) {
             if (!smsService.verifyCode(verifyDTO.getPhone(), verifyDTO.getSmsCode(), "unbind")) {
-                throw new BusinessException(ErrorCode.INVALID_SMS_CODE);
+                throw new BusinessException(ErrorCode.SMS_CODE_INVALID);
             }
             return;
         }

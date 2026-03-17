@@ -5,7 +5,14 @@ import lombok.Getter;
 
 /**
  * 统一错误码枚举
- * <p>错误码规范：0=成功，0001xx=公共错误，010xxx=用户错误，0004xx=资源错误，0005xx=系统错误</p>
+ * <p>
+ * 错误码格式: XYYZZZ
+ * <ul>
+ *   <li>X - 模块编码 (1=公共, 2=认证, 3=用户, 4=系统, 5=文件, 6=消息, 7=定时任务, 9=HTTP)</li>
+ *   <li>YY - 错误类型 (00=成功, 01=参数错误, 02=权限错误, 03=业务错误, 04=系统错误)</li>
+ *   <li>ZZZ - 序号 (001-999)</li>
+ * </ul>
+ * </p>
  *
  * @author zhangpengju
  * @since 2026-03-09
@@ -14,148 +21,192 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum ErrorCode {
 
+    // ==================== 成功 ====================
     /** 成功 */
     SUCCESS(0, "操作成功"),
 
-    // ==================== 公共错误 (1xx) ====================
+    // ==================== 公共模块 (1xxxxx) ====================
 
-    /** 公共错误：参数校验失败 */
-    PARAM_INVALID(100, "参数校验失败"),
+    // 公共-参数错误 (101xxx)
+    /** 参数校验失败 */
+    PARAM_INVALID(101001, "参数校验失败"),
+    /** 缺少必要参数 */
+    PARAM_MISSING(101002, "缺少必要参数"),
+    /** 参数格式错误 */
+    PARAM_FORMAT_ERROR(101003, "参数格式错误"),
+    /** 参数值超出范围 */
+    PARAM_OUT_OF_RANGE(101004, "参数值超出允许范围"),
 
-    /** 公共错误：缺少必要参数 */
-    PARAM_MISSING(101, "缺少必要参数"),
+    // 公共-权限错误 (102xxx)
+    /** 未登录或登录已过期 */
+    UNAUTHORIZED(102001, "未登录或登录已过期"),
+    /** 无权限访问 */
+    PERMISSION_DENIED(102002, "无权限访问"),
+    /** 无权访问该数据 */
+    DATA_SCOPE_DENIED(102003, "无权访问该数据"),
+    /** 数据权限校验失败 */
+    DATA_PERMISSION_DENIED(102004, "数据权限校验失败"),
 
-    // ==================== 用户错误 (1xxx) ====================
+    // ==================== 认证模块 (2xxxxx) ====================
 
-    /** 用户错误：用户不存在 */
-    USER_NOT_FOUND(1001, "用户不存在"),
+    // 认证-Token错误 (202xxx)
+    /** Token 无效或已过期 */
+    TOKEN_INVALID(202001, "Token 无效或已过期"),
+    /** Token 已过期 */
+    TOKEN_EXPIRED(202002, "Token 已过期"),
+    /** Token 可能被盗用 */
+    TOKEN_STOLEN(202003, "Token 异常，请重新登录"),
+    /** Token 刷新过于频繁 */
+    TOKEN_REFRESH_TOO_FREQUENT(202004, "Token 刷新过于频繁，请稍后再试"),
+    /** Token 刷新次数超限 */
+    TOKEN_REFRESH_LIMIT_EXCEEDED(202005, "Token 刷新次数已达上限，请明天再试"),
 
-    /** 用户错误：用户名或密码错误 */
-    USER_PASSWORD_ERROR(1002, "用户名或密码错误"),
+    // 认证-业务错误 (203xxx)
+    /** 用户名或密码错误 */
+    LOGIN_FAILED(203001, "用户名或密码错误"),
+    /** 验证码错误或已过期 */
+    CAPTCHA_ERROR(203002, "验证码错误或已过期"),
+    /** 请先完成图形验证码验证 */
+    CAPTCHA_REQUIRED(203003, "请先完成图形验证码验证"),
+    /** 不支持的登录方式 */
+    LOGIN_TYPE_NOT_SUPPORTED(203004, "不支持的登录方式"),
+    /** 短信验证码错误或已过期 */
+    SMS_CODE_INVALID(203005, "验证码错误或已过期"),
+    /** 发送过于频繁 */
+    SEND_TOO_FREQUENT(203006, "发送过于频繁，请稍后再试"),
+    /** 操作次数已达上限 */
+    RATE_LIMIT_EXCEEDED(203007, "操作次数已达上限，请稍后再试"),
 
-    /** 用户错误：用户已被禁用 */
-    USER_DISABLED(1003, "用户已被禁用"),
+    // 认证-社交登录错误 (204xxx)
+    /** 授权码无效或已过期 */
+    SOCIAL_AUTH_CODE_INVALID(204001, "授权码无效或已过期"),
+    /** State 参数无效或已过期 */
+    SOCIAL_STATE_INVALID(204002, "State 参数无效或已过期"),
+    /** 第三方平台服务异常 */
+    SOCIAL_PLATFORM_ERROR(204003, "第三方平台服务异常"),
+    /** 该社交账号未绑定系统账号 */
+    SOCIAL_ACCOUNT_NOT_BOUND(204004, "该社交账号未绑定系统账号"),
+    /** 已绑定其他系统账号 */
+    SOCIAL_ACCOUNT_ALREADY_BOUND(204005, "已绑定其他系统账号"),
+    /** 不支持的社交平台 */
+    SOCIAL_PLATFORM_NOT_SUPPORTED(204006, "不支持的社交平台"),
 
-    /** 用户错误：密码强度不足 */
-    PASSWORD_WEAK(1004, "密码强度不足"),
+    // 认证-账户错误 (205xxx)
+    /** 账户已锁定 */
+    ACCOUNT_LOCKED(205001, "账户已锁定，请稍后再试"),
+    /** 账户已被禁用 */
+    ACCOUNT_DISABLED(205002, "账户已被禁用"),
+    /** 密码已过期 */
+    PASSWORD_EXPIRED(205003, "密码已过期，请修改密码"),
+    /** 密码即将过期 */
+    PASSWORD_EXPIRING_SOON(205004, "密码即将过期，请及时修改"),
+    /** 密码强度不足 */
+    PASSWORD_WEAK(205005, "密码强度不足"),
+    /** 密码修改失败 */
+    PASSWORD_CHANGE_FAILED(205006, "密码修改失败"),
+    /** 原密码错误 */
+    OLD_PASSWORD_ERROR(205007, "原密码错误"),
 
-    // ==================== 验证码错误 (11xx) ====================
+    // 认证-安全错误 (206xxx)
+    /** IP 地址受限 */
+    IP_RESTRICTED(206001, "IP 地址受限，请稍后再试"),
+    /** 设备指纹不匹配 */
+    DEVICE_FINGERPRINT_MISMATCH(206002, "设备环境异常，请重新登录"),
+    /** 检测到异地登录 */
+    ABNORMAL_LOCATION_LOGIN(206003, "检测到异地登录，请确认是否为本人操作"),
 
-    /** 验证码错误：验证码错误或已过期 */
-    CAPTCHA_ERROR(1101, "验证码错误或已过期"),
+    // 认证-合规错误 (207xxx)
+    /** 请先阅读并同意用户协议 */
+    AGREEMENT_NOT_SIGNED(207001, "请先阅读并同意用户协议"),
+    /** 请先阅读并同意隐私政策 */
+    PRIVACY_POLICY_NOT_AGREED(207002, "请先阅读并同意隐私政策"),
 
-    /** 验证码错误：需要图形验证码 */
-    CAPTCHA_REQUIRED(1102, "请先完成图形验证码验证"),
+    // ==================== 用户模块 (3xxxxx) ====================
 
-    // ==================== Token 错误 (12xx) ====================
+    // 用户-业务错误 (303xxx)
+    /** 用户不存在 */
+    USER_NOT_FOUND(303001, "用户不存在"),
+    /** 用户名已存在 */
+    USER_EXISTS(303002, "用户名已存在"),
+    /** 手机号已存在 */
+    PHONE_EXISTS(303003, "手机号已被注册"),
+    /** 邮箱已存在 */
+    EMAIL_EXISTS(303004, "邮箱已被注册"),
+    /** 手机号未注册 */
+    USER_NOT_REGISTERED(303005, "手机号未注册，请先注册账号"),
+    /** 用户状态异常 */
+    USER_STATUS_ERROR(303006, "用户状态异常"),
 
-    /** Token 错误：Token 无效或已过期 */
-    TOKEN_INVALID(1201, "Token 无效或已过期"),
+    // ==================== 系统模块 (4xxxxx) ====================
 
-    /** Token 错误：Token 可能被盗用 */
-    TOKEN_STOLEN(1202, "Token 可能被盗用，已失效，请重新登录"),
+    // 系统-系统错误 (404xxx)
+    /** 系统异常 */
+    SYSTEM_ERROR(404001, "系统异常，请稍后重试"),
+    /** 服务暂不可用 */
+    SERVICE_UNAVAILABLE(404002, "服务暂不可用"),
+    /** 资源不存在 */
+    NOT_FOUND(404003, "资源不存在"),
+    /** 功能暂未开放 */
+    FEATURE_NOT_AVAILABLE(404004, "功能暂未开放"),
 
-    /** Token 错误：刷新过于频繁 */
-    TOKEN_REFRESH_TOO_FREQUENT(1203, "Token 刷新过于频繁，请稍后再试"),
+    // ==================== 文件模块 (5xxxxx) ====================
 
-    /** Token 错误：刷新次数超限 */
-    TOKEN_REFRESH_LIMIT_EXCEEDED(1204, "Token 刷新次数已达上限，请明天再试"),
+    // 文件-系统错误 (504xxx)
+    /** 文件上传失败 */
+    FILE_UPLOAD_FAILED(504001, "文件上传失败"),
+    /** 文件不存在 */
+    FILE_NOT_FOUND(504002, "文件不存在"),
+    /** 文件大小超出限制 */
+    FILE_SIZE_EXCEEDED(504003, "文件大小超出限制"),
+    /** 不支持的文件类型 */
+    FILE_TYPE_NOT_SUPPORTED(504004, "不支持的文件类型"),
+    /** 文件删除失败 */
+    FILE_DELETE_FAILED(504005, "文件删除失败"),
+    /** 文件名称无效 */
+    FILE_NAME_INVALID(504006, "文件名称无效"),
 
-    // ==================== 限流错误 (13xx) ====================
+    // ==================== 消息模块 (6xxxxx) ====================
 
-    /** 限流错误：发送过于频繁 */
-    RATE_LIMIT_SEND_TOO_FREQUENT(1301, "发送过于频繁，请稍后再试"),
+    // 消息-业务错误 (603xxx)
+    /** 消息发送失败 */
+    MESSAGE_SEND_FAILED(603001, "消息发送失败"),
+    /** 消息模板不存在 */
+    MESSAGE_TEMPLATE_NOT_FOUND(603002, "消息模板不存在"),
+    /** 消息渠道不可用 */
+    MESSAGE_CHANNEL_UNAVAILABLE(603003, "消息渠道不可用"),
+    /** 消息渠道配置错误 */
+    MESSAGE_CHANNEL_CONFIG_ERROR(603004, "消息渠道配置错误"),
 
-    /** 限流错误：次数已达上限 */
-    RATE_LIMIT_EXCEEDED(1302, "操作次数已达上限，请稍后再试"),
+    // 消息-系统错误 (604xxx)
+    /** 消息服务异常 */
+    MESSAGE_SERVICE_ERROR(604001, "消息服务异常"),
 
-    // ==================== 登录错误 (14xx) ====================
+    // ==================== 定时任务模块 (7xxxxx) ====================
 
-    /** 登录错误：不支持的登录方式 */
-    LOGIN_TYPE_NOT_SUPPORTED(1401, "不支持的登录方式"),
+    // 定时任务-业务错误 (703xxx)
+    /** 任务不存在 */
+    JOB_NOT_FOUND(703001, "任务不存在"),
+    /** 任务已暂停 */
+    JOB_PAUSED(703002, "任务已暂停"),
+    /** 任务执行器不存在 */
+    JOB_EXECUTOR_NOT_FOUND(703003, "任务执行器不存在"),
+    /** Cron 表达式无效 */
+    CRON_EXPRESSION_INVALID(703004, "Cron 表达式无效"),
+    /** 任务正在执行中 */
+    JOB_RUNNING(703005, "任务正在执行中"),
+    /** 任务配置无效 */
+    JOB_CONFIG_INVALID(703006, "任务配置无效"),
+    /** 任务已存在 */
+    JOB_EXISTS(703007, "任务已存在"),
 
-    // ==================== 短信错误 (15xx) ====================
+    // 定时任务-系统错误 (704xxx)
+    /** 任务执行异常 */
+    JOB_EXECUTE_ERROR(704001, "任务执行异常"),
 
-    /** 短信错误：验证码错误或已过期 */
-    INVALID_SMS_CODE(1501, "验证码错误或已过期"),
+    // ==================== HTTP 相关 (9xxxxx) ====================
 
-    /** 用户错误：未注册 */
-    USER_NOT_REGISTERED(1502, "手机号未注册，请先注册账号"),
-
-    // ==================== 社交登录错误 (16xx) ====================
-
-    /** 社交登录错误：授权码无效 */
-    SOCIAL_AUTH_CODE_INVALID(1601, "授权码无效或已过期"),
-
-    /** 社交登录错误：State 参数无效 */
-    SOCIAL_STATE_INVALID(1602, "State 参数无效或已过期"),
-
-    /** 社交登录错误：平台返回错误 */
-    SOCIAL_PLATFORM_ERROR(1603, "第三方平台服务异常"),
-
-    /** 社交登录错误：账号未绑定 */
-    SOCIAL_ACCOUNT_NOT_BOUND(1604, "该社交账号未绑定系统账号"),
-
-    /** 社交登录错误：绑定已存在 */
-    SOCIAL_ACCOUNT_ALREADY_BOUND(1605, "已绑定其他系统账号"),
-
-    /** 社交登录错误：不支持的平台 */
-    SOCIAL_PLATFORM_NOT_SUPPORTED(1606, "不支持的社交平台"),
-
-    // ==================== 账户错误 (17xx) ====================
-
-    /** 账户错误：账户已锁定 */
-    ACCOUNT_LOCKED(1701, "账户已锁定，请稍后再试"),
-
-    /** 账户错误：密码已过期 */
-    PASSWORD_EXPIRED(1702, "密码已过期，请修改密码"),
-
-    /** 账户错误：密码即将过期 */
-    PASSWORD_EXPIRING_SOON(1703, "密码即将过期，请及时修改"),
-
-    // ==================== 安全错误 (18xx) ====================
-
-    /** 安全错误：IP 受限 */
-    IP_RESTRICTED(1801, "IP 地址受限，请稍后再试"),
-
-    /** 安全错误：设备指纹不匹配 */
-    DEVICE_FINGERPRINT_MISMATCH(1802, "设备环境异常，请重新登录"),
-
-    /** 安全错误：异地登录 */
-    ABNORMAL_LOCATION_LOGIN(1803, "检测到异地登录，请确认是否为本人操作"),
-
-    // ==================== 合规错误 (19xx) ====================
-
-    /** 合规错误：未签署用户协议 */
-    AGREEMENT_NOT_SIGNED(1901, "请先阅读并同意用户协议"),
-
-    /** 合规错误：未同意隐私政策 */
-    PRIVACY_POLICY_NOT_AGREED(1902, "请先阅读并同意隐私政策"),
-
-    // ==================== 系统错误 (5xx) ====================
-
-    /** 系统错误：系统异常 */
-    SYSTEM_ERROR(500, "系统异常，请稍后重试"),
-
-    /** 资源错误：资源不存在 */
-    NOT_FOUND(404, "资源不存在"),
-
-    // ==================== 文件错误 (41x) ====================
-
-    /** 文件错误：文件上传失败 */
-    FILE_UPLOAD_FAILED(410, "文件上传失败"),
-
-    /** 文件错误：文件不存在 */
-    FILE_NOT_FOUND(411, "文件不存在"),
-
-    /** 文件错误：文件大小超出限制 */
-    FILE_SIZE_EXCEEDED(412, "文件大小超出限制"),
-
-    /** 文件错误：不支持的文件类型 */
-    FILE_TYPE_NOT_SUPPORTED(413, "不支持的文件类型"),
-
-    /** 文件错误：文件删除失败 */
-    FILE_DELETE_FAILED(414, "文件删除失败");
+    /** 请求方法不支持 */
+    HTTP_METHOD_NOT_ALLOWED(904001, "不支持的请求方法");
 
     /** 错误码 */
     private final int code;
@@ -163,4 +214,59 @@ public enum ErrorCode {
     /** 错误消息 */
     private final String message;
 
+    /**
+     * 获取模块编码
+     * @return 模块编码
+     */
+    public int getModule() {
+        return code / 100000;
+    }
+
+    /**
+     * 获取错误类型
+     * @return 错误类型编码
+     */
+    public int getErrorType() {
+        return (code / 1000) % 100;
+    }
+
+    /**
+     * 获取序号
+     * @return 序号
+     */
+    public int getSeq() {
+        return code % 1000;
+    }
+
+    /**
+     * 是否为业务错误
+     * @return true 表示业务错误
+     */
+    public boolean isBusinessError() {
+        return getErrorType() == 3;
+    }
+
+    /**
+     * 是否为参数错误
+     * @return true 表示参数错误
+     */
+    public boolean isParamError() {
+        return getErrorType() == 1;
+    }
+
+    /**
+     * 是否为权限错误
+     * @return true 表示权限错误
+     */
+    public boolean isAuthError() {
+        return getErrorType() == 2;
+    }
+
+    /**
+     * 是否为系统错误
+     * @return true 表示系统错误
+     */
+    public boolean isSystemError() {
+        return getErrorType() == 4;
+    }
 }
