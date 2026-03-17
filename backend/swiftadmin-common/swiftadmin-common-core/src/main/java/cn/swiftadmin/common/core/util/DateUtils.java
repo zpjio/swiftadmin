@@ -1,12 +1,15 @@
 package cn.swiftadmin.common.core.util;
 
 import java.time.DayOfWeek;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
@@ -220,7 +223,7 @@ public final class DateUtils {
      * @return 日期时间
      */
     public static LocalDateTime fromEpochMilli(long epochMilli) {
-        return LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(epochMilli), DEFAULT_ZONE_ID);
+        return LocalDateTime.ofInstant(Instant.ofEpochMilli(epochMilli), DEFAULT_ZONE_ID);
     }
 
     /**
@@ -458,7 +461,7 @@ public final class DateUtils {
         if (start == null || end == null) {
             return 0L;
         }
-        return java.time.Duration.between(start, end).toDays();
+        return Duration.between(start, end).toDays();
     }
 
     /**
@@ -472,7 +475,7 @@ public final class DateUtils {
         if (start == null || end == null) {
             return 0L;
         }
-        return java.time.temporal.ChronoUnit.DAYS.between(start, end);
+        return ChronoUnit.DAYS.between(start, end);
     }
 
     /**
@@ -486,7 +489,7 @@ public final class DateUtils {
         if (start == null || end == null) {
             return 0L;
         }
-        return java.time.temporal.ChronoUnit.MONTHS.between(start, end);
+        return ChronoUnit.MONTHS.between(start, end);
     }
 
     /**

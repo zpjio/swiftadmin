@@ -88,6 +88,23 @@ import org.springframework.util.ObjectUtils;
 if (!ObjectUtils.isEmpty(obj)) { }
 ```
 
+### Import 规范
+
+**禁止使用完全限定名**，应使用正常的 import 导入。
+
+```java
+// ❌ 错误：使用完全限定名
+private static final java.util.regex.Pattern MASKED_PHONE_PATTERN = java.util.regex.Pattern.compile("^\\d{3}\\*{4}\\d{4}$");
+long remainingDays = java.time.temporal.ChronoUnit.DAYS.between(LocalDateTime.now(), expireTime);
+
+// ✅ 正确：使用 import 导入
+import java.util.regex.Pattern;
+import java.time.temporal.ChronoUnit;
+
+private static final Pattern MASKED_PHONE_PATTERN = Pattern.compile("^\\d{3}\\*{4}\\d{4}$");
+long remainingDays = ChronoUnit.DAYS.between(LocalDateTime.now(), expireTime);
+```
+
 ### 命名规范
 
 | 类型 | 命名规则 | 示例 |

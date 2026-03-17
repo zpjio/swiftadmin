@@ -24,6 +24,9 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -80,7 +83,7 @@ public class AuthServiceImpl implements AuthService {
             redisTemplate.delete(refreshFreqKey);
 
             // 5. 清除当日刷新次数记录
-            String today = java.time.LocalDate.now().toString();
+            String today = LocalDate.now().toString();
             String dailyCountKey = RedisKeyConstants.tokenRefreshDailyCount(loginUser.getUsername(), today);
             redisTemplate.delete(dailyCountKey);
             
@@ -326,7 +329,7 @@ public class AuthServiceImpl implements AuthService {
                 refreshIntervalSeconds * 2L, TimeUnit.SECONDS);
 
         // 检查当日刷新次数
-        String today = java.time.LocalDate.now().toString();
+        String today = LocalDate.now().toString();
         String dailyCountKey = RedisKeyConstants.tokenRefreshDailyCount(username, today);
 
         Long currentCount = redisTemplate.opsForValue().increment(dailyCountKey);
@@ -345,9 +348,9 @@ public class AuthServiceImpl implements AuthService {
      * 获取距离明天零点的秒数
      */
     private long getSecondsUntilTomorrow() {
-        java.time.LocalDateTime now = java.time.LocalDateTime.now();
-        java.time.LocalDateTime tomorrow = now.plusDays(1).withHour(0).withMinute(0).withSecond(0);
-        return java.time.Duration.between(now, tomorrow).getSeconds();
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime tomorrow = now.plusDays(1).withHour(0).withMinute(0).withSecond(0);
+        return Duration.between(now, tomorrow).getSeconds();
     }
 
     @Override

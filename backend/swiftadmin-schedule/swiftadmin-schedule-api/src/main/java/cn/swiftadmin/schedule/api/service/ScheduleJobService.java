@@ -6,6 +6,8 @@ import cn.swiftadmin.schedule.api.dto.JobQueryDTO;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.service.IService;
 
+import java.util.List;
+
 /**
  * 定时任务服务接口
  *
@@ -89,5 +91,5 @@ public interface ScheduleJobService extends IService<ScheduleJob> {
      *
      * @return 任务列表
      */
-    java.util.List<ScheduleJob> getAllEnabledJobs();
+    List<ScheduleJob> getAllEnabledJobs();
 }

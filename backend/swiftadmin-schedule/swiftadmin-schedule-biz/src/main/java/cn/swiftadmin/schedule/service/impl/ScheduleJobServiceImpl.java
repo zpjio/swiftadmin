@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static cn.swiftadmin.schedule.api.entity.table.ScheduleJobTableDef.SCHEDULE_JOB;
 
@@ -204,7 +205,7 @@ public class ScheduleJobServiceImpl extends ServiceImpl<ScheduleJobMapper, Sched
     }
 
     @Override
-    public java.util.List<ScheduleJob> getAllEnabledJobs() {
+    public List<ScheduleJob> getAllEnabledJobs() {
         return list(QueryWrapper.create()
                 .where(SCHEDULE_JOB.STATUS.eq(JobStatus.NORMAL.getCode()))
                 .orderBy(SCHEDULE_JOB.CREATE_TIME.asc()));

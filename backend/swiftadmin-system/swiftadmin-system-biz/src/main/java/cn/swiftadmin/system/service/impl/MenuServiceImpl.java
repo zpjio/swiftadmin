@@ -29,6 +29,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -105,7 +106,7 @@ public class MenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impleme
         // 检查权限标识是否变更
         SysMenu existing = getById(dto.getId());
         boolean permissionChanged = existing != null &&
-                !java.util.Objects.equals(existing.getPermission(), dto.getPermission());
+                !Objects.equals(existing.getPermission(), dto.getPermission());
 
         UpdateChain.of(SysMenu.class)
                 .set(SYS_MENU.PARENT_ID, dto.getParentId() != null ? dto.getParentId() : 0L)

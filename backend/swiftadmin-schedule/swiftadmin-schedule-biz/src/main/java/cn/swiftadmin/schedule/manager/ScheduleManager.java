@@ -16,6 +16,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.support.CronExpression;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
@@ -235,7 +236,7 @@ public class ScheduleManager {
                 return false;
             }
 
-            long timeDiff = java.time.Duration.between(nowLocal, nextExecuteTime).toMillis();
+            long timeDiff = Duration.between(nowLocal, nextExecuteTime).toMillis();
             return timeDiff >= 0 && timeDiff <= 5000;
 
         } catch (Exception e) {

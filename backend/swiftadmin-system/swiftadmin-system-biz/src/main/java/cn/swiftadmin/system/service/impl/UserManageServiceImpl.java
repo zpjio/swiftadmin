@@ -33,6 +33,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static cn.swiftadmin.system.api.entity.table.SysUserTableDef.SYS_USER;
@@ -277,10 +278,10 @@ public class UserManageServiceImpl extends ServiceImpl<SysUserMapper, SysUser> i
     // ==================== 脱敏值检测 ====================
 
     /** 手机号脱敏格式正则：如 138****0000 */
-    private static final java.util.regex.Pattern MASKED_PHONE_PATTERN = java.util.regex.Pattern.compile("^\\d{3}\\*{4}\\d{4}$");
+    private static final Pattern MASKED_PHONE_PATTERN = Pattern.compile("^\\d{3}\\*{4}\\d{4}$");
 
     /** 邮箱脱敏格式正则：如 a***@example.com */
-    private static final java.util.regex.Pattern MASKED_EMAIL_PATTERN = java.util.regex.Pattern.compile("^.+\\*+.+@.+$");
+    private static final Pattern MASKED_EMAIL_PATTERN = Pattern.compile("^.+\\*+.+@.+$");
 
     /**
      * 判断是否为脱敏后的手机号

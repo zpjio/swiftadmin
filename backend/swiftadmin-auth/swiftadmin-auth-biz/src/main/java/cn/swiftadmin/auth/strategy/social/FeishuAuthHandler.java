@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -65,7 +66,7 @@ public class FeishuAuthHandler implements SocialAuthHandler {
         HttpEntity<Void> request = new HttpEntity<>(headers);
         ResponseEntity<Map> response = restTemplate.exchange(
                 properties.getUserInfoUrl(),
-                org.springframework.http.HttpMethod.GET,
+                HttpMethod.GET,
                 request,
                 Map.class
         );

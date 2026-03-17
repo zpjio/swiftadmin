@@ -16,6 +16,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.IOException;
+import java.net.URI;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
@@ -63,7 +64,7 @@ public class OssFileStorageStrategy implements FileStorageStrategy {
     public void init() {
         try {
             this.s3Client = S3Client.builder()
-                    .endpointOverride(java.net.URI.create(endpoint))
+                    .endpointOverride(URI.create(endpoint))
                     .region(Region.of(region))
                     .credentialsProvider(StaticCredentialsProvider.create(
                             AwsBasicCredentials.create(accessKeyId, accessKeySecret)))

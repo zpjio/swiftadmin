@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 import static cn.swiftadmin.system.api.entity.table.SysUserTableDef.SYS_USER;
 
@@ -299,7 +300,7 @@ public class UserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impleme
         }
         int expireDays = configService.getPasswordExpireDays();
         LocalDateTime expireTime = user.getPasswordUpdateTime().plusDays(expireDays);
-        long remainingDays = java.time.temporal.ChronoUnit.DAYS.between(LocalDateTime.now(), expireTime);
+        long remainingDays = ChronoUnit.DAYS.between(LocalDateTime.now(), expireTime);
         return (int) Math.max(0, remainingDays);
     }
 
