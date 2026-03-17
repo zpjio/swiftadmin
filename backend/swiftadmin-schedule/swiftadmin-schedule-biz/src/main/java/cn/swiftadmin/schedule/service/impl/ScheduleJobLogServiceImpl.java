@@ -1,6 +1,7 @@
 package cn.swiftadmin.schedule.service.impl;
 
 import cn.swiftadmin.common.core.exception.BusinessException;
+import cn.swiftadmin.common.core.util.BeanCopyUtils;
 import cn.swiftadmin.common.mybatis.util.PageHelper;
 import cn.swiftadmin.schedule.api.dto.JobLogQueryDTO;
 import cn.swiftadmin.schedule.api.entity.ScheduleJobLog;
@@ -9,6 +10,7 @@ import cn.swiftadmin.schedule.api.vo.JobLogVO;
 import cn.swiftadmin.schedule.mapper.ScheduleJobLogMapper;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
+import com.mybatisflex.core.update.UpdateChain;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -62,19 +64,14 @@ public class ScheduleJobLogServiceImpl extends ServiceImpl<ScheduleJobLogMapper,
     @Transactional(rollbackFor = Exception.class)
     public void updateLog(Long logId, Integer executeStatus, String executeResult,
                           String errorMsg, String stackTrace, Long costTime) {
-        ScheduleJobLog jobLog = getById(logId);
-        if (jobLog == null) {
-            log.error("Log not found: {}", logId);
-            return;
-        }
-
-        jobLog.setExecuteStatus(executeStatus);
-        jobLog.setExecuteResult(executeResult);
-        jobLog.setErrorMsg(errorMsg);
-        jobLog.setStackTrace(stackTrace);
-        jobLog.setCostTime(costTime);
-
-        updateById(jobLog);
+        UpdateChain.of(ScheduleJobLog.class)
+                .set(SCHEDULE_JOB_LOG.EXECUTE_STATUS, executeStatus)
+                .set(SCHEDULE_JOB_LOG.EXECUTE_RESULT, executeResult)
+                .set(SCHEDULE_JOB_LOG.ERROR_MSG, errorMsg)
+                .set(SCHEDULE_JOB_LOG.STACK_TRACE, stackTrace)
+                .set(SCHEDULE_JOB_LOG.COST_TIME, costTime)
+                .where(SCHEDULE_JOB_LOG.ID.eq(logId))
+                .update();
     }
 
     /**
@@ -84,20 +81,6 @@ public class ScheduleJobLogServiceImpl extends ServiceImpl<ScheduleJobLogMapper,
      * @return VO
      */
     private JobLogVO convertToVO(ScheduleJobLog jobLog) {
-        JobLogVO vo = new JobLogVO();
-        vo.setId(jobLog.getId());
-        vo.setJobId(jobLog.getJobId());
-        vo.setJobName(jobLog.getJobName());
-        vo.setJobGroup(jobLog.getJobGroup());
-        vo.setExecuteStatus(jobLog.getExecuteStatus());
-        vo.setExecuteTime(jobLog.getExecuteTime());
-        vo.setCostTime(jobLog.getCostTime());
-        vo.setExecuteResult(jobLog.getExecuteResult());
-        vo.setErrorMsg(jobLog.getErrorMsg());
-        vo.setStackTrace(jobLog.getStackTrace());
-        vo.setRetryCount(jobLog.getRetryCount());
-        vo.setExecuteType(jobLog.getExecuteType());
-        vo.setCreateTime(jobLog.getCreateTime());
-        return vo;
+        return BeanCopyUtils.copy(jobLog, JobLogVO::new);
     }
 }

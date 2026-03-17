@@ -1,6 +1,7 @@
 package cn.swiftadmin.schedule.service.impl;
 
 import cn.swiftadmin.common.core.exception.BusinessException;
+import cn.swiftadmin.common.core.util.BeanCopyUtils;
 import cn.swiftadmin.common.mybatis.util.PageHelper;
 import cn.swiftadmin.schedule.api.dto.JobDTO;
 import cn.swiftadmin.schedule.api.dto.JobQueryDTO;
@@ -14,15 +15,18 @@ import cn.swiftadmin.schedule.manager.ScheduleManager;
 import cn.swiftadmin.schedule.mapper.ScheduleJobMapper;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
+import com.mybatisflex.core.update.UpdateChain;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.support.CronExpression;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 import static cn.swiftadmin.schedule.api.entity.table.ScheduleJobTableDef.SCHEDULE_JOB;
@@ -157,33 +161,31 @@ public class ScheduleJobServiceImpl extends ServiceImpl<ScheduleJobMapper, Sched
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteJob(Long[] jobIds) {
-        for (Long jobId : jobIds) {
-            removeById(jobId);
+        if (jobIds == null || jobIds.length == 0) {
+            return;
         }
+        List<Long> ids = Arrays.asList(jobIds);
+        removeByIds(ids);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void enableJob(Long jobId) {
-        ScheduleJob job = getById(jobId);
-        if (job == null) {
-            throw BusinessException.of(400, "任务不存在");
-        }
-
-        job.setStatus(JobStatus.NORMAL.getCode());
-        updateById(job);
+        UpdateChain.of(ScheduleJob.class)
+                .set(SCHEDULE_JOB.STATUS, JobStatus.NORMAL.getCode())
+                .set(SCHEDULE_JOB.UPDATE_TIME, LocalDateTime.now())
+                .where(SCHEDULE_JOB.ID.eq(jobId))
+                .update();
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void pauseJob(Long jobId) {
-        ScheduleJob job = getById(jobId);
-        if (job == null) {
-            throw BusinessException.of(400, "任务不存在");
-        }
-
-        job.setStatus(JobStatus.PAUSED.getCode());
-        updateById(job);
+        UpdateChain.of(ScheduleJob.class)
+                .set(SCHEDULE_JOB.STATUS, JobStatus.PAUSED.getCode())
+                .set(SCHEDULE_JOB.UPDATE_TIME, LocalDateTime.now())
+                .where(SCHEDULE_JOB.ID.eq(jobId))
+                .update();
     }
 
     @Override
@@ -218,22 +220,7 @@ public class ScheduleJobServiceImpl extends ServiceImpl<ScheduleJobMapper, Sched
      * @return VO
      */
     private JobVO convertToVO(ScheduleJob job) {
-        JobVO vo = new JobVO();
-        vo.setId(job.getId());
-        vo.setJobName(job.getJobName());
-        vo.setJobGroup(job.getJobGroup());
-        vo.setBeanName(job.getBeanName());
-        vo.setMethodName(job.getMethodName());
-        vo.setMethodParams(job.getMethodParams());
-        vo.setCronExpression(job.getCronExpression());
-        vo.setTimeout(job.getTimeout());
-        vo.setRetryTimes(job.getRetryTimes());
-        vo.setRetryInterval(job.getRetryInterval());
-        vo.setStatus(job.getStatus());
-        vo.setRemark(job.getRemark());
-        vo.setCreateTime(job.getCreateTime());
-        vo.setUpdateTime(job.getUpdateTime());
-        return vo;
+        return BeanCopyUtils.copy(job, JobVO::new);
     }
 
     /**

@@ -3,6 +3,11 @@ package cn.swiftadmin.schedule.api.enums;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.util.Arrays;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 /**
  * 任务执行状态枚举
  *
@@ -25,15 +30,17 @@ public enum JobExecuteStatus {
     private final Integer code;
     private final String desc;
 
+    /** code -> JobExecuteStatus 映射缓存 */
+    private static final Map<Integer, JobExecuteStatus> CODE_MAP = Arrays.stream(values())
+            .collect(Collectors.toMap(JobExecuteStatus::getCode, Function.identity()));
+
+    /**
+     * 根据编码获取枚举
+     *
+     * @param code 编码
+     * @return 枚举值，不存在返回 null
+     */
     public static JobExecuteStatus fromCode(Integer code) {
-        if (code == null) {
-            return null;
-        }
-        for (JobExecuteStatus value : values()) {
-            if (value.code.equals(code)) {
-                return value;
-            }
-        }
-        return null;
+        return CODE_MAP.get(code);
     }
 }

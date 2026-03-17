@@ -18,12 +18,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.support.CronExpression;
 import org.springframework.stereotype.Component;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -45,6 +44,9 @@ public class ScheduleManager {
 
     /** 执行器映射 */
     private Map<JobType, JobExecutor> executorMap;
+
+    /** 正在执行的任务ID集合（防止重复执行） */
+    private final Set<Long> runningJobs = ConcurrentHashMap.newKeySet();
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -77,6 +79,11 @@ public class ScheduleManager {
                 try {
                     // 检查任务是否需要执行
                     if (shouldExecute(job)) {
+                        // 检查任务是否正在执行
+                        if (runningJobs.contains(job.getId())) {
+                            log.debug("Job is already running, skip: {}", job.getJobName());
+                            continue;
+                        }
                         // 异步执行任务
                         executeJobAsync(job);
                     }
@@ -124,6 +131,9 @@ public class ScheduleManager {
      * @return 执行日志ID
      */
     private Long executeJob(ScheduleJob job) {
+        // 标记任务开始执行
+        runningJobs.add(job.getId());
+
         long startTime = System.currentTimeMillis();
         Long logId = createJobLog(job, JobExecuteStatus.RUNNING);
 
@@ -161,6 +171,9 @@ public class ScheduleManager {
             }
 
             return logId;
+        } finally {
+            // 标记任务执行结束
+            runningJobs.remove(job.getId());
         }
     }
 
@@ -273,8 +286,9 @@ public class ScheduleManager {
      * @return 堆栈字符串
      */
     private String getStackTrace(Exception e) {
-        StringWriter sw = new StringWriter();
-        e.printStackTrace(new PrintWriter(sw));
-        return sw.toString();
+        return String.join("\n",
+                java.util.Arrays.stream(e.getStackTrace())
+                        .map(StackTraceElement::toString)
+                        .toArray(String[]::new));
     }
 }
