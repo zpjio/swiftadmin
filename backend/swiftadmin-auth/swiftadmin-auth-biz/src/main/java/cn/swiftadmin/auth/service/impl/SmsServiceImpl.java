@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 import static cn.swiftadmin.auth.api.entity.table.SysSmsCodeTableDef.SYS_SMS_CODE;
@@ -252,7 +252,7 @@ public class SmsServiceImpl implements SmsService {
      * 生成 6 位数字验证码
      */
     private String generateCode() {
-        Random random = new Random();
+        ThreadLocalRandom random = ThreadLocalRandom.current();
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < 6; i++) {
             sb.append(random.nextInt(10));

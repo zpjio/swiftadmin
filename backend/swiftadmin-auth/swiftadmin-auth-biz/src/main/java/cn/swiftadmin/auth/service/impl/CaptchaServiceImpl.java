@@ -6,8 +6,10 @@ import cn.swiftadmin.auth.captcha.CaptchaGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -60,15 +62,25 @@ public class CaptchaServiceImpl implements CaptchaService {
         }
 
         String key = CAPTCHA_KEY_PREFIX + captchaId;
-        String storedCode = redisTemplate.opsForValue().get(key);
+
+        // 使用 Lua 脚本原子性地获取并删除验证码
+        String verifyAndDeleteScript =
+            "local code = redis.call('GET', KEYS[1]); " +
+            "if code then " +
+            "  redis.call('DEL', KEYS[1]); " +
+            "  return code; " +
+            "end " +
+            "return nil;";
+
+        String storedCode = redisTemplate.execute(
+            new DefaultRedisScript<>(verifyAndDeleteScript, String.class),
+            Collections.singletonList(key)
+        );
 
         if (storedCode == null) {
             log.warn("验证码已过期或不存在：id={}", captchaId);
             return false;
         }
-
-        // 验证成功后删除验证码（一次性使用）
-        redisTemplate.delete(key);
 
         // 不区分大小写比较
         boolean result = storedCode.equalsIgnoreCase(code.trim());

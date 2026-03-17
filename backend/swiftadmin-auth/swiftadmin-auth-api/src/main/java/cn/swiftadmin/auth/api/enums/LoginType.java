@@ -5,6 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.Arrays;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * 登录方式枚举
@@ -26,11 +29,12 @@ public enum LoginType {
     private final String code;
     private final String description;
 
+    /** code -> LoginType 映射缓存 */
+    private static final Map<String, LoginType> CODE_MAP = Arrays.stream(values())
+            .collect(Collectors.toMap(type -> type.code.toLowerCase(), Function.identity()));
+
     public static LoginType fromCode(String code) {
-        return Arrays.stream(values())
-                .filter(type -> type.code.equalsIgnoreCase(code))
-                .findFirst()
-                .orElse(null);
+        return code != null ? CODE_MAP.get(code.toLowerCase()) : null;
     }
 
 }
