@@ -1,3 +1,5 @@
+import type { FieldError } from './error'
+
 /**
  * 分页响应结果
  */
@@ -68,3 +70,13 @@ export {
   type FieldError,
   type ErrorDetail,
 } from './error'
+
+// 重导出菜单相关类型
+export {
+  MenuType,
+  type MenuTypeEnum,
+  type MenuVO,
+  type MenuTreeVO,
+  type MenuDTO,
+  type RouteMeta,
+} from './menu'

@@ -107,7 +107,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, h, onMounted } from 'vue'
-import { useMessage, useDialog, NTag, NButton, NSpace, NSwitch, type DataTableColumns } from 'naive-ui'
+import { useMessage, useDialog, NTag, NButton, NSpace, NSwitch, type DataTableColumns, type DataTableRowKey } from 'naive-ui'
 import {
   getTemplatePageApi,
   getTemplateDetailApi,
@@ -116,6 +116,7 @@ import {
   deleteTemplateApi,
   updateTemplateStatusApi,
   type MessageTemplate,
+  type ChannelType,
 } from '@/api/message'
 import { useDict } from '@/composables/useDict'
 import { formatDateTime } from '@/utils/date'
@@ -125,7 +126,7 @@ const dialog = useDialog()
 const formRef = ref<any>(null)
 const loading = ref(false)
 const tableData = ref<MessageTemplate[]>([])
-const selectedRowKeys = ref<number[]>([])
+const selectedRowKeys = ref<DataTableRowKey[]>([])
 const showModal = ref(false)
 const saving = ref(false)
 const isEdit = ref(false)
@@ -139,7 +140,7 @@ const queryForm = reactive({
   pageSize: 10,
   templateName: undefined as string | undefined,
   templateCode: undefined as string | undefined,
-  channelType: undefined as string | undefined,
+  channelType: undefined as ChannelType | undefined,
 })
 
 const pagination = reactive({
@@ -163,11 +164,11 @@ const pagination = reactive({
 })
 
 const form = reactive({
-  id: undefined as number | undefined,
+  id: undefined as string | undefined,
   templateName: '',
   templateCode: '',
   providerTemplateCode: '',
-  channelType: 'inbox',
+  channelType: 'inbox' as ChannelType,
   subject: '',
   content: '',
   variables: '',
@@ -247,7 +248,7 @@ function handleReset() {
   handleSearch()
 }
 
-function onCheckedRowKeysChange(keys: number[]) {
+function onCheckedRowKeysChange(keys: DataTableRowKey[]) {
   selectedRowKeys.value = keys
 }
 
@@ -311,7 +312,7 @@ async function handleStatusChange(row: MessageTemplate, val: boolean) {
   }
 }
 
-function handleDelete(ids: number[]) {
+function handleDelete(ids: string[]) {
   dialog.warning({
     title: '确认删除',
     content: `确定要删除选中的 ${ids.length} 条记录吗？`,
@@ -334,7 +335,7 @@ function handleBatchDelete() {
     message.warning('请选择要删除的记录')
     return
   }
-  handleDelete(selectedRowKeys.value)
+  handleDelete(selectedRowKeys.value as string[])
 }
 </script>
 

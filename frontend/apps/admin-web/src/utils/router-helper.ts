@@ -1,43 +1,5 @@
 import type { RouteRecordRaw } from 'vue-router'
-
-/**
- * 菜单类型
- */
-export const MenuType = {
-  DIRECTORY: 1, // 目录
-  MENU: 2,      // 菜单
-  BUTTON: 3,    // 按钮
-} as const
-
-export type MenuTypeEnum = typeof MenuType[keyof typeof MenuType]
-
-/**
- * 菜单数据接口
- */
-export interface MenuVO {
-  id: number
-  parentId: number
-  name: string
-  path: string
-  component: string | null
-  type: number | null
-  icon: string | null
-  sortOrder: number
-  permission: string | null
-  status: number | null
-  children?: MenuVO[]
-}
-
-/**
- * 路由元信息
- */
-export interface CustomRouteMeta {
-  title: string
-  icon?: string
-  permission?: string
-  hidden?: boolean
-  keepAlive?: boolean
-}
+import type { MenuVO, RouteMeta } from '@/types'
 
 /**
  * 将后端菜单树转换为 Vue Router 路由配置
@@ -68,7 +30,7 @@ export function convertMenusToRoutes(menus: MenuVO[]): RouteRecordRaw[] {
     }
 
     // 菜单类型（type=2）创建实际路由，使用后端返回的完整路径
-    const route: any = {
+    const route: RouteRecordRaw = {
       path: menu.path,
       name: getMenuName(menu.path),
       component: loadComponent(menu.component),
@@ -78,7 +40,7 @@ export function convertMenusToRoutes(menus: MenuVO[]): RouteRecordRaw[] {
         permission: menu.permission || undefined,
         hidden: false,
         keepAlive: true, // 默认启用页面缓存
-      },
+      } as RouteMeta,
     }
 
     routes.push(route)
@@ -90,7 +52,7 @@ export function convertMenusToRoutes(menus: MenuVO[]): RouteRecordRaw[] {
 /**
  * 从路径生成路由名称
  */
-function getMenuName(path: string): string {
+export function getMenuName(path: string): string {
   // 处理空路径
   if (!path) {
     return 'Menu_' + Date.now()
@@ -106,41 +68,36 @@ function getMenuName(path: string): string {
     .join('')
 }
 
+// 组件缓存
+const componentModules = import.meta.glob('../views/**/*.vue')
+
 /**
  * 动态加载组件
+ * 支持动态导入，无需手动维护映射表
  */
 function loadComponent(component?: string | null) {
   if (!component) {
-    // 默认使用 Layout
-    return () => import('@/layout/index.vue')
+    // 默认使用 404 页面
+    return () => import('@/views/error/404.vue')
   }
 
-  // 组件路径映射
-  const componentMap: Record<string, () => Promise<any>> = {
-    'dashboard/index': () => import('@/views/dashboard/index.vue'),
-    'system/user/index': () => import('@/views/system/user/index.vue'),
-    'system/role/index': () => import('@/views/system/role/index.vue'),
-    'system/menu/index': () => import('@/views/system/menu/index.vue'),
-    'system/dept/index': () => import('@/views/system/dept/index.vue'),
-    'system/online/index': () => import('@/views/system/online/index.vue'),
-    'system/dict/index': () => import('@/views/system/dict/index.vue'),
-    'system/file/index': () => import('@/views/system/file/index.vue'),
-    'system/config/index': () => import('@/views/system/config/index.vue'),
-    'monitor/operlog/index': () => import('@/views/monitor/operlog/index.vue'),
-    'monitor/loginlog/index': () => import('@/views/monitor/loginlog/index.vue'),
-    'monitor/online/index': () => import('@/views/system/online/index.vue'),
-    'profile/index': () => import('@/views/profile/index.vue'),
-    // 消息模块
-    'views/message/template/index': () => import('@/views/message/template/index.vue'),
-    'views/message/channel/index': () => import('@/views/message/channel/index.vue'),
-    'views/message/inbox/index': () => import('@/views/message/inbox/index.vue'),
-    'views/message/record/index': () => import('@/views/message/record/index.vue'),
-    // 定时任务模块
-    'schedule/job/index': () => import('@/views/schedule/job/index.vue'),
-    'schedule/log/index': () => import('@/views/schedule/log/index.vue'),
+  // 标准化组件路径
+  // 支持格式：'system/user/index' 或 'views/system/user/index'
+  let normalizedPath = component
+  if (normalizedPath.startsWith('views/')) {
+    normalizedPath = normalizedPath.replace('views/', '')
   }
 
-  return componentMap[component] || (() => import('@/views/error/404.vue'))
+  const fullPath = `../views/${normalizedPath}.vue`
+
+  // 检查组件是否存在
+  if (componentModules[fullPath]) {
+    return componentModules[fullPath]
+  }
+
+  // 组件不存在，返回 404 页面
+  console.warn(`[Router] 组件不存在: ${fullPath}`)
+  return () => import('@/views/error/404.vue')
 }
 
 /**

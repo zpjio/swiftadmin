@@ -249,7 +249,7 @@ const handleViewDetail = async (row: JobLogVO) => {
   }
 }
 
-const getExecuteStatusLabel = (status: JobExecuteStatus) => {
+const getExecuteStatusLabel = (status: number) => {
   switch (status) {
     case JobExecuteStatus.RUNNING:
       return '执行中'
@@ -262,7 +262,7 @@ const getExecuteStatusLabel = (status: JobExecuteStatus) => {
   }
 }
 
-const getExecuteStatusTag = (status: JobExecuteStatus) => {
+const getExecuteStatusTag = (status: number) => {
   switch (status) {
     case JobExecuteStatus.RUNNING:
       return 'info'

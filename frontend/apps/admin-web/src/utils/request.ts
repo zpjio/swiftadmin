@@ -94,7 +94,7 @@ service.interceptors.response.use(
   (response: AxiosResponse<ApiResponse>) => {
     // 如果是 blob 类型（文件下载），直接返回完整响应
     if (response.config.responseType === 'blob') {
-      return response
+      return response as unknown as AxiosResponse<ApiResponse>
     }
 
     const res = response.data
@@ -130,7 +130,7 @@ service.interceptors.response.use(
     }
 
     // 直接返回业务数据
-    return res.data
+    return res.data as unknown as AxiosResponse<ApiResponse>
   },
   (error: AxiosError<ApiResponse>) => {
     const options = error.config as RequestOptions
@@ -226,7 +226,8 @@ function filterParams(params?: Record<string, unknown>): Record<string, unknown>
  */
 export function get<T = unknown>(
   url: string,
-  params?: Record<string, unknown>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  params?: any,
   config?: RequestOptions
 ): Promise<T> {
   return service.get(url, { params: filterParams(params), ...config })
@@ -337,7 +338,6 @@ export function download(
 
 // 导出类型和错误类
 export { BusinessError, NetworkError, TimeoutError, CancelError }
-export type { RequestOptions }
 // 重导出 ApiResponse 便于使用
 export type { ApiResponse, FieldError } from '@/types'
 

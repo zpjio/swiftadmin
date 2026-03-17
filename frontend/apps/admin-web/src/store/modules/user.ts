@@ -1,12 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-import type { MenuVO } from '@/api/menu'
+import type { MenuVO } from '@/types'
 import { refreshPermissionApi, checkPermissionRefreshApi } from '@/api/auth'
 import { resetRouter } from '@/router'
 
 export interface UserInfo {
-  id: number
+  id: string
   username: string
   nickname: string
   avatar: string

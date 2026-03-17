@@ -5,40 +5,44 @@
  *   YY  - 错误类型
  *   ZZZ - 序号
  */
-export enum ErrorModule {
+export const ErrorModule = {
   /** 成功 */
-  SUCCESS = 0,
+  SUCCESS: 0,
   /** 公共模块 */
-  COMMON = 1,
+  COMMON: 1,
   /** 认证模块 */
-  AUTH = 2,
+  AUTH: 2,
   /** 用户模块 */
-  USER = 3,
+  USER: 3,
   /** 系统模块 */
-  SYSTEM = 4,
+  SYSTEM: 4,
   /** 文件模块 */
-  FILE = 5,
+  FILE: 5,
   /** 消息模块 */
-  MESSAGE = 6,
+  MESSAGE: 6,
   /** 定时任务模块 */
-  SCHEDULE = 7,
-}
+  SCHEDULE: 7,
+} as const
+
+export type ErrorModuleType = typeof ErrorModule[keyof typeof ErrorModule]
 
 /**
  * 错误类型编码
  */
-export enum ErrorType {
+export const ErrorType = {
   /** 成功 */
-  SUCCESS = 0,
+  SUCCESS: 0,
   /** 参数错误 */
-  PARAM = 1,
+  PARAM: 1,
   /** 权限错误 */
-  AUTH = 2,
+  AUTH: 2,
   /** 业务错误 */
-  BIZ = 3,
+  BIZ: 3,
   /** 系统错误 */
-  SYSTEM = 4,
-}
+  SYSTEM: 4,
+} as const
+
+export type ErrorTypeValue = typeof ErrorType[keyof typeof ErrorType]
 
 /**
  * 字段级错误信息
@@ -72,8 +76,8 @@ export interface ErrorDetail {
  * @returns 解析后的错误信息
  */
 export function parseErrorCode(code: number): {
-  module: ErrorModule
-  type: ErrorType
+  module: ErrorModuleType
+  type: ErrorTypeValue
   seq: number
 } {
   // 成功码
@@ -87,8 +91,8 @@ export function parseErrorCode(code: number): {
   }
 
   return {
-    module: Math.floor(code / 100000) as ErrorModule,
-    type: Math.floor((code / 1000) % 100) as ErrorType,
+    module: Math.floor(code / 100000) as ErrorModuleType,
+    type: Math.floor((code / 1000) % 100) as ErrorTypeValue,
     seq: code % 1000,
   }
 }
@@ -98,7 +102,7 @@ export function parseErrorCode(code: number): {
  * @param code 错误码
  * @returns 错误类型
  */
-export function getErrorType(code: number): ErrorType {
+export function getErrorType(code: number): ErrorTypeValue {
   return parseErrorCode(code).type
 }
 
@@ -107,7 +111,7 @@ export function getErrorType(code: number): ErrorType {
  * @param type 错误类型
  * @returns 是否需要提示
  */
-export function shouldShowMessage(type: ErrorType): boolean {
+export function shouldShowMessage(type: ErrorTypeValue): boolean {
   return type !== ErrorType.SUCCESS
 }
 
@@ -149,10 +153,10 @@ export class BusinessError extends Error {
   readonly code: number
 
   /** 错误类型 */
-  readonly type: ErrorType
+  readonly type: ErrorTypeValue
 
   /** 错误模块 */
-  readonly module: ErrorModule
+  readonly module: ErrorModuleType
 
   /** 链路追踪 ID */
   readonly traceId?: string

@@ -498,7 +498,7 @@ const handleSaveData = async () => {
 const handleDeleteData = (row: DictDataVO) => {
   dialog.warning({
     title: '确认删除',
-    content: `确定要删除数据 "${row.dictLabel}" 吗？`,
+    content: `确定要删除数据 "${row.label}" 吗？`,
     positiveText: '确定',
     negativeText: '取消',
     onPositiveClick: async () => {

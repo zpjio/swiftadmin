@@ -110,7 +110,7 @@ const uploadHeaders = computed(() => ({
 
 // 基本信息
 const basicForm = reactive({
-  id: 0,
+  id: '',
   username: '',
   nickname: '',
   avatar: '',
@@ -282,7 +282,7 @@ const handleUpdatePassword = async () => {
     }
     
     await changePasswordApi({
-      userId,
+      userId: Number(userId),
       oldPassword: securityForm.oldPassword,
       newPassword: securityForm.newPassword,
     })

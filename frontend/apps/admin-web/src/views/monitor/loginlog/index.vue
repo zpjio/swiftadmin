@@ -89,14 +89,14 @@
 
 <script setup lang="ts">
 import { ref, reactive, h, onMounted } from 'vue'
-import { useMessage, type DataTableColumns } from 'naive-ui'
+import { useMessage, type DataTableColumns, type DataTableRowKey } from 'naive-ui'
 import { getLoginLogPageApi, deleteLoginLogApi, clearLoginLogApi } from '@/api/loginlog'
 import type { LoginLogVO, LoginLogQuery } from '@/api/loginlog'
 
 const message = useMessage()
 const loading = ref(false)
 const tableData = ref<LoginLogVO[]>([])
-const selectedRowKeys = ref<number[]>([])
+const selectedRowKeys = ref<DataTableRowKey[]>([])
 
 const queryForm = reactive<LoginLogQuery & { dateRange?: [number, number] }>({
   page: 1,
@@ -134,7 +134,7 @@ const statusOptions = [
   { label: '失败', value: 0 },
 ]
 
-const columns: DataTableColumns = [
+const columns: DataTableColumns<LoginLogVO> = [
   { type: 'selection', fixed: 'left' },
   {
     title: '序号',
@@ -219,7 +219,7 @@ const handleBatchDelete = async () => {
     return
   }
   try {
-    await deleteLoginLogApi(selectedRowKeys.value)
+    await deleteLoginLogApi(selectedRowKeys.value as string[])
     message.success('删除成功')
     selectedRowKeys.value = []
     loadData()
@@ -238,7 +238,7 @@ const handleClearAll = async () => {
   }
 }
 
-const onCheckedRowKeysChange = (keys: number[]) => {
+const onCheckedRowKeysChange = (keys: DataTableRowKey[]) => {
   selectedRowKeys.value = keys
 }
 

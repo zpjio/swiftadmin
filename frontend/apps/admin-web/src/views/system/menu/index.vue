@@ -74,9 +74,10 @@
               </div>
             </NDescriptionsItem>
             <NDescriptionsItem label="菜单类型">
-              <NTag :type="getTypeTagType(selectedMenu.type)" size="small">
+              <NTag v-if="selectedMenu.type" :type="getTypeTagType(selectedMenu.type)" size="small">
                 {{ getTypeLabel(selectedMenu.type) }}
               </NTag>
+              <span v-else>-</span>
             </NDescriptionsItem>
             <NDescriptionsItem label="路由地址">{{ selectedMenu.path || '-' }}</NDescriptionsItem>
             <NDescriptionsItem label="组件路径">{{ selectedMenu.component || '-' }}</NDescriptionsItem>
@@ -87,7 +88,7 @@
                 {{ selectedMenu.status === 1 ? '正常' : '禁用' }}
               </NTag>
             </NDescriptionsItem>
-            <NDescriptionsItem label="创建时间">{{ selectedMenu.createdAt || '-' }}</NDescriptionsItem>
+            <NDescriptionsItem label="创建时间">{{ selectedMenu.createTime || '-' }}</NDescriptionsItem>
             <NDescriptionsItem label="操作" :span="2">
               <NSpace>
                 <NButton v-if="hasPermission('system:menu:add')" type="primary" size="small" @click="handleAdd(selectedMenu.id)">
@@ -300,7 +301,7 @@ const getParentMenuIds = (menus: MenuVO[]): string[] => {
 // 渲染树节点标签
 const renderTreeLabel = ({ option }: { option: TreeOption }) => {
   return h('div', { class: 'flex items-center gap-2 w-full py-1' }, [
-    option.icon ? h(Icon, { icon: option.icon, style: { fontSize: '16px' } }) : null,
+    option.icon ? h(Icon, { icon: option.icon as string, style: { fontSize: '16px' } }) : null,
     h('span', null, option.label),
     option.type ? h(NTag, { type: getTypeTagType(option.type as number), size: 'small', round: true }, () => getTypeLabel(option.type as number)) : null
   ])
@@ -339,7 +340,7 @@ const onSelect = async (keys: (string | number)[]) => {
 
 // 表单数据
 const formData = reactive<MenuDTO & { isExternal?: boolean; isCache?: boolean; isVisible?: boolean }>({
-  parentId: 0,
+  parentId: '0',
   name: '',
   type: 1,
   path: '',
@@ -385,10 +386,10 @@ const getTypeTagType = (type: number): 'default' | 'info' | 'success' | 'warning
 }
 
 // 新增
-const handleAdd = (parentId?: number) => {
+const handleAdd = (parentId?: string) => {
   Object.assign(formData, {
     id: undefined,
-    parentId: parentId || 0,
+    parentId: parentId || '0',
     name: '',
     type: parentId ? 2 : 1,
     path: '',
@@ -411,15 +412,15 @@ const startEdit = () => {
   // 先重置表单数据
   Object.assign(formData, {
     id: selectedMenu.value.id,
-    parentId: selectedMenu.value.parentId ?? 0,
+    parentId: selectedMenu.value.parentId || '0',
     name: selectedMenu.value.name || '',
-    type: typeof selectedMenu.value.type === 'number' ? selectedMenu.value.type : Number(selectedMenu.value.type) || 1,
+    type: selectedMenu.value.type ?? 1,
     path: selectedMenu.value.path || '',
     component: selectedMenu.value.component || '',
     icon: selectedMenu.value.icon || '',
     sortOrder: selectedMenu.value.sortOrder ?? 0,
     permission: selectedMenu.value.permission || '',
-    status: typeof selectedMenu.value.status === 'number' ? selectedMenu.value.status : Number(selectedMenu.value.status) ?? 1,
+    status: selectedMenu.value.status ?? 1,
     isExternal: false,
     isCache: false,
     isVisible: true,
@@ -485,7 +486,7 @@ const handleSubmit = async () => {
 
 // 转换选择树数据
 const convertSelectTree = (items: MenuTreeVO[]): TreeSelectOption[] => {
-  const result: TreeSelectOption[] = [{ key: 0, label: '顶级菜单', children: [] }]
+  const result: TreeSelectOption[] = [{ key: '0', label: '顶级菜单', children: [] }]
   const convert = (items: MenuTreeVO[]): TreeSelectOption[] => {
     return items.map(item => ({
       key: item.id,

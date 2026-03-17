@@ -1,19 +1,9 @@
-/**
- * 菜单类型枚举
- */
-export enum MenuType {
-  /** 目录 */
-  DIRECTORY = 1,
-  /** 菜单 */
-  MENU = 2,
-  /** 按钮 */
-  BUTTON = 3,
-}
+import { MenuType } from '@/types'
 
 /**
  * 菜单类型标签
  */
-export const MenuTypeLabels: Record<MenuType, string> = {
+export const MenuTypeLabels: Record<number, string> = {
   [MenuType.DIRECTORY]: '目录',
   [MenuType.MENU]: '菜单',
   [MenuType.BUTTON]: '按钮',
@@ -22,24 +12,26 @@ export const MenuTypeLabels: Record<MenuType, string> = {
 /**
  * 获取菜单类型标签
  */
-export function getMenuTypeLabel(type: MenuType | number): string {
-  return MenuTypeLabels[type as MenuType] || '未知'
+export function getMenuTypeLabel(type: number): string {
+  return MenuTypeLabels[type] || '未知'
 }
 
 /**
- * 状态枚举
+ * 状态常量
  */
-export enum Status {
+export const Status = {
   /** 禁用 */
-  DISABLED = 0,
+  DISABLED: 0,
   /** 正常 */
-  ENABLED = 1,
-}
+  ENABLED: 1,
+} as const
+
+export type StatusType = typeof Status[keyof typeof Status]
 
 /**
  * 状态标签
  */
-export const StatusLabels: Record<Status, string> = {
+export const StatusLabels: Record<number, string> = {
   [Status.DISABLED]: '禁用',
   [Status.ENABLED]: '正常',
 }
@@ -47,20 +39,22 @@ export const StatusLabels: Record<Status, string> = {
 /**
  * 获取状态标签
  */
-export function getStatusLabel(status: Status | number): string {
-  return StatusLabels[status as Status] || '未知'
+export function getStatusLabel(status: number): string {
+  return StatusLabels[status] || '未知'
 }
 
 /**
  * 文件类型
  */
-export enum FileType {
-  IMAGE = 'image',
-  VIDEO = 'video',
-  AUDIO = 'audio',
-  DOCUMENT = 'doc',
-  OTHER = 'other',
-}
+export const FileType = {
+  IMAGE: 'image',
+  VIDEO: 'video',
+  AUDIO: 'audio',
+  DOCUMENT: 'doc',
+  OTHER: 'other',
+} as const
+
+export type FileTypeValue = typeof FileType[keyof typeof FileType]
 
 /**
  * 文件扩展名图标映射

@@ -2,7 +2,7 @@ import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { convertMenusToRoutes } from '@/utils/router-helper'
 import { getUserMenusApi } from '@/api/menu'
 import { useUserStore } from '@/store'
-import type { MenuVO } from '@/api/menu'
+import type { MenuVO } from '@/types'
 import { redirectRoute } from './redirect'
 
 // 静态路由（不需要权限）

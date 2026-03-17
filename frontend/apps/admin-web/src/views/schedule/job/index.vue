@@ -115,7 +115,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, h } from 'vue'
-import { useMessage, useDialog, type DataTableColumns, NButton as NButtonComponent, NTag } from 'naive-ui'
+import { useMessage, useDialog, type DataTableColumns, type DataTableRowKey, type FormRules, NButton as NButtonComponent, NTag } from 'naive-ui'
 import {
   getJobPageApi,
   getJobDetailApi,
@@ -137,7 +137,7 @@ const dialog = useDialog()
 const formRef = ref<any>(null)
 const loading = ref(false)
 const tableData = ref<JobVO[]>([])
-const selectedRowKeys = ref<number[]>([])
+const selectedRowKeys = ref<DataTableRowKey[]>([])
 const showModal = ref(false)
 const saving = ref(false)
 const isEdit = ref(false)
@@ -170,15 +170,15 @@ const form = reactive<JobDTO>({
   remark: '',
 })
 
-const rules = {
-  jobName: { required: true, message: '请输入任务名称', trigger: 'blur' },
-  jobGroup: { required: true, message: '请输入任务分组', trigger: 'blur' },
-  beanName: { required: true, message: '请输入Bean名称', trigger: 'blur' },
-  methodName: { required: true, message: '请输入方法名称', trigger: 'blur' },
-  cronExpression: { required: true, message: '请输入Cron表达式', trigger: 'blur' },
-  timeout: { required: true, type: 'number', message: '请输入超时时间', trigger: 'blur' },
-  retryTimes: { required: true, type: 'number', message: '请输入重试次数', trigger: 'blur' },
-  retryInterval: { required: true, type: 'number', message: '请输入重试间隔', trigger: 'blur' },
+const rules: FormRules = {
+  jobName: [{ required: true, message: '请输入任务名称', trigger: 'blur' }],
+  jobGroup: [{ required: true, message: '请输入任务分组', trigger: 'blur' }],
+  beanName: [{ required: true, message: '请输入Bean名称', trigger: 'blur' }],
+  methodName: [{ required: true, message: '请输入方法名称', trigger: 'blur' }],
+  cronExpression: [{ required: true, message: '请输入Cron表达式', trigger: 'blur' }],
+  timeout: [{ required: true, type: 'number', message: '请输入超时时间', trigger: 'blur' }],
+  retryTimes: [{ required: true, type: 'number', message: '请输入重试次数', trigger: 'blur' }],
+  retryInterval: [{ required: true, type: 'number', message: '请输入重试间隔', trigger: 'blur' }],
 }
 
 const pagination = reactive({
@@ -397,7 +397,7 @@ const handleBatchDelete = () => {
     negativeText: '取消',
     onPositiveClick: async () => {
       try {
-        await deleteJobApi(selectedRowKeys.value)
+        await deleteJobApi(selectedRowKeys.value as string[])
         message.success('批量删除成功')
         selectedRowKeys.value = []
         loadData()
@@ -440,7 +440,7 @@ const handleTrigger = async (row: JobVO) => {
   })
 }
 
-const onCheckedRowKeysChange = (keys: number[]) => {
+const onCheckedRowKeysChange = (keys: DataTableRowKey[]) => {
   selectedRowKeys.value = keys
 }
 

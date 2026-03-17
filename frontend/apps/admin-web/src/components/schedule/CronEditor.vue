@@ -484,18 +484,28 @@ const parseExpression = (expr: string) => {
   const [second, minute, hour, day, month, week] = parts
 
   // 解析秒
+  if (!second) return
+
   if (second === '*') {
     config.second.type = 'every'
   } else if (second.includes('/')) {
-    const [start, interval] = second.split('/')
-    config.second.type = 'interval'
-    config.second.intervalStart = parseInt(start)
-    config.second.intervalValue = parseInt(interval)
+    const parts = second.split('/')
+    const start = parts[0]
+    const interval = parts[1]
+    if (start && interval) {
+      config.second.type = 'interval'
+      config.second.intervalStart = parseInt(start)
+      config.second.intervalValue = parseInt(interval)
+    }
   } else if (second.includes('-')) {
-    const [start, end] = second.split('-')
-    config.second.type = 'cycle'
-    config.second.start = parseInt(start)
-    config.second.end = parseInt(end)
+    const parts = second.split('-')
+    const start = parts[0]
+    const end = parts[1]
+    if (start && end) {
+      config.second.type = 'cycle'
+      config.second.start = parseInt(start)
+      config.second.end = parseInt(end)
+    }
   } else if (second.includes(',')) {
     config.second.type = 'specific'
     config.second.values = second.split(',').map(Number)
@@ -634,7 +644,8 @@ const updateExpression = () => {
   const expr = generateExpression()
   cronExpression.value = expr
   updateDescription()
-  calculateNextExecuteTime()
+  // TODO: Implement calculateNextExecuteTime
+  // calculateNextExecuteTime()
 }
 
 const updateDescription = () => {

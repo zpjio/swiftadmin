@@ -5,7 +5,7 @@ import router from './router'
 import App from './App.vue'
 import './styles/index.css'
 import { setupPermissionDirective } from './directives/permission'
-import { initTheme, theme, themeOverrides } from '@/utils/theme'
+import { initTheme } from '@/utils/theme'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -15,10 +15,7 @@ initTheme()
 
 app.use(pinia)
 app.use(router)
-app.use(naive, {
-  theme: theme.value,
-  themeOverrides: themeOverrides.value,
-})
+app.use(naive)
 setupPermissionDirective(app)
 
 app.mount('#app')

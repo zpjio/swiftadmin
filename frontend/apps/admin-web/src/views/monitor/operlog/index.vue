@@ -171,14 +171,14 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, h } from 'vue'
-import { useMessage, type DataTableColumns } from 'naive-ui'
+import { useMessage, type DataTableColumns, type DataTableRowKey } from 'naive-ui'
 import { getOperLogPageApi, deleteOperLogApi, clearOperLogApi, getOperLogDetailApi } from '@/api/operlog'
 import type { OperLogVO, OperLogQuery } from '@/api/operlog'
 
 const message = useMessage()
 const loading = ref(false)
 const tableData = ref<OperLogVO[]>([])
-const selectedRowKeys = ref<number[]>([])
+const selectedRowKeys = ref<DataTableRowKey[]>([])
 const showDetailModal = ref(false)
 const currentDetail = ref<OperLogVO | null>(null)
 
@@ -238,7 +238,7 @@ const statusOptions = [
 ]
 
 // 表格列定义
-const columns: DataTableColumns = [
+const columns: DataTableColumns<OperLogVO> = [
   { type: 'selection', fixed: 'left' },
   {
     title: '序号',
@@ -380,7 +380,7 @@ const handleBatchDelete = async () => {
   }
 
   try {
-    await deleteOperLogApi(selectedRowKeys.value)
+    await deleteOperLogApi(selectedRowKeys.value as string[])
     message.success('删除成功')
     selectedRowKeys.value = []
     loadData()
@@ -429,7 +429,7 @@ const formatJson = (json?: string) => {
 }
 
 // 选中行变化
-const onCheckedRowKeysChange = (keys: number[]) => {
+const onCheckedRowKeysChange = (keys: DataTableRowKey[]) => {
   selectedRowKeys.value = keys
 }
 

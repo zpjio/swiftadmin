@@ -55,14 +55,14 @@
     <NModal v-model:show="showDetailModal" title="发送详情" preset="card" style="width: 700px;">
       <NDescriptions :column="2" label-placement="left" bordered>
         <NDescriptionsItem label="消息ID">{{ currentRecord?.messageId }}</NDescriptionsItem>
-        <NDescriptionsItem label="渠道类型">{{ getChannelTypeLabel(currentRecord?.channelType) }}</NDescriptionsItem>
+        <NDescriptionsItem label="渠道类型">{{ getChannelTypeLabel(currentRecord?.channelType ?? '') }}</NDescriptionsItem>
         <NDescriptionsItem label="接收地址">{{ currentRecord?.toAddress }}</NDescriptionsItem>
         <NDescriptionsItem label="状态">
           <NTag :type="getStatusType(currentRecord?.status)">{{ getStatusLabel(currentRecord?.status) }}</NTag>
         </NDescriptionsItem>
         <NDescriptionsItem label="主题" :span="2">{{ currentRecord?.subject || '-' }}</NDescriptionsItem>
         <NDescriptionsItem label="模板编码">{{ currentRecord?.templateCode || '-' }}</NDescriptionsItem>
-        <NDescriptionsItem label="业务类型">{{ getBizTypeLabel(currentRecord?.bizType) || '-' }}</NDescriptionsItem>
+        <NDescriptionsItem label="业务类型">{{ getBizTypeLabel(currentRecord?.bizType ?? '') || '-' }}</NDescriptionsItem>
         <NDescriptionsItem label="发送时间">{{ formatDateTime(currentRecord?.sendTime) }}</NDescriptionsItem>
         <NDescriptionsItem label="到达时间">{{ formatDateTime(currentRecord?.arriveTime) }}</NDescriptionsItem>
         <NDescriptionsItem label="耗时">{{ currentRecord?.costTime ? currentRecord.costTime + 'ms' : '-' }}</NDescriptionsItem>
@@ -95,6 +95,8 @@ import {
   getMessageRecordDetailApi,
   retryMessageApi,
   type MessageRecord,
+  type ChannelType,
+  type MessageStatus,
 } from '@/api/message'
 import { useDict } from '@/composables/useDict'
 import { formatDateTime } from '@/utils/date'
@@ -137,9 +139,9 @@ const queryForm = reactive({
   page: 1,
   pageSize: 10,
   messageId: undefined as string | undefined,
-  channelType: undefined as string | undefined,
+  channelType: undefined as ChannelType | undefined,
   toAddress: undefined as string | undefined,
-  status: undefined as string | undefined,
+  status: undefined as MessageStatus | undefined,
 })
 
 const pagination = reactive({
@@ -168,7 +170,7 @@ const columns: DataTableColumns<MessageRecord> = [
     title: '渠道类型',
     key: 'channelType',
     width: 100,
-    render: (row) => h(NTag, { type: 'info' }, () => getChannelTypeLabel(row.channelType)),
+    render: (row) => h(NTag, { type: 'info' }, () => getChannelTypeLabel(row.channelType ?? '')),
   },
   { title: '接收地址', key: 'toAddress', width: 180, ellipsis: { tooltip: true } },
   { title: '主题', key: 'subject', width: 150, ellipsis: { tooltip: true } },

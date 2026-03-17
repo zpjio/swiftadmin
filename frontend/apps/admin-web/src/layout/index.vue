@@ -18,7 +18,7 @@
         <div class="menu-wrapper">
           <NScrollbar>
             <NMenu
-              :options="menuOptions"
+              :options="(menuOptions as any)"
               :collapsed="collapsed"
               :collapsed-width="64"
               :collapsed-icon-size="22"
@@ -78,7 +78,7 @@
 
 <script setup lang="ts">
 import { ref, computed, h, watch, onMounted } from 'vue'
-import { useRouter, useRoute, type RouteRecordRaw } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { useUserStore } from '@/store'
 import { useTagsStore } from '@/store/modules/tags'
@@ -86,10 +86,21 @@ import { logoutApi } from '@/api/auth'
 import { getCurrentUserInfoApi } from '@/api/user'
 import { toggleTheme, isDark } from '@/utils/theme'
 import { normalizeIconName } from '@/utils/icon'
+import { getMenuName } from '@/utils/router-helper'
 import { Icon } from '@iconify/vue'
 import TagsView from '@/components/TagsView/index.vue'
 import Notification from '@/components/Notification/index.vue'
 import type { MenuOption, DropdownOption } from 'naive-ui'
+import type { MenuVO } from '@/types'
+
+/** 扩展的菜单选项，包含 path 属性 */
+interface ExtendedMenuOption {
+  label: string
+  key: string
+  icon?: (() => import('vue').VNodeChild) | null
+  path?: string
+  children?: ExtendedMenuOption[]
+}
 
 const router = useRouter()
 const route = useRoute()
@@ -97,7 +108,7 @@ const message = useMessage()
 const userStore = useUserStore()
 const tagsStore = useTagsStore()
 const collapsed = ref(false)
-const menuOptions = ref<MenuOption[]>([])
+const menuOptions = ref<ExtendedMenuOption[]>([])
 const cachedViews = computed(() => tagsStore.cachedViews)
 const isAlive = ref(true)
 
@@ -107,12 +118,12 @@ const currentRoute = computed(() => route.name as string)
 const expandedKeys = ref<string[]>([])
 
 // 获取所有需要展开的菜单项 key（有子菜单的项）
-const getAllExpandKeys = (options: MenuOption[]): string[] => {
+const getAllExpandKeys = (options: ExtendedMenuOption[]): string[] => {
   const keys: string[] = []
-  const traverse = (items: MenuOption[]) => {
+  const traverse = (items: ExtendedMenuOption[]) => {
     items.forEach((item) => {
       if (item.children && item.children.length > 0) {
-        keys.push(item.key as string)
+        keys.push(item.key)
         traverse(item.children)
       }
     })
@@ -140,29 +151,29 @@ const avatarText = computed(() => {
 })
 
 // 从菜单树生成菜单选项
-function convertMenuTreeToOptions(menus: any[]): MenuOption[] {
-  const options: MenuOption[] = []
-  
+function convertMenuTreeToOptions(menus: MenuVO[]): ExtendedMenuOption[] {
+  const options: ExtendedMenuOption[] = []
+
   menus.forEach((menu) => {
     // 跳过按钮类型（type=3）- 按钮只用于权限控制，不显示在菜单中
     if (menu.type === 3) {
       return
     }
-    
+
     // 跳过禁用的菜单
     if (menu.status === 0) {
       return
     }
-    
+
     // 跳过没有 path 的菜单
     if (!menu.path) {
       return
     }
-    
-    const option: any = {
+
+    const option: ExtendedMenuOption = {
       label: menu.name,
       key: getMenuName(menu.path),
-      icon: menu.icon ? () => h(Icon, { icon: normalizeIconName(menu.icon), style: { fontSize: '18px' } }) : undefined,
+      icon: menu.icon ? () => h(Icon, { icon: normalizeIconName(menu.icon), style: { fontSize: '18px' } }) : null,
       path: menu.path,
     }
 
@@ -173,25 +184,11 @@ function convertMenuTreeToOptions(menus: any[]): MenuOption[] {
         option.children = childrenOptions
       }
     }
-    
+
     options.push(option)
   })
-  
-  return options
-}
 
-// 从路径生成菜单名称（与 router-helper.ts 保持一致）
-function getMenuName(path: string): string {
-  if (!path) {
-    return 'Menu_' + Date.now()
-  }
-  
-  const cleanPath = path.replace(/^\//, '')
-  return cleanPath
-    .split('/')
-    .filter(segment => segment.length > 0)
-    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
-    .join('')
+  return options
 }
 
 // 更新菜单选项
@@ -266,51 +263,6 @@ onMounted(async () => {
   }, 300)
 })
 
-/**
- * 将路由转换为菜单选项
- */
-function convertRoutesToMenuOptions(routes: RouteRecordRaw[]): MenuOption[] {
-  const options: MenuOption[] = []
-  
-  routes.forEach((route) => {
-    // 跳过隐藏的菜单
-    if (route.meta?.hidden) {
-      return
-    }
-    
-    const isDirectory = route.meta?.isDirectory as boolean || false
-    
-    const option: any = {
-      label: (route.meta?.title as string) || (route.name as string),
-      key: route.name as string,
-      icon: route.meta?.icon ? () => h(Icon, { icon: normalizeIconName(route.meta?.icon as string), style: { fontSize: '18px' } }) : undefined,
-    }
-    
-    // 如果是目录类型，设置为分组
-    if (isDirectory) {
-      option.type = 'group'
-    }
-    
-    // 处理子菜单
-    if (route.children && route.children.length > 0) {
-      const childrenOptions = convertRoutesToMenuOptions(route.children)
-      if (childrenOptions.length > 0) {
-        if (isDirectory) {
-          // 目录类型的 children 直接作为 group 的 children
-          option.children = childrenOptions
-        } else {
-          // 非目录类型的 children 作为子菜单
-          option.children = childrenOptions
-        }
-      }
-    }
-    
-    options.push(option)
-  })
-  
-  return options
-}
-
 // 用户下拉菜单
 const userDropdownOptions: DropdownOption[] = [
   {
@@ -326,10 +278,10 @@ const userDropdownOptions: DropdownOption[] = [
 ]
 
 // 从菜单选项中查找路径
-const findPathByKey = (options: MenuOption[], key: string): string | undefined => {
+const findPathByKey = (options: ExtendedMenuOption[], key: string): string | undefined => {
   for (const option of options) {
     if (option.key === key) {
-      return (option as any).path
+      return option.path
     }
     if (option.children) {
       const path = findPathByKey(option.children, key)

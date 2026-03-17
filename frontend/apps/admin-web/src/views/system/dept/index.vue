@@ -135,7 +135,7 @@ const formRef = ref<FormInst | null>(null)
 const deptSelectTreeData = ref<TreeSelectOption[]>([])
 
 const formData = reactive<DeptDTO>({
-  parentId: 0,
+  parentId: '',
   name: '',
   sortOrder: 0,
   leader: '',
@@ -183,7 +183,7 @@ const loadDeptTree = async () => {
 
 // 转换选择树数据
 const convertSelectTree = (items: DeptVO[]): TreeSelectOption[] => {
-  const result: TreeSelectOption[] = [{ key: 0, label: '顶级部门', children: [] }]
+  const result: TreeSelectOption[] = [{ key: '', label: '顶级部门', children: [] }]
 
   const convert = (items: DeptVO[]): TreeSelectOption[] => {
     return items.map((item) => ({
@@ -200,11 +200,11 @@ const convertSelectTree = (items: DeptVO[]): TreeSelectOption[] => {
 }
 
 // 新增
-const handleAdd = (_e: MouseEvent, parentId?: number) => {
+const handleAdd = (_e: MouseEvent, parentId?: string) => {
   modalTitle.value = parentId ? '新增子部门' : '新增顶级部门'
   Object.assign(formData, {
     id: undefined,
-    parentId: parentId || 0,
+    parentId: parentId || '',
     name: '',
     sortOrder: 0,
     leader: '',

@@ -109,7 +109,7 @@
         <NDescriptionsItem label="标题">{{ currentMessage?.title }}</NDescriptionsItem>
         <NDescriptionsItem label="发送者">{{ currentMessage?.senderName || '系统' }}</NDescriptionsItem>
         <NDescriptionsItem label="发送时间">{{ formatDateTime(currentMessage?.createTime) }}</NDescriptionsItem>
-        <NDescriptionsItem label="消息类型">{{ getMsgTypeLabel(currentMessage?.msgType) }}</NDescriptionsItem>
+        <NDescriptionsItem label="消息类型">{{ getMsgTypeLabel(currentMessage?.msgType ?? '') }}</NDescriptionsItem>
         <NDescriptionsItem label="内容">
           <div v-html="currentMessage?.content?.replace(/\n/g, '<br>')"></div>
         </NDescriptionsItem>
@@ -126,7 +126,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, h, onMounted } from 'vue'
-import { useMessage, useDialog, NTag, NButton, NSpace, type DataTableColumns } from 'naive-ui'
+import { useMessage, useDialog, NTag, NButton, NSpace, type DataTableColumns, type DataTableRowKey } from 'naive-ui'
 import {
   getInboxPageApi,
   getInboxDetailApi,
@@ -147,7 +147,7 @@ const formRef = ref<any>(null)
 const sendFormRef = ref<any>(null)
 const loading = ref(false)
 const tableData = ref<InboxMessage[]>([])
-const selectedRowKeys = ref<number[]>([])
+const selectedRowKeys = ref<DataTableRowKey[]>([])
 const showSendModal = ref(false)
 const showDetailModal = ref(false)
 const sending = ref(false)
@@ -228,7 +228,7 @@ const columns: DataTableColumns<InboxMessage> = [
     title: '消息类型',
     key: 'msgType',
     width: 100,
-    render: (row) => h(NTag, { type: 'info', size: 'small' }, () => getMsgTypeLabel(row.msgType)),
+    render: (row) => h(NTag, { type: 'info', size: 'small' }, () => getMsgTypeLabel(row.msgType ?? '')),
   },
   { title: '发送者', key: 'senderName', width: 100 },
   { title: '发送时间', key: 'createTime', width: 170, render: (row) => formatDateTime(row.createTime) },
@@ -285,7 +285,7 @@ function handleReset() {
   handleSearch()
 }
 
-function onCheckedRowKeysChange(keys: number[]) {
+function onCheckedRowKeysChange(keys: DataTableRowKey[]) {
   selectedRowKeys.value = keys
 }
 
@@ -325,7 +325,7 @@ async function handleDetail(row: InboxMessage) {
   }
 }
 
-async function handleMarkRead(ids: number[]) {
+async function handleMarkRead(ids: string[]) {
   try {
     await markInboxReadApi(ids)
     message.success('标记成功')
@@ -356,7 +356,7 @@ async function handleToggleStar(row: InboxMessage) {
   }
 }
 
-function handleDelete(ids: number[]) {
+function handleDelete(ids: string[]) {
   dialog.warning({
     title: '确认删除',
     content: `确定要删除选中的 ${ids.length} 条消息吗？`,
@@ -380,7 +380,7 @@ function handleBatchDelete() {
     message.warning('请选择要删除的消息')
     return
   }
-  handleDelete(selectedRowKeys.value)
+  handleDelete(selectedRowKeys.value as string[])
 }
 </script>
 

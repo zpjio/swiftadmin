@@ -60,7 +60,9 @@ const isActive = (tag: TagView) => {
 // 点击标签页
 const handleClick = (tag: TagView) => {
   tagsStore.setActiveView(tag)
-  router.push(tag.path)
+  if (tag.path) {
+    router.push(tag.path)
+  }
 }
 
 // 关闭标签页
@@ -119,12 +121,17 @@ const handleDropdownSelect = (key: string) => {
       break
     case 'close-others':
       tagsStore.closeOthers(currentTag.value)
-      router.push(currentTag.value.path)
+      if (currentTag.value.path) {
+        router.push(currentTag.value.path)
+      }
       break
     case 'close-all':
       tagsStore.closeAll()
-      if (visitedViews.value.length > 0) {
-        router.push(visitedViews.value[0].path)
+      {
+        const firstView = visitedViews.value[0]
+        if (firstView?.path) {
+          router.push(firstView.path)
+        }
       }
       break
     case 'refresh':

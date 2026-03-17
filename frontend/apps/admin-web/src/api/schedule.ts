@@ -4,27 +4,33 @@ import type { PageResult } from '@/types'
 /**
  * 任务状态
  */
-export const enum JobStatus {
-  NORMAL = 0,
-  PAUSED = 1
-}
+export const JobStatus = {
+  NORMAL: 0,
+  PAUSED: 1,
+} as const
+
+export type JobStatusType = typeof JobStatus[keyof typeof JobStatus]
 
 /**
  * 任务执行状态
  */
-export const enum JobExecuteStatus {
-  RUNNING = 0,
-  SUCCESS = 1,
-  FAILED = 2
-}
+export const JobExecuteStatus = {
+  RUNNING: 0,
+  SUCCESS: 1,
+  FAILED: 2,
+} as const
+
+export type JobExecuteStatusType = typeof JobExecuteStatus[keyof typeof JobExecuteStatus]
 
 /**
  * 执行类型
  */
-export const enum ExecuteType {
-  AUTO = 1,
-  MANUAL = 2
-}
+export const ExecuteType = {
+  AUTO: 1,
+  MANUAL: 2,
+} as const
+
+export type ExecuteTypeValue = typeof ExecuteType[keyof typeof ExecuteType]
 
 /**
  * 定时任务信息
@@ -40,7 +46,7 @@ export interface JobVO {
   timeout: number
   retryTimes: number
   retryInterval: number
-  status: JobStatus
+  status: number
   remark?: string
   createTime: string
   updateTime: string
@@ -87,14 +93,14 @@ export interface JobLogVO {
   jobId: string
   jobName: string
   jobGroup: string
-  executeStatus: JobExecuteStatus
+  executeStatus: number
   executeTime: string
   costTime?: number
   executeResult?: string
   errorMsg?: string
   stackTrace?: string
   retryCount: number
-  executeType: ExecuteType
+  executeType: number
   createTime: string
 }
 

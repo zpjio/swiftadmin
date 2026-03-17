@@ -176,6 +176,7 @@ import {
   updateChannelStatusApi,
   testChannelApi,
   type MessageChannel,
+  type ChannelType,
 } from '@/api/message'
 import { useDict } from '@/composables/useDict'
 import { formatDateTime } from '@/utils/date'
@@ -229,7 +230,7 @@ const queryForm = reactive({
   page: 1,
   pageSize: 10,
   channelName: undefined as string | undefined,
-  channelType: undefined as string | undefined,
+  channelType: undefined as ChannelType | undefined,
 })
 
 const pagination = reactive({
@@ -253,9 +254,9 @@ const pagination = reactive({
 })
 
 const form = reactive({
-  id: undefined as number | undefined,
+  id: undefined as string | undefined,
   channelName: '',
-  channelType: 'email',
+  channelType: 'email' as ChannelType,
   channelCode: '',
   config: '{}',
   status: 1,
@@ -405,7 +406,7 @@ async function handleTest(row: MessageChannel) {
   }
 }
 
-function handleDelete(id: number) {
+function handleDelete(id: string) {
   dialog.warning({
     title: '确认删除',
     content: '确定要删除该渠道吗？',

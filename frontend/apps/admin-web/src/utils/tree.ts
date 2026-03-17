@@ -69,7 +69,7 @@ export function convertToTreeSelectOptions<T extends TreeNodeBase>(
       const children = item[childrenField] as T[] | undefined
       const hasChildren = children && children.length > 0
       return {
-        key: item[keyField],
+        key: item[keyField] as string | number,
         label: String(item[labelField]),
         children: hasChildren ? convert(children!) : undefined,
       }

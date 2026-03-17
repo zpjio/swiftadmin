@@ -63,7 +63,8 @@ import { reactive, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { useUserStore } from '@/store'
-import { loginApi } from '@/api/auth'
+import { loginApi, type LoginResult } from '@/api/auth'
+import { BusinessError } from '@/types'
 import type { FormRules } from 'naive-ui'
 
 const router = useRouter()
@@ -75,8 +76,8 @@ const captchaUrl = ref('')
 const captchaId = ref('')
 
 const form = reactive({
-  username: 'admin',
-  password: 'admin123',
+  username: '',
+  password: '',
   captchaCode: '',
   remember: false,
 })
@@ -123,7 +124,7 @@ const handleLogin = async () => {
     })
 
     // 检查是否需要修改密码
-    const loginRes = res as any
+    const loginRes = res as LoginResult
     if (loginRes.passwordExpired) {
       // 保存临时 Token
       if (loginRes.tempToken) {
@@ -160,8 +161,8 @@ const handleLogin = async () => {
     }
   } catch (error) {
     console.error('登录失败:', error)
-    // 如果需要验证码，刷新验证码
-    if ((error as any).response?.data?.code === 402) {
+    // 如果是需要验证码的错误码，刷新验证码
+    if (error instanceof BusinessError && error.code === 402) {
       captchaEnabled.value = true
       refreshCaptcha()
     }

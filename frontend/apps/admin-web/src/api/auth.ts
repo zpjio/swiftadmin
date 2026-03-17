@@ -57,10 +57,13 @@ export interface LoginResult {
   tokenType: string
   /** 用户信息 */
   userInfo?: {
-    id: number
+    id: string
+    username?: string
     nickname: string
     avatar: string
     source: string
+    roles?: string[]
+    permissions?: string[]
   }
   /** 临时 Token（密码过期时使用） */
   tempToken?: string
@@ -139,10 +142,18 @@ export interface ForceChangePasswordParams {
 }
 
 /**
+ * 强制修改密码响应
+ */
+export interface ForceChangePasswordResult {
+  accessToken: string
+  refreshToken: string
+}
+
+/**
  * 强制修改密码（使用临时 Token）
  */
 export function forceChangePasswordApi(data: ForceChangePasswordParams) {
-  return post('/auth/password/force-change', null, {
+  return post<ForceChangePasswordResult>('/auth/password/force-change', null, {
     params: {
       tempToken: data.tempToken,
       newPassword: data.newPassword,

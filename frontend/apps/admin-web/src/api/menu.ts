@@ -1,55 +1,13 @@
 import { get, post, put, del } from '@/utils/request'
+import type { MenuVO, MenuTreeVO, MenuDTO } from '@/types'
+
+// 重导出类型，保持向后兼容
+export type { MenuVO, MenuTreeVO, MenuDTO } from '@/types'
 
 /**
- * 菜单类型
+ * 菜单类型别名（向后兼容）
  */
 export type MenuType = 1 | 2 | 3 // 1-目录 2-菜单 3-按钮
-
-/**
- * 菜单信息
- */
-export interface MenuVO {
-  id: string
-  parentId: string
-  name: string
-  path: string
-  component: string
-  type: MenuType
-  icon: string
-  sortOrder: number
-  permission: string
-  status: number
-  createTime: string
-  updateTime: string
-  children?: MenuVO[]
-}
-
-/**
- * 菜单树节点（简化版，用于选择）
- */
-export interface MenuTreeVO {
-  id: string
-  parentId: string
-  label: string
-  type: MenuType
-  children?: MenuTreeVO[]
-}
-
-/**
- * 菜单创建/更新参数
- */
-export interface MenuDTO {
-  id?: string
-  parentId: string
-  name: string
-  path?: string
-  component?: string
-  type: MenuType
-  icon?: string
-  sortOrder?: number
-  permission?: string
-  status?: number
-}
 
 /**
  * 获取当前用户菜单（动态路由用）

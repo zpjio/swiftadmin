@@ -74,7 +74,10 @@ export const useTagsStore = defineStore('tags', () => {
     // 如果关闭的是当前标签页，激活前一个标签页
     if (isCurrentActive && visitedViews.value.length > 0) {
       const newIndex = Math.min(index, visitedViews.value.length - 1)
-      setActiveView(visitedViews.value[newIndex])
+      const newActiveView = visitedViews.value[newIndex]
+      if (newActiveView) {
+        setActiveView(newActiveView)
+      }
     }
   }
 
@@ -99,10 +102,11 @@ export const useTagsStore = defineStore('tags', () => {
   const closeAll = () => {
     visitedViews.value = visitedViews.value.filter((v) => !v.closable)
     cachedViews.value = []
-    
+
     // 激活第一个标签页（通常是首页）
-    if (visitedViews.value.length > 0) {
-      setActiveView(visitedViews.value[0])
+    const firstView = visitedViews.value[0]
+    if (firstView) {
+      setActiveView(firstView)
     }
   }
 

@@ -144,7 +144,7 @@ const fileTypeOptions = [
 const uploadUrl = computed(() => `${import.meta.env.VITE_API_BASE_URL}/system/file/upload`)
 const uploadHeaders = computed(() => buildAuthHeader())
 
-const columns: DataTableColumns = [
+const columns: DataTableColumns<FileVO> = [
   { type: 'selection', fixed: 'left' },
   {
     title: '序号',
