@@ -169,14 +169,14 @@ public class UserSessionServiceImpl implements UserSessionService {
                 .map(RedisKeyConstants::loginToken)
                 .toList();
 
-        List<Object> results = stringRedisTemplate.opsForValue().multiGet(tokenKeys);
+        List<String> results = stringRedisTemplate.opsForValue().multiGet(tokenKeys);
 
         List<String> validSessions = new ArrayList<>();
         List<String> expiredSessions = new ArrayList<>();
 
         for (int i = 0; i < tokenList.size(); i++) {
             String sessionId = tokenList.get(i);
-            Object value = results != null && i < results.size() ? results.get(i) : null;
+            String value = results != null && i < results.size() ? results.get(i) : null;
             if (value != null) {
                 validSessions.add(sessionId);
             } else {
