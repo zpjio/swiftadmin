@@ -59,6 +59,11 @@ public class ChannelServiceImpl extends ServiceImpl<MsgChannelMapper, MsgChannel
     }
 
     @Override
+    public MsgChannel getEntityById(Long id) {
+        return getById(id);
+    }
+
+    @Override
     public MsgChannel getByCode(String channelCode) {
         return getOne(QueryWrapper.create()
                 .where(MSG_CHANNEL.CHANNEL_CODE.eq(channelCode)));

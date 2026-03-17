@@ -50,6 +50,8 @@ export interface MessageTemplate {
 export interface SendMessageParams {
   to: string[]
   channelType?: ChannelType
+  /** 多渠道发送时使用，如：['sms', 'email', 'inbox'] */
+  channelTypes?: ChannelType[]
   templateCode?: string
   subject?: string
   content?: string
@@ -64,6 +66,7 @@ export interface SendMessageParams {
 export interface SendResult {
   success: boolean
   messageId?: string
+  channelType?: ChannelType
   toAddress: string
   errorMsg?: string
   sendTime?: string

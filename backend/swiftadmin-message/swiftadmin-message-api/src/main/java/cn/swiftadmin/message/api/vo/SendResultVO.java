@@ -19,6 +19,9 @@ public class SendResultVO {
     /** 消息ID */
     private String messageId;
 
+    /** 渠道类型 */
+    private String channelType;
+
     /** 接收地址 */
     private String toAddress;
 
@@ -28,18 +31,20 @@ public class SendResultVO {
     /** 发送时间 */
     private LocalDateTime sendTime;
 
-    public static SendResultVO success(String messageId, String toAddress) {
+    public static SendResultVO success(String messageId, String channelType, String toAddress) {
         SendResultVO result = new SendResultVO();
         result.setSuccess(true);
         result.setMessageId(messageId);
+        result.setChannelType(channelType);
         result.setToAddress(toAddress);
         result.setSendTime(LocalDateTime.now());
         return result;
     }
 
-    public static SendResultVO fail(String toAddress, String errorMsg) {
+    public static SendResultVO fail(String channelType, String toAddress, String errorMsg) {
         SendResultVO result = new SendResultVO();
         result.setSuccess(false);
+        result.setChannelType(channelType);
         result.setToAddress(toAddress);
         result.setErrorMsg(errorMsg);
         return result;

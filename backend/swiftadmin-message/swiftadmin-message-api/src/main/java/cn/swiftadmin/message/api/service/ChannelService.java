@@ -33,6 +33,14 @@ public interface ChannelService {
     ChannelVO getDetail(Long id);
 
     /**
+     * 根据ID获取渠道实体
+     *
+     * @param id 渠道ID
+     * @return 渠道实体
+     */
+    MsgChannel getEntityById(Long id);
+
+    /**
      * 根据渠道编码获取渠道
      *
      * @param channelCode 渠道编码

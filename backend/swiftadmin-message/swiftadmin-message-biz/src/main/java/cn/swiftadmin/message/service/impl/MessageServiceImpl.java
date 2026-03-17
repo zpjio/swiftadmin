@@ -27,7 +27,6 @@ import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -50,6 +49,9 @@ import static cn.swiftadmin.message.api.entity.table.MsgRecordTableDef.MSG_RECOR
 @RequiredArgsConstructor
 public class MessageServiceImpl extends ServiceImpl<MsgRecordMapper, MsgRecord> implements MessageService {
 
+    /** 最大重试次数 */
+    private static final int MAX_RETRY_COUNT = 3;
+
     private final ChannelSenderFactory senderFactory;
     private final ChannelService channelService;
     private final TemplateService templateService;
@@ -58,15 +60,7 @@ public class MessageServiceImpl extends ServiceImpl<MsgRecordMapper, MsgRecord> 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public List<SendResultVO> send(MessageDTO dto) {
-        List<SendResultVO> results = new ArrayList<>();
-
-        // 获取渠道类型
-        ChannelType channelType = determineChannelType(dto);
-
-        // 获取渠道发送器
-        ChannelSender sender = senderFactory.getSender(channelType);
-
-        // 获取模板（如果有）
+        // 获取模板（如果有）- 只查询一次
         MsgTemplate template = null;
         if (StringUtils.hasText(dto.getTemplateCode())) {
             template = templateService.getByCode(dto.getTemplateCode());
@@ -75,64 +69,186 @@ public class MessageServiceImpl extends ServiceImpl<MsgRecordMapper, MsgRecord> 
             }
         }
 
-        // 获取渠道配置
-        List<MsgChannel> channels = channelService.listEnabledByType(channelType.getCode());
-        if (CollectionUtils.isEmpty(channels)) {
-            throw new BusinessException(400, "没有可用的" + channelType.getName() + "渠道");
-        }
-        MsgChannel channel = channels.get(0); // 使用优先级最高的渠道
+        // 确定要发送的渠道类型列表
+        List<ChannelType> channelTypes = determineChannelTypes(dto, template);
 
-        // 发送给每个接收者
-        for (String to : dto.getTo()) {
-            // 创建发送记录
-            MsgRecord record = createRecord(dto, channelType, channel, template, to);
-            save(record);
+        // 预估结果数量，避免 ArrayList 扩容
+        int estimatedSize = dto.getTo().size() * channelTypes.size();
+        List<SendResultVO> results = new ArrayList<>(estimatedSize);
 
-            // 构建消息内容
-            String content = buildContent(dto, template);
-
-            // 构建发送上下文
-            MessageContext context = MessageContext.builder()
-                    .recordId(record.getId())
-                    .messageId(record.getMessageId())
-                    .to(to)
-                    .subject(dto.getSubject() != null ? dto.getSubject() :
-                            (template != null ? template.getSubject() : null))
-                    .content(content)
-                    .variables(dto.getVariables())
-                    .channel(channel)
-                    .template(template)
-                    .bizType(dto.getBizType())
-                    .bizId(dto.getBizId())
-                    .build();
-
-            // 发送消息
-            SendResult sendResult = sender.send(context);
-
-            // 更新发送记录
-            updateRecordAfterSend(record.getId(), sendResult);
-
-            // 构建返回结果
-            SendResultVO resultVO = new SendResultVO();
-            resultVO.setMessageId(record.getMessageId());
-            resultVO.setToAddress(to);
-            if (sendResult.success()) {
-                resultVO.setSuccess(true);
-                resultVO.setSendTime(LocalDateTime.now());
-            } else {
-                resultVO.setSuccess(false);
-                resultVO.setErrorMsg(sendResult.errorMsg());
-            }
-            results.add(resultVO);
+        // 遍历每个渠道类型发送
+        for (ChannelType channelType : channelTypes) {
+            List<SendResultVO> channelResults = sendByChannelType(dto, channelType, template);
+            results.addAll(channelResults);
         }
 
         return results;
     }
 
+    /**
+     * 确定要发送的渠道类型列表
+     */
+    private List<ChannelType> determineChannelTypes(MessageDTO dto, MsgTemplate template) {
+        List<ChannelType> types = new ArrayList<>();
+
+        // 优先使用 channelTypes（多渠道）
+        if (!CollectionUtils.isEmpty(dto.getChannelTypes())) {
+            for (String code : dto.getChannelTypes()) {
+                types.add(parseChannelType(code));
+            }
+            return types;
+        }
+
+        // 单渠道模式
+        if (StringUtils.hasText(dto.getChannelType())) {
+            types.add(parseChannelType(dto.getChannelType()));
+            return types;
+        }
+
+        // 根据模板确定渠道类型
+        if (template != null) {
+            ChannelType type = ChannelType.fromCode(template.getChannelType());
+            if (type != null) {
+                types.add(type);
+                return types;
+            }
+        }
+
+        // 默认使用站内信
+        types.add(ChannelType.INBOX);
+        return types;
+    }
+
+    /**
+     * 解析渠道类型
+     */
+    private ChannelType parseChannelType(String code) {
+        ChannelType type = ChannelType.fromCode(code);
+        if (type == null) {
+            throw new BusinessException(400, "无效的渠道类型: " + code);
+        }
+        return type;
+    }
+
+    /**
+     * 按指定渠道类型发送消息
+     */
+    private List<SendResultVO> sendByChannelType(MessageDTO dto, ChannelType channelType, MsgTemplate template) {
+        int receiverCount = dto.getTo().size();
+        List<SendResultVO> results = new ArrayList<>(receiverCount);
+
+        // 获取渠道发送器
+        ChannelSender sender = senderFactory.getSender(channelType);
+
+        // 获取渠道配置（按优先级排序）
+        List<MsgChannel> channels = channelService.listEnabledByType(channelType.getCode());
+
+        // 构建消息内容（只构建一次）
+        String content = buildContent(dto, template);
+
+        // 序列化变量（只序列化一次）
+        String variablesJson = serializeVariables(dto.getVariables());
+
+        // 构建主题（统一处理）
+        String subject = dto.getSubject() != null ? dto.getSubject() :
+                (template != null ? template.getSubject() : null);
+
+        // 没有可用渠道时，统一处理所有接收者
+        if (CollectionUtils.isEmpty(channels)) {
+            log.warn("没有可用的{}渠道，跳过发送", channelType.getName());
+            String errorMsg = "没有可用的" + channelType.getName() + "渠道";
+            for (String to : dto.getTo()) {
+                MsgRecord record = createRecord(dto, channelType, template, to, content, variablesJson, subject);
+                record.setStatus(MessageStatus.FAILED.getCode());
+                record.setErrorMsg(errorMsg);
+                save(record);
+                results.add(buildResultVO(record.getMessageId(), channelType.getCode(), to, false, errorMsg));
+            }
+            return results;
+        }
+
+        // 发送给每个接收者
+        for (String to : dto.getTo()) {
+            // 创建发送记录
+            MsgRecord record = createRecord(dto, channelType, template, to, content, variablesJson, subject);
+            save(record);
+
+            // 尝试发送，支持故障转移到备用渠道
+            SendResult sendResult = null;
+            MsgChannel usedChannel = null;
+            String lastError = null;
+
+            for (MsgChannel channel : channels) {
+                try {
+                    usedChannel = channel;
+                    record.setChannelId(channel.getId());
+
+                    // 构建发送上下文
+                    MessageContext context = MessageContext.builder()
+                            .recordId(record.getId())
+                            .messageId(record.getMessageId())
+                            .to(to)
+                            .subject(subject)
+                            .content(content)
+                            .variables(dto.getVariables())
+                            .channel(channel)
+                            .template(template)
+                            .bizType(dto.getBizType())
+                            .bizId(dto.getBizId())
+                            .build();
+
+                    // 发送消息
+                    sendResult = sender.send(context);
+
+                    if (sendResult.success()) {
+                        break; // 发送成功，跳出循环
+                    }
+                    lastError = sendResult.errorMsg();
+                    log.warn("渠道 {} 发送失败，尝试下一个渠道: {}", channel.getChannelCode(), lastError);
+                } catch (Exception e) {
+                    lastError = e.getMessage();
+                    log.error("渠道 {} 发送异常: {}", channel.getChannelCode(), e.getMessage(), e);
+                }
+            }
+
+            // 更新发送记录
+            if (sendResult != null && sendResult.success()) {
+                record.setChannelId(usedChannel.getId());
+                updateRecordAfterSend(record, sendResult);
+                results.add(buildResultVO(record.getMessageId(), channelType.getCode(), to, true, null));
+            } else {
+                // 所有渠道都失败
+                String errorMsg = "所有渠道发送失败: " + lastError;
+                record.setStatus(MessageStatus.FAILED.getCode());
+                record.setErrorMsg(errorMsg);
+                updateById(record);
+                results.add(buildResultVO(record.getMessageId(), channelType.getCode(), to, false, lastError));
+            }
+        }
+
+        return results;
+    }
+
+    /**
+     * 构建发送结果 VO
+     */
+    private SendResultVO buildResultVO(String messageId, String channelType, String toAddress, boolean success, String errorMsg) {
+        SendResultVO resultVO = new SendResultVO();
+        resultVO.setMessageId(messageId);
+        resultVO.setChannelType(channelType);
+        resultVO.setToAddress(toAddress);
+        resultVO.setSuccess(success);
+        if (success) {
+            resultVO.setSendTime(LocalDateTime.now());
+        } else {
+            resultVO.setErrorMsg(errorMsg);
+        }
+        return resultVO;
+    }
+
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public List<SendResultVO> batchSend(List<MessageDTO> messages) {
-        List<SendResultVO> allResults = new ArrayList<>();
+        List<SendResultVO> allResults = new ArrayList<>(messages.size());
         for (MessageDTO dto : messages) {
             allResults.addAll(send(dto));
         }
@@ -186,18 +302,21 @@ public class MessageServiceImpl extends ServiceImpl<MsgRecordMapper, MsgRecord> 
             throw new BusinessException(400, "只能重试发送失败的消息");
         }
 
-        if (record.getRetryCount() >= 3) {
+        if (record.getRetryCount() >= MAX_RETRY_COUNT) {
             throw new BusinessException(400, "重试次数已达上限");
         }
 
         // 获取渠道
-        MsgChannel channel = channelService.getByCode(record.getChannelType());
-        if (channel == null || channel.getStatus() != 1) {
+        MsgChannel channel = channelService.getEntityById(record.getChannelId());
+        if (channel == null || !channel.isEnabled()) {
             throw new BusinessException(400, "渠道不可用");
         }
 
         // 获取发送器
         ChannelType channelType = ChannelType.fromCode(record.getChannelType());
+        if (channelType == null) {
+            throw new BusinessException(400, "无效的渠道类型: " + record.getChannelType());
+        }
         ChannelSender sender = senderFactory.getSender(channelType);
 
         // 构建上下文
@@ -213,65 +332,28 @@ public class MessageServiceImpl extends ServiceImpl<MsgRecordMapper, MsgRecord> 
         // 重试发送
         SendResult sendResult = sender.send(context);
 
-        // 更新记录
+        // 更新重试次数和发送结果
         record.setRetryCount(record.getRetryCount() + 1);
-        updateRecordAfterSend(id, sendResult);
+        updateRecordAfterSend(record, sendResult);
 
-        SendResultVO resultVO = new SendResultVO();
-        resultVO.setMessageId(record.getMessageId());
-        resultVO.setToAddress(record.getToAddress());
-        resultVO.setSuccess(sendResult.success());
-        if (!sendResult.success()) {
-            resultVO.setErrorMsg(sendResult.errorMsg());
-        }
-        return resultVO;
+        return buildResultVO(record.getMessageId(), channelType.getCode(),
+                record.getToAddress(), sendResult.success(),
+                sendResult.success() ? null : sendResult.errorMsg());
     }
 
-    private ChannelType determineChannelType(MessageDTO dto) {
-        if (StringUtils.hasText(dto.getChannelType())) {
-            ChannelType type = ChannelType.fromCode(dto.getChannelType());
-            if (type == null) {
-                throw new BusinessException(400, "无效的渠道类型: " + dto.getChannelType());
-            }
-            return type;
-        }
-
-        // 如果没有指定渠道类型，根据模板或默认使用站内信
-        if (StringUtils.hasText(dto.getTemplateCode())) {
-            MsgTemplate template = templateService.getByCode(dto.getTemplateCode());
-            if (template != null) {
-                ChannelType type = ChannelType.fromCode(template.getChannelType());
-                if (type != null) {
-                    return type;
-                }
-            }
-        }
-
-        // 默认使用站内信
-        return ChannelType.INBOX;
-    }
-
-    private MsgRecord createRecord(MessageDTO dto, ChannelType channelType, MsgChannel channel,
-                                   MsgTemplate template, String to) {
+    private MsgRecord createRecord(MessageDTO dto, ChannelType channelType,
+                                   MsgTemplate template, String to, String content,
+                                   String variablesJson, String subject) {
         String messageId = UUID.randomUUID().toString().replace("-", "");
-        String variablesJson = null;
-        if (dto.getVariables() != null && !dto.getVariables().isEmpty()) {
-            try {
-                variablesJson = objectMapper.writeValueAsString(dto.getVariables());
-            } catch (JsonProcessingException e) {
-                log.warn("序列化变量失败", e);
-            }
-        }
 
         return MsgRecord.builder()
                 .messageId(messageId)
                 .channelType(channelType.getCode())
-                .channelId(channel.getId())
                 .templateId(template != null ? template.getId() : null)
                 .templateCode(template != null ? template.getTemplateCode() : null)
                 .toAddress(to)
-                .subject(dto.getSubject())
-                .content(dto.getContent())
+                .subject(subject)
+                .content(content)
                 .variables(variablesJson)
                 .bizType(dto.getBizType())
                 .bizId(dto.getBizId())
@@ -279,6 +361,21 @@ public class MessageServiceImpl extends ServiceImpl<MsgRecordMapper, MsgRecord> 
                 .retryCount(0)
                 .createTime(LocalDateTime.now())
                 .build();
+    }
+
+    /**
+     * 序列化模板变量
+     */
+    private String serializeVariables(Map<String, Object> variables) {
+        if (variables == null || variables.isEmpty()) {
+            return null;
+        }
+        try {
+            return objectMapper.writeValueAsString(variables);
+        } catch (JsonProcessingException e) {
+            log.warn("序列化变量失败", e);
+            return null;
+        }
     }
 
     private String buildContent(MessageDTO dto, MsgTemplate template) {
@@ -291,9 +388,7 @@ public class MessageServiceImpl extends ServiceImpl<MsgRecordMapper, MsgRecord> 
         return "";
     }
 
-    private void updateRecordAfterSend(Long recordId, SendResult sendResult) {
-        MsgRecord record = new MsgRecord();
-        record.setId(recordId);
+    private void updateRecordAfterSend(MsgRecord record, SendResult sendResult) {
         record.setSendTime(LocalDateTime.now());
 
         if (sendResult.success()) {

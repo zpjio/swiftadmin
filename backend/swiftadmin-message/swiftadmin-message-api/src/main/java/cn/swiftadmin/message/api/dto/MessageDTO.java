@@ -21,8 +21,11 @@ public class MessageDTO {
     @Size(max = 100, message = "单次发送接收者数量不能超过100")
     private List<String> to;
 
-    /** 渠道类型（可选，不填则用默认渠道） */
+    /** 渠道类型（单渠道发送时使用） */
     private String channelType;
+
+    /** 渠道类型列表（多渠道发送时使用，如：["sms", "email", "inbox"]） */
+    private List<String> channelTypes;
 
     /** 模板编码（可选） */
     private String templateCode;

@@ -35,10 +35,82 @@
           <template #icon><icon-mdi-plus /></template>
           新增渠道
         </NButton>
+        <NButton @click="toggleGroupView">
+          <template #icon><icon-mdi-view-module /></template>
+          {{ groupByType ? '列表视图' : '分组视图' }}
+        </NButton>
       </NSpace>
 
-      <!-- 表格 -->
+      <!-- 提示信息 -->
+      <NAlert type="info" class="mb-4">
+        同类型渠道按优先级从高到低选择，高优先级渠道发送失败时自动切换到备用渠道
+      </NAlert>
+
+      <!-- 分组视图 -->
+      <template v-if="groupByType">
+        <NGrid :x-gap="16" :y-gap="16" :cols="3" responsive="screen">
+          <NGridItem v-for="group in channelGroups" :key="group.type" span="1">
+            <NCard :title="group.label" size="small" :bordered="true">
+              <template #header-extra>
+                <NTag :type="group.channels.length > 0 ? 'success' : 'default'" size="small">
+                  {{ group.channels.length }} 个渠道
+                </NTag>
+              </template>
+              <NSpace vertical v-if="group.channels.length > 0">
+                <div
+                  v-for="(channel, index) in group.channels"
+                  :key="channel.id"
+                  class="channel-item"
+                  :class="{ 'is-primary': index === 0, 'is-disabled': channel.status !== 1 }"
+                >
+                  <div class="channel-header">
+                    <NSpace align="center">
+                      <NTag
+                        :type="index === 0 ? 'primary' : 'default'"
+                        size="small"
+                        :bordered="false"
+                      >
+                        {{ index === 0 ? '主渠道' : `备用 ${index}` }}
+                      </NTag>
+                      <NText strong>{{ channel.channelName }}</NText>
+                      <NText depth="3" style="font-size: 12px;">({{ channel.channelCode }})</NText>
+                    </NSpace>
+                    <NSpace>
+                      <NSwitch
+                        size="small"
+                        :value="channel.status === 1"
+                        @update:value="(val) => handleStatusChange(channel, val)"
+                      />
+                      <NDropdown
+                        trigger="click"
+                        :options="getActionOptions(channel)"
+                        @select="(key) => handleAction(key, channel)"
+                      >
+                        <NButton text size="small">
+                          <template #icon><icon-mdi-dots-vertical /></template>
+                        </NButton>
+                      </NDropdown>
+                    </NSpace>
+                  </div>
+                  <div class="channel-meta">
+                    <NSpace size="small">
+                      <NText depth="3" style="font-size: 12px;">优先级: {{ channel.priority }}</NText>
+                      <NText depth="3" style="font-size: 12px;">|</NText>
+                      <NText depth="3" style="font-size: 12px;">{{ formatDateTime(channel.createTime) }}</NText>
+                    </NSpace>
+                  </div>
+                  <NDivider v-if="index < group.channels.length - 1" style="margin: 8px 0;" />
+                </div>
+              </NSpace>
+              <NEmpty v-else description="暂无渠道" size="small" />
+            </NCard>
+          </NGridItem>
+        </NGrid>
+      </template>
+
+      <!-- 列表视图 -->
       <NDataTable
+        v-else
         :columns="columns"
         :data="tableData"
         :loading="loading"
@@ -68,7 +140,8 @@
           <NInput v-model:value="form.config" type="textarea" placeholder="请输入JSON格式配置" :rows="6" />
         </NFormItem>
         <NFormItem label="优先级" path="priority">
-          <NInputNumber v-model:value="form.priority" :min="0" :max="100" placeholder="数字越大优先级越高" style="width: 200px" />
+          <NInputNumber v-model:value="form.priority" :min="0" :max="100" style="width: 200px" />
+          <NText depth="3" style="margin-left: 8px;">数字越大优先级越高，发送时优先使用高优先级渠道</NText>
         </NFormItem>
         <NFormItem label="状态" path="status">
           <NRadioGroup v-model:value="form.status">
@@ -92,8 +165,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, h, onMounted } from 'vue'
-import { useMessage, useDialog, NTag, NButton, NSpace, NSwitch, type DataTableColumns } from 'naive-ui'
+import { ref, reactive, h, computed, onMounted } from 'vue'
+import { useMessage, useDialog, NTag, NButton, NSpace, NSwitch, NDropdown, NGrid, NGridItem, NDivider, NText, NEmpty, type DataTableColumns } from 'naive-ui'
 import {
   getChannelPageApi,
   getChannelDetailApi,
@@ -116,9 +189,41 @@ const showModal = ref(false)
 const saving = ref(false)
 const isEdit = ref(false)
 const modalTitle = ref('')
+const groupByType = ref(true)
 
 // 渠道类型选项
 const { options: channelTypeOptions, getLabel: getChannelTypeLabel } = useDict('msg_channel_type')
+
+// 按类型分组的渠道
+interface ChannelGroup {
+  type: string
+  label: string
+  channels: MessageChannel[]
+}
+
+const channelGroups = computed<ChannelGroup[]>(() => {
+  const groups: Map<string, ChannelGroup> = new Map()
+
+  // 初始化所有类型
+  channelTypeOptions.value.forEach(opt => {
+    groups.set(opt.value as string, {
+      type: opt.value as string,
+      label: opt.label as string,
+      channels: []
+    })
+  })
+
+  // 按优先级排序后分组
+  const sorted = [...tableData.value].sort((a, b) => b.priority - a.priority)
+  sorted.forEach(channel => {
+    const group = groups.get(channel.channelType)
+    if (group) {
+      group.channels.push(channel)
+    }
+  })
+
+  return Array.from(groups.values())
+})
 
 const queryForm = reactive({
   page: 1,
@@ -317,10 +422,62 @@ function handleDelete(id: number) {
     },
   })
 }
+
+function toggleGroupView() {
+  groupByType.value = !groupByType.value
+}
+
+function getActionOptions(row: MessageChannel) {
+  return [
+    { label: '编辑', key: 'edit' },
+    { label: '测试', key: 'test' },
+    { label: '删除', key: 'delete' },
+  ]
+}
+
+function handleAction(key: string, row: MessageChannel) {
+  switch (key) {
+    case 'edit':
+      handleEdit(row)
+      break
+    case 'test':
+      handleTest(row)
+      break
+    case 'delete':
+      handleDelete(row.id)
+      break
+  }
+}
 </script>
 
 <style scoped>
 .channel-container {
   padding: 16px;
+}
+
+.channel-item {
+  padding: 8px 0;
+}
+
+.channel-item.is-primary {
+  background: linear-gradient(to right, rgba(24, 144, 255, 0.05), transparent);
+  margin: -8px -12px;
+  padding: 8px 12px;
+  border-radius: 4px;
+}
+
+.channel-item.is-disabled {
+  opacity: 0.6;
+}
+
+.channel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.channel-meta {
+  margin-top: 4px;
+  padding-left: 4px;
 }
 </style>

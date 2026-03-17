@@ -67,4 +67,16 @@ public class MsgChannel {
     /** 删除标记：0=正常，1=已删除 */
     @Column(isLogicDelete = true)
     private Integer deleted;
+
+    /** 渠道状态：启用 */
+    public static final int STATUS_ENABLED = 1;
+    /** 渠道状态：禁用 */
+    public static final int STATUS_DISABLED = 0;
+
+    /**
+     * 判断渠道是否启用
+     */
+    public boolean isEnabled() {
+        return STATUS_ENABLED == status;
+    }
 }
