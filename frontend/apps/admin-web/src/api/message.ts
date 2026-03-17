@@ -33,6 +33,7 @@ export interface MessageTemplate {
   id: string
   templateName: string
   templateCode: string
+  providerTemplateCode?: string
   channelType: ChannelType
   subject?: string
   content: string

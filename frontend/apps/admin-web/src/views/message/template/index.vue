@@ -65,6 +65,9 @@
         <NFormItem label="模板编码" path="templateCode">
           <NInput v-model:value="form.templateCode" placeholder="请输入模板编码" :disabled="isEdit" />
         </NFormItem>
+        <NFormItem v-if="form.channelType === 'sms'" label="服务商模板码" path="providerTemplateCode">
+          <NInput v-model:value="form.providerTemplateCode" placeholder="如阿里云 SMS_123456789" />
+        </NFormItem>
         <NFormItem label="渠道类型" path="channelType">
           <NSelect
             v-model:value="form.channelType"
@@ -163,6 +166,7 @@ const form = reactive({
   id: undefined as number | undefined,
   templateName: '',
   templateCode: '',
+  providerTemplateCode: '',
   channelType: 'inbox',
   subject: '',
   content: '',
@@ -180,8 +184,9 @@ const rules = {
 
 const columns: DataTableColumns<MessageTemplate> = [
   { type: 'selection' },
-  { title: '模板名称', key: 'templateName', width: 150 },
-  { title: '模板编码', key: 'templateCode', width: 150 },
+  { title: '模板名称', key: 'templateName', width: 120 },
+  { title: '模板编码', key: 'templateCode', width: 130 },
+  { title: '服务商模板码', key: 'providerTemplateCode', width: 140, ellipsis: { tooltip: true } },
   {
     title: '渠道类型',
     key: 'channelType',
@@ -253,6 +258,7 @@ function handleAdd() {
     id: undefined,
     templateName: '',
     templateCode: '',
+    providerTemplateCode: '',
     channelType: 'inbox',
     subject: '',
     content: '',
