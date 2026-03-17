@@ -62,7 +62,7 @@
             {{ getExecuteStatusLabel(currentLog.executeStatus) }}
           </NTag>
         </NDescriptionsItem>
-        <NDescriptionsItem label="执行时间">{{ currentLog.executeTime }}</NDescriptionsItem>
+        <NDescriptionsItem label="执行时间">{{ formatDateTime(currentLog.executeTime) || '-' }}</NDescriptionsItem>
         <NDescriptionsItem label="耗时">{{ currentLog.costTime }} ms</NDescriptionsItem>
         <NDescriptionsItem label="重试次数">{{ currentLog.retryCount }}</NDescriptionsItem>
         <NDescriptionsItem label="执行类型">
@@ -105,6 +105,7 @@ import {
   JobExecuteStatus,
   ExecuteType,
 } from '@/api/schedule'
+import { formatDateTime } from '@/utils/date'
 
 const message = useMessage()
 const loading = ref(false)
@@ -175,7 +176,7 @@ const columns: DataTableColumns<JobLogVO> = [
       )
     },
   },
-  { title: '执行时间', key: 'executeTime', width: 160 },
+  { title: '执行时间', key: 'executeTime', width: 160, render: (row) => formatDateTime(row.executeTime) || '-' },
   {
     title: '耗时',
     key: 'costTime',

@@ -131,6 +131,7 @@ import {
   type JobQuery,
 } from '@/api/schedule'
 import CronEditor from '@/components/schedule/CronEditor.vue'
+import { formatDateTime } from '@/utils/date'
 
 const message = useMessage()
 const dialog = useDialog()
@@ -234,7 +235,7 @@ const columns: DataTableColumns<JobVO> = [
     title: '下次执行时间',
     key: 'nextExecuteTime',
     width: 170,
-    render: (row) => row.nextExecuteTime || '-',
+    render: (row) => formatDateTime(row.nextExecuteTime) || '-',
   },
   {
     title: '操作',

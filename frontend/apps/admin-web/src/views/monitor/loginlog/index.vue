@@ -92,6 +92,7 @@ import { ref, reactive, h, onMounted } from 'vue'
 import { useMessage, type DataTableColumns, type DataTableRowKey } from 'naive-ui'
 import { getLoginLogPageApi, deleteLoginLogApi, clearLoginLogApi } from '@/api/loginlog'
 import type { LoginLogVO, LoginLogQuery } from '@/api/loginlog'
+import { formatDateTime } from '@/utils/date'
 
 const message = useMessage()
 const loading = ref(false)
@@ -153,7 +154,7 @@ const columns: DataTableColumns<LoginLogVO> = [
   { title: '登录 IP', key: 'ipAddress', width: 140 },
   { title: '浏览器/操作系统', key: 'userAgent', width: 200, ellipsis: { tooltip: true } },
   { title: '提示信息', key: 'message', width: 160, ellipsis: { tooltip: true } },
-  { title: '登录时间', key: 'loginTime', width: 160 },
+  { title: '登录时间', key: 'loginTime', width: 160, render: (row) => formatDateTime(row.loginTime) || '-' },
   {
     title: '操作',
     key: 'actions',

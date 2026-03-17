@@ -47,6 +47,7 @@ import { reactive, ref, h, onMounted } from 'vue'
 import { useMessage, useDialog, type DataTableColumns } from 'naive-ui'
 import { getOnlineUserPageApi, forceLogoutApi, forceLogoutBatchApi } from '@/api/online'
 import type { OnlineUserVO, OnlineUserQuery } from '@/api/online'
+import { formatDateTime } from '@/utils/date'
 
 const message = useMessage()
 const dialog = useDialog()
@@ -128,6 +129,7 @@ const columns: DataTableColumns<OnlineUserVO> = [
     title: '登录时间',
     key: 'loginTime',
     width: 180,
+    render: (row) => formatDateTime(row.loginTime) || '-',
   },
   {
     title: '剩余时间',

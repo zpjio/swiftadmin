@@ -133,7 +133,7 @@
         </NDescriptionsItem>
         <NDescriptionsItem label="耗时">{{ currentDetail?.costTime }}ms</NDescriptionsItem>
         <NDescriptionsItem label="操作时间" :span="2">
-          {{ currentDetail?.operTime }}
+          {{ formatDateTime(currentDetail?.operTime) || '-' }}
         </NDescriptionsItem>
 
         <!-- 审计信息 -->
@@ -174,6 +174,7 @@ import { ref, reactive, onMounted, h } from 'vue'
 import { useMessage, type DataTableColumns, type DataTableRowKey } from 'naive-ui'
 import { getOperLogPageApi, deleteOperLogApi, clearOperLogApi, getOperLogDetailApi } from '@/api/operlog'
 import type { OperLogVO, OperLogQuery } from '@/api/operlog'
+import { formatDateTime } from '@/utils/date'
 
 const message = useMessage()
 const loading = ref(false)
@@ -308,6 +309,7 @@ const columns: DataTableColumns<OperLogVO> = [
     title: '操作时间',
     key: 'operTime',
     width: 160,
+    render: (row) => formatDateTime(row.operTime) || '-',
     ellipsis: { tooltip: true },
   },
   {
