@@ -6,6 +6,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.Arrays;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * 菜单类型枚举
@@ -26,11 +29,12 @@ public enum MenuType {
     private final Integer code;
     private final String description;
 
+    /** code -> MenuType 映射缓存 */
+    private static final Map<Integer, MenuType> CODE_MAP = Arrays.stream(values())
+            .collect(Collectors.toMap(MenuType::getCode, Function.identity()));
+
     public static MenuType fromCode(Integer code) {
-        return Arrays.stream(values())
-                .filter(type -> type.code.equals(code))
-                .findFirst()
-                .orElse(null);
+        return CODE_MAP.get(code);
     }
 
 }

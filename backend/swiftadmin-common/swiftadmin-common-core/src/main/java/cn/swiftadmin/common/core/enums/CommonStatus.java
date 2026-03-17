@@ -6,6 +6,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.Arrays;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * 通用状态枚举
@@ -25,11 +28,12 @@ public enum CommonStatus {
     private final Integer code;
     private final String description;
 
+    /** code -> CommonStatus 映射缓存 */
+    private static final Map<Integer, CommonStatus> CODE_MAP = Arrays.stream(values())
+            .collect(Collectors.toMap(CommonStatus::getCode, Function.identity()));
+
     public static CommonStatus fromCode(Integer code) {
-        return Arrays.stream(values())
-                .filter(status -> status.code.equals(code))
-                .findFirst()
-                .orElse(null);
+        return CODE_MAP.get(code);
     }
 
     public boolean isEnabled() {

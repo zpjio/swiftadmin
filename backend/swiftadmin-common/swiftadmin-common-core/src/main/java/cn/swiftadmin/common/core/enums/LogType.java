@@ -6,6 +6,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.Arrays;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * 日志类型枚举
@@ -26,11 +29,12 @@ public enum LogType {
     private final String code;
     private final String description;
 
+    /** code -> LogType 映射缓存 */
+    private static final Map<String, LogType> CODE_MAP = Arrays.stream(values())
+            .collect(Collectors.toMap(LogType::getCode, Function.identity()));
+
     public static LogType fromCode(String code) {
-        return Arrays.stream(values())
-                .filter(type -> type.code.equalsIgnoreCase(code))
-                .findFirst()
-                .orElse(null);
+        return code != null ? CODE_MAP.get(code.toUpperCase()) : null;
     }
 
 }

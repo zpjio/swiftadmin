@@ -6,6 +6,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.Arrays;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * 是否枚举
@@ -25,11 +28,12 @@ public enum YesNo {
     private final Integer code;
     private final String description;
 
+    /** code -> YesNo 映射缓存 */
+    private static final Map<Integer, YesNo> CODE_MAP = Arrays.stream(values())
+            .collect(Collectors.toMap(YesNo::getCode, Function.identity()));
+
     public static YesNo fromCode(Integer code) {
-        return Arrays.stream(values())
-                .filter(value -> value.code.equals(code))
-                .findFirst()
-                .orElse(null);
+        return CODE_MAP.get(code);
     }
 
     public boolean isYes() {

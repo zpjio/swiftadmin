@@ -145,18 +145,36 @@ public class UserSessionServiceImpl implements UserSessionService {
             log.debug("用户 {} 没有活跃会话", userId);
             return new ArrayList<>();
         }
-        // 过滤掉已过期的会话
+
+        // 使用 Redis Pipeline 批量检查 key 是否存在
+        List<String> tokenList = new ArrayList<>(tokens);
+        List<String> tokenKeys = tokenList.stream()
+                .map(RedisKeyConstants::loginToken)
+                .toList();
+
+        List<Object> results = stringRedisTemplate.opsForValue().multiGet(tokenKeys);
+
         List<String> validSessions = new ArrayList<>();
-        for (String sessionId : tokens) {
-            Boolean exists = stringRedisTemplate.hasKey(RedisKeyConstants.loginToken(sessionId));
-            if (Boolean.TRUE.equals(exists)) {
+        List<String> expiredSessions = new ArrayList<>();
+
+        for (int i = 0; i < tokenList.size(); i++) {
+            String sessionId = tokenList.get(i);
+            Object value = results != null && i < results.size() ? results.get(i) : null;
+            if (value != null) {
                 validSessions.add(sessionId);
             } else {
-                // 清理过期会话记录
-                stringRedisTemplate.opsForSet().remove(RedisKeyConstants.USER_TOKENS + userId, sessionId);
-                log.debug("清理过期会话记录: userId={}, sessionId={}", userId, sessionId);
+                expiredSessions.add(sessionId);
             }
         }
+
+        // 批量清理过期会话记录
+        if (!expiredSessions.isEmpty()) {
+            for (String sessionId : expiredSessions) {
+                stringRedisTemplate.opsForSet().remove(RedisKeyConstants.USER_TOKENS + userId, sessionId);
+            }
+            log.debug("清理过期会话记录: userId={}, count={}", userId, expiredSessions.size());
+        }
+
         log.debug("用户 {} 有效会话数: {}", userId, validSessions.size());
         return validSessions;
     }

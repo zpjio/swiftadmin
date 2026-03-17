@@ -30,7 +30,16 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * 操作日志切面
@@ -50,7 +59,7 @@ public class OperationLogAspect {
     private final DataSource dataSource;
 
     /** 字段缓存，避免重复反射 */
-    private final Map<Class<?>, List<Field>> fieldCache = new HashMap<>();
+    private final Map<Class<?>, List<Field>> fieldCache = new ConcurrentHashMap<>();
 
     public OperationLogAspect(ApplicationEventPublisher eventPublisher, ObjectMapper objectMapper, DataSource dataSource) {
         this.eventPublisher = eventPublisher;
