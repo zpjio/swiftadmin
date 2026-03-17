@@ -10,8 +10,7 @@ import IconsResolver from 'unplugin-icons/resolver'
 
 const __dirname = resolve(fileURLToPath(import.meta.url), '..')
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const config: any = ({ mode }: { mode: string }) => {
+export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd())
 
   const plugins = [
@@ -99,6 +98,4 @@ const config: any = ({ mode }: { mode: string }) => {
       },
     },
   }
-}
-
-export default defineConfig(config)
+})

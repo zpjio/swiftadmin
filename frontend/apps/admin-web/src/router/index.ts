@@ -108,7 +108,7 @@ router.beforeEach(async (to, from, next) => {
     try {
       // 获取用户菜单
       const res = await getUserMenusApi()
-      const menus = res as any as MenuVO[]
+      const menus = res as MenuVO[]
 
       // 转换为路由配置
       const dynamicRoutes = convertMenusToRoutes(menus)
@@ -155,7 +155,7 @@ router.beforeEach(async (to, from, next) => {
  * 提取所有权限标识
  * 从菜单树中提取所有权限标识，用于前端权限判断
  */
-function extractPermissions(menus: any[]): string[] {
+function extractPermissions(menus: MenuVO[]): string[] {
   const permissions: string[] = []
 
   menus.forEach((menu) => {

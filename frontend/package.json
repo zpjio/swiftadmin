@@ -14,11 +14,6 @@
     "build:c-end": "pnpm --filter c-end-h5 build",
     "clean": "pnpm -r exec rm -rf node_modules dist"
   },
-  "devDependencies": {
-    "typescript": "^5.7.2",
-    "vite": "^6.0.0",
-    "vue": "^3.5.13"
-  },
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=9.0.0"

@@ -223,13 +223,12 @@ function filterParams(params?: Record<string, unknown>): Record<string, unknown>
 
 /**
  * GET 请求
+ * @param url 请求地址
+ * @param params 查询参数（会被过滤空值）
+ * @param config 请求配置
  */
-export function get<T = unknown>(
-  url: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  params?: any,
-  config?: RequestOptions
-): Promise<T> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function get<T = unknown>(url: string, params?: any, config?: RequestOptions): Promise<T> {
   return service.get(url, { params: filterParams(params), ...config })
 }
 

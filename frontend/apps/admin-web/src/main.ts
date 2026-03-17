@@ -1,6 +1,5 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import naive from 'naive-ui'
 import router from './router'
 import App from './App.vue'
 import './styles/index.css'
@@ -15,7 +14,6 @@ initTheme()
 
 app.use(pinia)
 app.use(router)
-app.use(naive)
 setupPermissionDirective(app)
 
 app.mount('#app')
