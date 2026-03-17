@@ -44,6 +44,12 @@
             <artifactId>swiftadmin-system-api</artifactId>
         </dependency>
 
+        <!-- Message API (for MessageService) -->
+        <dependency>
+            <groupId>cn.swiftadmin</groupId>
+            <artifactId>swiftadmin-message-api</artifactId>
+        </dependency>
+
         <!-- Spring Boot Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

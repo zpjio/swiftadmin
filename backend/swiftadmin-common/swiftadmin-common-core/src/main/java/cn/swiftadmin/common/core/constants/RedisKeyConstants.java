@@ -232,4 +232,35 @@ public final class RedisKeyConstants {
         return IP_LOGIN_BLACKLIST + ip;
     }
 
+    /**
+     * 构建 Token 每日刷新次数 Key
+     *
+     * @param username 用户名
+     * @param date 日期（格式：yyyy-MM-dd）
+     * @return Redis Key
+     */
+    public static String tokenRefreshDailyCount(String username, String date) {
+        return TOKEN_REFRESH_COUNT + username + ":daily:" + date;
+    }
+
+    /**
+     * 构建 OAuth State Key
+     *
+     * @param state OAuth 状态码
+     * @return Redis Key
+     */
+    public static String oauthState(String state) {
+        return OAUTH_STATE + state;
+    }
+
+    /**
+     * 构建 OAuth 临时 Token Key
+     *
+     * @param tempToken 临时 Token
+     * @return Redis Key
+     */
+    public static String oauthTempToken(String tempToken) {
+        return OAUTH_TEMP_TOKEN + tempToken;
+    }
+
 }

@@ -1,5 +1,6 @@
 package cn.swiftadmin.auth.util;
 
+import cn.swiftadmin.auth.config.AuthSecurityProperties;
 import cn.swiftadmin.common.core.constants.RedisKeyConstants;
 import cn.swiftadmin.common.core.exception.BusinessException;
 import cn.swiftadmin.common.core.result.ErrorCode;
@@ -14,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * IP 限流工具类
  * <p>基于 Redis 实现 IP 维度的登录限流，防止暴力破解和 DDoS 攻击</p>
+ * <p>阈值可通过 {@link AuthSecurityProperties} 配置</p>
  *
  * @author zhangpengju
  * @since 2026-03-10
@@ -24,10 +26,11 @@ import java.util.concurrent.TimeUnit;
 public class IpRateLimiter {
 
     private final StringRedisTemplate redisTemplate;
+    private final AuthSecurityProperties securityProperties;
 
     /**
      * 检查 IP 登录限流
-     * <p>单 IP 每小时最多登录 20 次，超过则锁定 30 分钟</p>
+     * <p>单 IP 每小时最多登录 N 次（可配置），超过则锁定 M 分钟（可配置）</p>
      *
      * @param ip IP 地址
      */
@@ -44,12 +47,16 @@ public class IpRateLimiter {
             redisTemplate.expire(key, 1, TimeUnit.HOURS);
         }
 
-        // 检查是否超过阈值（每小时 20 次）
-        if (attempts > 20) {
-            log.warn("IP 登录次数超限：ip={}, 次数={}", ip, attempts);
-            // 将 IP 加入黑名单 30 分钟
+        // 从配置获取阈值
+        int limitPerHour = securityProperties.getIpLoginLimitPerHour();
+
+        // 检查是否超过阈值
+        if (attempts > limitPerHour) {
+            int blacklistMinutes = securityProperties.getIpBlacklistMinutes();
+            log.warn("IP 登录次数超限：ip={}, 次数={}, 限制={}", ip, attempts, limitPerHour);
+            // 将 IP 加入黑名单
             String blacklistKey = RedisKeyConstants.ipLoginBlacklist(ip);
-            redisTemplate.opsForValue().set(blacklistKey, "blocked", 30, TimeUnit.MINUTES);
+            redisTemplate.opsForValue().set(blacklistKey, "blocked", blacklistMinutes, TimeUnit.MINUTES);
             throw new BusinessException(ErrorCode.RATE_LIMIT_EXCEEDED);
         }
 

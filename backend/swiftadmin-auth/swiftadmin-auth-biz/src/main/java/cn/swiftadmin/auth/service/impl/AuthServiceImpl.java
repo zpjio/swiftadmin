@@ -1,6 +1,5 @@
 package cn.swiftadmin.auth.service.impl;
 
-import cn.swiftadmin.auth.api.dto.LoginDTO;
 import cn.swiftadmin.auth.api.event.LoginEvent;
 import cn.swiftadmin.auth.api.service.AuthService;
 import cn.swiftadmin.auth.api.service.SmsService;
@@ -11,8 +10,8 @@ import cn.swiftadmin.common.core.constants.RedisKeyConstants;
 import cn.swiftadmin.common.core.exception.BusinessException;
 import cn.swiftadmin.common.core.result.ErrorCode;
 import cn.swiftadmin.common.core.util.ServletUtils;
+import cn.swiftadmin.common.core.util.SensitiveUtils;
 import cn.swiftadmin.common.security.domain.LoginUser;
-import cn.swiftadmin.common.security.service.PermissionWarmupService;
 import cn.swiftadmin.common.security.service.UserSessionService;
 import cn.swiftadmin.common.security.util.SecurityUtils;
 import cn.swiftadmin.system.api.entity.SysUser;
@@ -22,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -30,8 +28,8 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * 认证服务实现类
- * <p>统一处理认证相关逻辑：Token 管理、登出、短信验证码</p>
- * <p>增强版：支持 Token 类型验证、请求上下文验证、刷新次数限制</p>
+ * <p>处理 Token 管理：登出、刷新、短信验证码</p>
+ * <p>登录认证由 {@link cn.swiftadmin.auth.strategy.AuthStrategy} 策略模式处理</p>
  *
  * @author zhangpengju
  * @since 2026-03-09
@@ -42,43 +40,12 @@ import java.util.concurrent.TimeUnit;
 public class AuthServiceImpl implements AuthService {
 
     private final UserService userService;
-    private final PasswordEncoder passwordEncoder;
     private final TokenManager tokenManager;
     private final SmsService smsService;
     private final ApplicationEventPublisher eventPublisher;
     private final StringRedisTemplate redisTemplate;
     private final AuthSecurityProperties securityProperties;
     private final UserSessionService userSessionService;
-    private final PermissionWarmupService permissionWarmupService;
-
-    @Override
-    public LoginVO login(LoginDTO dto) {
-        String ipAddress = ServletUtils.getClientIp();
-        String userAgent = ServletUtils.getUserAgent();
-
-        SysUser user = userService.getByUsername(dto.getUsername());
-
-        if (user == null || !passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
-            eventPublisher.publishEvent(LoginEvent.failure(
-                    dto.getUsername(), "认证失败", ipAddress, userAgent, "password"));
-            throw new BusinessException(ErrorCode.USER_PASSWORD_ERROR);
-        }
-
-        if (!user.getStatus().isEnabled()) {
-            eventPublisher.publishEvent(LoginEvent.failure(
-                    dto.getUsername(), "用户已禁用", ipAddress, userAgent, "password"));
-            throw new BusinessException(ErrorCode.USER_DISABLED);
-        }
-
-        eventPublisher.publishEvent(LoginEvent.success(
-                user.getUsername(), ipAddress, userAgent, "password"));
-
-        // 异步预热用户权限数据，减少首次请求延迟
-        permissionWarmupService.warmupUserPermission(user.getId());
-        permissionWarmupService.warmupUserMenus(user.getId());
-
-        return buildLoginVO(user);
-    }
 
     @Override
     public void logout() {
@@ -114,10 +81,10 @@ public class AuthServiceImpl implements AuthService {
 
             // 5. 清除当日刷新次数记录
             String today = java.time.LocalDate.now().toString();
-            String dailyCountKey = RedisKeyConstants.tokenRefreshCount(loginUser.getUsername()) + ":daily:" + today;
+            String dailyCountKey = RedisKeyConstants.tokenRefreshDailyCount(loginUser.getUsername(), today);
             redisTemplate.delete(dailyCountKey);
             
-            log.info("用户登出成功：userId={}, username={}", loginUser.getUserId(), loginUser.getUsername());
+            log.info("用户登出成功：userId={}, username={}", loginUser.getUserId(), SensitiveUtils.maskUsername(loginUser.getUsername()));
         }
     }
 
@@ -169,27 +136,36 @@ public class AuthServiceImpl implements AuthService {
         SysUser user = userService.getByUsername(username);
 
         if (user == null) {
-            log.warn("Token 刷新失败：用户不存在，username={}", username);
+            log.warn("Token 刷新失败：用户不存在，username={}", SensitiveUtils.maskUsername(username));
             throw new BusinessException(ErrorCode.USER_PASSWORD_ERROR.getCode(), "用户不存在");
         }
         if (!user.getStatus().isEnabled()) {
-            log.warn("Token 刷新失败：用户已禁用，username={}", username);
+            log.warn("Token 刷新失败：用户已禁用，username={}", SensitiveUtils.maskUsername(username));
             throw new BusinessException(ErrorCode.USER_DISABLED);
         }
 
         // 7. 将旧的 Refresh Token 加入黑名单
         tokenManager.addToBlacklist(refreshToken);
 
-        // 8. 记录刷新日志
-        log.info("Token 刷新成功：username={}", username);
+        // 8. 生成新的 Token
+        LoginVO loginVO = buildLoginVO(user);
 
-        // 9. 发布刷新事件
-        String ipAddress = ServletUtils.getClientIp();
-        String userAgent = ServletUtils.getUserAgent();
+        // 9. 为新 Refresh Token 建立上下文
+        String newRefreshJti = tokenManager.getJtiFromToken(loginVO.getRefreshToken());
+        String currentIp = ServletUtils.getClientIp();
+        String currentUserAgent = ServletUtils.getUserAgent();
+        if (newRefreshJti != null) {
+            saveRequestContext(newRefreshJti, currentIp, currentUserAgent);
+        }
+
+        // 10. 记录刷新日志
+        log.info("Token 刷新成功：username={}", SensitiveUtils.maskUsername(username));
+
+        // 11. 发布刷新事件
         eventPublisher.publishEvent(LoginEvent.tokenRefresh(
-                username, ipAddress, userAgent));
+                username, currentIp, currentUserAgent));
 
-        return buildLoginVO(user);
+        return loginVO;
     }
 
     /**
@@ -340,7 +316,7 @@ public class AuthServiceImpl implements AuthService {
             long lastTime = Long.parseLong(lastRefreshTime);
 
             if (currentTime - lastTime < refreshIntervalSeconds * 1000L) {
-                log.warn("Token 刷新频率过高：username={}, 时间间隔={}ms", username, currentTime - lastTime);
+                log.warn("Token 刷新频率过高：username={}, 时间间隔={}ms", SensitiveUtils.maskUsername(username), currentTime - lastTime);
                 throw new BusinessException(ErrorCode.TOKEN_REFRESH_TOO_FREQUENT);
             }
         }
@@ -351,7 +327,7 @@ public class AuthServiceImpl implements AuthService {
 
         // 检查当日刷新次数
         String today = java.time.LocalDate.now().toString();
-        String dailyCountKey = countKey + ":daily:" + today;
+        String dailyCountKey = RedisKeyConstants.tokenRefreshDailyCount(username, today);
 
         Long currentCount = redisTemplate.opsForValue().increment(dailyCountKey);
         if (currentCount == 1) {
@@ -360,7 +336,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         if (currentCount > maxRefreshCountPerDay) {
-            log.warn("Token 刷新次数超限：username={}, 当日次数={}", username, currentCount);
+            log.warn("Token 刷新次数超限：username={}, 当日次数={}", SensitiveUtils.maskUsername(username), currentCount);
             throw new BusinessException(ErrorCode.TOKEN_REFRESH_LIMIT_EXCEEDED);
         }
     }

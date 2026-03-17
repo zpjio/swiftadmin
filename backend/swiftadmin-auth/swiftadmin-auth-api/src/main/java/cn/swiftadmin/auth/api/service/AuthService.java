@@ -1,11 +1,11 @@
 package cn.swiftadmin.auth.api.service;
 
-import cn.swiftadmin.auth.api.dto.LoginDTO;
 import cn.swiftadmin.auth.api.vo.LoginVO;
 
 /**
  * 认证服务接口
- * <p>提供用户登录、登出、Token 刷新、短信验证码功能</p>
+ * <p>提供 Token 管理功能：登出、刷新、短信验证码</p>
+ * <p>登录认证由 {@link cn.swiftadmin.auth.strategy.AuthStrategy} 策略模式处理</p>
  *
  * @author zhangpengju
  * @since 2026-03-09
@@ -13,15 +13,8 @@ import cn.swiftadmin.auth.api.vo.LoginVO;
 public interface AuthService {
 
     /**
-     * 用户登录
-     *
-     * @param dto 登录参数（用户名、密码）
-     * @return 登录结果（Access Token、Refresh Token）
-     */
-    LoginVO login(LoginDTO dto);
-
-    /**
      * 用户登出
+     * <p>将当前 Token 加入黑名单，清除相关缓存</p>
      */
     void logout();
 

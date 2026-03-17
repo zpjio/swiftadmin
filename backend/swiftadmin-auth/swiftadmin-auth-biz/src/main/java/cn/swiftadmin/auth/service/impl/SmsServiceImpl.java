@@ -7,15 +7,20 @@ import cn.swiftadmin.auth.config.AuthSecurityProperties;
 import cn.swiftadmin.auth.mapper.SysSmsCodeMapper;
 import cn.swiftadmin.common.core.exception.BusinessException;
 import cn.swiftadmin.common.core.result.ErrorCode;
+import cn.swiftadmin.common.core.util.SensitiveUtils;
+import cn.swiftadmin.message.api.dto.MessageDTO;
+import cn.swiftadmin.message.api.service.MessageService;
+import cn.swiftadmin.message.api.vo.SendResultVO;
 import com.mybatisflex.core.update.UpdateChain;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -23,9 +28,8 @@ import static cn.swiftadmin.auth.api.entity.table.SysSmsCodeTableDef.SYS_SMS_COD
 
 /**
  * 短信服务实现类
- * <p>基于 Redis 实现验证码存储和限流，支持阿里云/腾讯云短信发送</p>
- * <p>安全防护：IP 限流、验证错误次数限制、图形验证码触发</p>
- * <p>使用 MyBatis-Flex UpdateChain 优化更新操作</p>
+ * <p>负责验证码业务逻辑：生成、限流、存储、校验</p>
+ * <p>短信发送委托给 message 模块的 MessageService</p>
  *
  * @author zhangpengju
  * @since 2026-03-10
@@ -35,16 +39,15 @@ import static cn.swiftadmin.auth.api.entity.table.SysSmsCodeTableDef.SYS_SMS_COD
 @RequiredArgsConstructor
 public class SmsServiceImpl implements SmsService {
 
+    /** 验证码短信模板编码（对应 msg_template.template_code） */
+    private static final String SMS_CODE_TEMPLATE = "verify_code_sms";
+
     private final StringRedisTemplate redisTemplate;
     private final SysSmsCodeMapper smsCodeMapper;
     private final CaptchaService captchaService;
     private final AuthSecurityProperties securityProperties;
+    private final MessageService messageService;
 
-    /**
-     * 发送验证码
-     * <p>限流：1 分钟 1 次，1 小时 5 次（手机号），1 小时 10 次（IP）</p>
-     * <p>安全：IP 发送超过阈值触发图形验证码</p>
-     */
     @Override
     public void sendCode(String phone, String scene, String ip, String captchaId, String captchaCode) {
         // 0. 检查验证错误锁定
@@ -119,56 +122,72 @@ public class SmsServiceImpl implements SmsService {
         redisTemplate.opsForValue().increment(hourCountKey);
         redisTemplate.expire(hourCountKey, 1, TimeUnit.HOURS);
 
-        // 9. 发送短信
-        log.info("【短信验证码】手机号：{}, 验证码：{}, 场景：{}, IP:{}", phone, code, scene, ip);
+        // 9. 调用 message 模块发送短信
+        sendSmsViaMessageModule(phone, code, scene, ip);
 
-        // 调用短信服务商 API 发送
-        // 开发环境仅记录日志，生产环境需要接入实际的短信服务
-        // 示例：阿里云短信、腾讯云短信等
-        if (!"dev".equals(System.getProperty("spring.profiles.active", "dev"))) {
-            // 生产环境应该调用实际的短信发送服务
-            // 这里保留接口，实际使用时需要注入 SmsProvider 并调用发送方法
-            log.warn("生产环境需要接入实际的短信发送服务");
-        }
+        log.info("短信验证码发送成功：phone={}, scene={}", SensitiveUtils.maskPhone(phone), scene);
     }
 
     /**
-     * 验证验证码
-     * <p>使用 Redis Lua 脚本实现原子性验证和删除，防止重放攻击</p>
-     * <p>安全：连续错误 3 次后锁定 15 分钟</p>
+     * 通过 message 模块发送短信验证码
      */
+    private void sendSmsViaMessageModule(String phone, String code, String scene, String ip) {
+        try {
+            MessageDTO messageDTO = new MessageDTO();
+            messageDTO.setTo(List.of(phone));
+            messageDTO.setChannelType("sms");
+            messageDTO.setTemplateCode(SMS_CODE_TEMPLATE);
+            messageDTO.setVariables(Map.of(
+                    "code", code,
+                    "expireMinutes", String.valueOf(securityProperties.getCodeExpireMinutes())
+            ));
+            messageDTO.setBizType("sms_verify");
+            messageDTO.setBizId(scene + ":" + phone);
+
+            List<SendResultVO> results = messageService.send(messageDTO);
+
+            if (!results.isEmpty() && !Boolean.TRUE.equals(results.get(0).getSuccess())) {
+                log.error("短信发送失败：phone={}, error={}",
+                        SensitiveUtils.maskPhone(phone), results.get(0).getErrorMsg());
+            }
+        } catch (Exception e) {
+            // 发送失败不影响验证码已生成，用户可以重新获取
+            log.error("调用消息模块发送短信失败：phone={}", SensitiveUtils.maskPhone(phone), e);
+        }
+    }
+
     @Override
     public boolean verifyCode(String phone, String code, String scene) {
         // 检查验证错误锁定
         String lockKey = "sms:verify_lock:" + phone;
         if (Boolean.TRUE.equals(redisTemplate.hasKey(lockKey))) {
-            log.warn("验证码验证被锁定：{}", phone);
+            log.warn("验证码验证被锁定：{}", SensitiveUtils.maskPhone(phone));
             return false;
         }
 
         String redisKey = "sms:code:" + phone + ":" + scene;
-        
+
         // 使用 Lua 脚本原子性地获取并删除验证码
-        String verifyAndDeleteScript = 
+        String verifyAndDeleteScript =
             "local code = redis.call('GET', KEYS[1]); " +
             "if code then " +
             "  redis.call('DEL', KEYS[1]); " +
             "  return code; " +
             "end " +
             "return nil;";
-        
+
         String storedCode = redisTemplate.execute(
-            new DefaultRedisScript<>(verifyAndDeleteScript, String.class),
+            new org.springframework.data.redis.core.script.DefaultRedisScript<>(verifyAndDeleteScript, String.class),
             java.util.Collections.singletonList(redisKey)
         );
 
         if (storedCode == null) {
-            log.warn("验证码已过期或已被使用：{}", phone);
+            log.warn("验证码已过期或已被使用：{}", SensitiveUtils.maskPhone(phone));
             return false;
         }
 
         if (!code.equals(storedCode)) {
-            log.warn("验证码错误：{}", phone);
+            log.warn("验证码错误：{}", SensitiveUtils.maskPhone(phone));
 
             // 增加错误计数
             String failKey = "sms:verify_fail:" + phone;
@@ -178,7 +197,7 @@ public class SmsServiceImpl implements SmsService {
             // 达到错误上限，锁定账户
             if (failCount != null && failCount >= securityProperties.getMaxVerifyFailCount()) {
                 redisTemplate.opsForValue().set(lockKey, "1", securityProperties.getVerifyLockMinutes(), TimeUnit.MINUTES);
-                log.warn("验证码错误次数过多，已锁定：{}", phone);
+                log.warn("验证码错误次数过多，已锁定：{}", SensitiveUtils.maskPhone(phone));
             }
 
             return false;
@@ -195,13 +214,10 @@ public class SmsServiceImpl implements SmsService {
             log.warn("更新验证码状态失败", e);
         }
 
-        log.info("验证码验证成功：phone={}, scene={}", phone, scene);
+        log.info("验证码验证成功：phone={}, scene={}", SensitiveUtils.maskPhone(phone), scene);
         return true;
     }
 
-    /**
-     * 检查是否需要图形验证码
-     */
     @Override
     public boolean isCaptchaRequired(String ip) {
         if (!StringUtils.hasLength(ip)) {
@@ -212,12 +228,10 @@ public class SmsServiceImpl implements SmsService {
 
     /**
      * 更新验证码状态（异步，仅用于审计）
-     * <p>使用 UpdateChain 直接更新，避免先查询</p>
      */
     @org.springframework.scheduling.annotation.Async
     public void updateSmsCodeStatusAsync(String phone, String scene) {
         try {
-            // 使用 UpdateChain 直接更新，一条 SQL 完成
             boolean updated = UpdateChain.of(SysSmsCode.class)
                     .set(SYS_SMS_CODE.STATUS, 0)
                     .where(SYS_SMS_CODE.PHONE.eq(phone))
@@ -226,10 +240,10 @@ public class SmsServiceImpl implements SmsService {
                     .update();
 
             if (updated) {
-                log.debug("验证码状态已更新: phone={}", phone);
+                log.debug("验证码状态已更新: phone={}", SensitiveUtils.maskPhone(phone));
             }
         } catch (Exception e) {
-            log.warn("更新验证码状态失败: phone={}", phone, e);
+            log.warn("更新验证码状态失败: phone={}", SensitiveUtils.maskPhone(phone), e);
         }
     }
 
@@ -244,5 +258,4 @@ public class SmsServiceImpl implements SmsService {
         }
         return sb.toString();
     }
-
 }

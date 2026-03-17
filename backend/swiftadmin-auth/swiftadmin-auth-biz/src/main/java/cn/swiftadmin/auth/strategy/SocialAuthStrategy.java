@@ -83,6 +83,13 @@ public class SocialAuthStrategy implements AuthStrategy {
         log.info("社交登录策略初始化完成，已注册平台：{}", handlerMap.keySet());
     }
 
+    /**
+     * 获取登录类型
+     * <p>社交登录不走 AuthStrategyFactory，直接由 SocialAuthController 调用</p>
+     * <p>因此返回 null，不参与策略工厂的路由</p>
+     *
+     * @return null
+     */
     @Override
     public LoginType getLoginType() {
         return null;
@@ -161,7 +168,7 @@ public class SocialAuthStrategy implements AuthStrategy {
         String state = encodeState(stateDTO);
         String url = getHandler(source).getAuthUrl(state);
 
-        String stateKey = RedisKeyConstants.OAUTH_STATE + state;
+        String stateKey = RedisKeyConstants.oauthState(state);
         try {
             String stateJson = objectMapper.writeValueAsString(stateDTO);
             redisTemplate.opsForValue().set(stateKey, stateJson, OAuthStateDTO.VALID_PERIOD, TimeUnit.MILLISECONDS);
@@ -181,7 +188,7 @@ public class SocialAuthStrategy implements AuthStrategy {
             throw new SocialAuthException(SocialAuthError.STATE_INVALID);
         }
 
-        String stateKey = RedisKeyConstants.OAUTH_STATE + state;
+        String stateKey = RedisKeyConstants.oauthState(state);
         String stateJson = redisTemplate.opsForValue().get(stateKey);
 
         OAuthStateDTO stateDTO;
@@ -219,7 +226,7 @@ public class SocialAuthStrategy implements AuthStrategy {
      */
     @Override
     public void bindAccount(Long userId, String tempToken) {
-        String cacheKey = RedisKeyConstants.OAUTH_TEMP_TOKEN + tempToken;
+        String cacheKey = RedisKeyConstants.oauthTempToken(tempToken);
 
         DefaultRedisScript<String> script = new DefaultRedisScript<>(GET_AND_DELETE_SCRIPT, String.class);
         String userInfoJson = redisTemplate.execute(script, Collections.singletonList(cacheKey));
@@ -337,7 +344,7 @@ public class SocialAuthStrategy implements AuthStrategy {
 
     private String generateTempToken(String openId, String source, SocialUserInfo userInfo) {
         String tempToken = UUID.randomUUID().toString().replace("-", "");
-        String cacheKey = RedisKeyConstants.OAUTH_TEMP_TOKEN + tempToken;
+        String cacheKey = RedisKeyConstants.oauthTempToken(tempToken);
 
         Map<String, Object> tempInfo = userInfo.toMap();
         tempInfo.put("openId", openId);

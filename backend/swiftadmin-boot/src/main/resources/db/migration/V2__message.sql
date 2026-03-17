@@ -32,7 +32,8 @@ CREATE INDEX idx_channel_status ON msg_channel(status);
 CREATE TABLE msg_template (
     id BIGINT NOT NULL PRIMARY KEY,
     template_name VARCHAR(100) NOT NULL COMMENT '模板名称',
-    template_code VARCHAR(50) NOT NULL COMMENT '模板编码',
+    template_code VARCHAR(50) NOT NULL COMMENT '模板编码（系统内部唯一标识）',
+    provider_template_code VARCHAR(100) COMMENT '云服务商模板码（如阿里云SMS_123456789）',
     channel_type VARCHAR(20) NOT NULL COMMENT '渠道类型',
     subject VARCHAR(200) COMMENT '主题（邮件使用）',
     content TEXT NOT NULL COMMENT '模板内容',
@@ -122,22 +123,25 @@ CREATE INDEX idx_inbox_create_time ON msg_user_inbox(create_time);
 -- ============================================
 
 -- 初始化默认渠道
+-- 注意：sms 渠道的 templateCode 为默认云服务商模板码，实际发送时优先使用模板表中的配置
 INSERT INTO msg_channel (id, channel_name, channel_type, channel_code, config, status, priority, remark) VALUES
 (1, '站内信', 'inbox', 'default_inbox', '{}', 1, 100, '默认站内信渠道'),
-(2, '系统短信', 'sms', 'default_sms', '{"provider":"aliyun","accessKeyId":"","accessKeySecret":"","signName":"","regionId":"cn-hangzhou"}', 0, 50, '阿里云短信渠道，需要配置AccessKey'),
+(2, '系统短信', 'sms', 'default_sms', '{"provider":"aliyun","accessKeyId":"","accessKeySecret":"","signName":"","regionId":"cn-hangzhou","templateCode":""}', 0, 50, '阿里云短信渠道，需配置AccessKey'),
 (3, '系统邮件', 'email', 'default_email', '{"host":"","port":465,"username":"","password":"","from":"","sslEnabled":true}', 0, 40, 'SMTP邮件渠道'),
 (4, '企业微信机器人', 'wecom', 'default_wecom', '{"webhookUrl":""}', 0, 30, '企业微信机器人Webhook'),
 (5, '钉钉机器人', 'dingtalk', 'default_dingtalk', '{"webhookUrl":"","secret":""}', 0, 30, '钉钉机器人Webhook'),
 (6, '飞书机器人', 'feishu', 'default_feishu', '{"webhookUrl":"","secret":""}', 0, 30, '飞书机器人Webhook');
 
 -- 初始化示例模板
-INSERT INTO msg_template (id, template_name, template_code, channel_type, subject, content, variables, status, remark) VALUES
-(1, '欢迎邮件', 'welcome_email', 'email', '欢迎加入 SwiftAdmin', '亲爱的 ${username}，欢迎加入 SwiftAdmin！您的账号已创建成功。', '["username"]', 1, '用户注册欢迎邮件'),
-(2, '验证码短信', 'verify_code_sms', 'sms', NULL, '您的验证码是 ${code}，有效期 ${expireMinutes} 分钟，请勿泄露给他人。', '["code","expireMinutes"]', 1, '通用验证码短信模板'),
-(3, '登录提醒', 'login_notice', 'inbox', NULL, '您的账号于 ${loginTime} 在 ${device} 上登录，如非本人操作，请及时修改密码。', '["loginTime","device"]', 1, '登录安全提醒'),
-(4, '密码修改通知', 'password_changed', 'email', '密码修改通知', '尊敬的 ${username}，您的密码已于 ${changeTime} 修改成功。如非本人操作，请立即联系管理员。', '["username","changeTime"]', 1, '密码修改成功通知'),
-(5, '系统公告', 'system_notice', 'inbox', '${title}', '${content}', '["title","content"]', 1, '系统公告模板'),
-(6, '订单状态变更', 'order_status', 'sms', NULL, '您的订单 ${orderNo} 状态已变更为 ${status}，请及时查看。', '["orderNo","status"]', 1, '订单状态变更通知');
+-- template_code: 系统内部编码，业务代码引用
+-- provider_template_code: 云服务商模板码，实际发送时使用
+INSERT INTO msg_template (id, template_name, template_code, provider_template_code, channel_type, subject, content, variables, status, remark) VALUES
+(1, '欢迎邮件', 'welcome_email', NULL, 'email', '欢迎加入 SwiftAdmin', '亲爱的 ${username}，欢迎加入 SwiftAdmin！您的账号已创建成功。', '["username"]', 1, '用户注册欢迎邮件'),
+(2, '验证码短信', 'verify_code_sms', 'SMS_000000000', 'sms', NULL, '您的验证码是 ${code}，有效期 ${expireMinutes} 分钟，请勿泄露给他人。', '["code","expireMinutes"]', 1, '短信验证码模板'),
+(3, '登录提醒', 'login_notice', NULL, 'inbox', NULL, '您的账号于 ${loginTime} 在 ${device} 上登录，如非本人操作，请及时修改密码。', '["loginTime","device"]', 1, '登录安全提醒'),
+(4, '密码修改通知', 'password_changed', NULL, 'email', '密码修改通知', '尊敬的 ${username}，您的密码已于 ${changeTime} 修改成功。如非本人操作，请立即联系管理员。', '["username","changeTime"]', 1, '密码修改成功通知'),
+(5, '系统公告', 'system_notice', NULL, 'inbox', '${title}', '${content}', '["title","content"]', 1, '系统公告模板'),
+(6, '订单状态变更', 'order_status_change', 'SMS_000000001', 'sms', NULL, '您的订单 ${orderNo} 状态已变更为 ${status}，请及时查看。', '["orderNo","status"]', 0, '订单状态变更通知');
 
 -- 初始化菜单
 INSERT INTO sys_menu (id, parent_id, name, path, component, type, icon, sort_order, permission, status) VALUES

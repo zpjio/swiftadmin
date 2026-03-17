@@ -32,9 +32,13 @@ public class MsgTemplate {
     @Column
     private String templateName;
 
-    /** 模板编码（唯一标识） */
+    /** 模板编码（系统内部唯一标识，业务代码引用） */
     @Column
     private String templateCode;
+
+    /** 云服务商模板码（如阿里云 SMS_123456789，腾讯云 123456） */
+    @Column
+    private String providerTemplateCode;
 
     /** 渠道类型 */
     @Column

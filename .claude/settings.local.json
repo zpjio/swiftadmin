@@ -6,7 +6,8 @@
       "Write(*)",
       "Edit(*)",
       "WebSearch",
-      "WebFetch(domain:mybatis-flex.com)"
+      "WebFetch(domain:mybatis-flex.com)",
+      "mcp__zread__get_repo_structure"
     ]
   },
   "dangerouslyDisableSandbox": true

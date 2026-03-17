@@ -110,6 +110,20 @@ public class AuthSecurityProperties {
      */
     private int captchaTriggerFailCount = 3;
 
+    // ========== IP 限流配置 ==========
+
+    /**
+     * 单 IP 每小时最大登录尝试次数
+     * <p>超过此次数后 IP 将被加入黑名单</p>
+     */
+    private int ipLoginLimitPerHour = 20;
+
+    /**
+     * IP 黑名单锁定时间（分钟）
+     * <p>IP 触发限流后的锁定时长</p>
+     */
+    private int ipBlacklistMinutes = 30;
+
     // ========== 社交 Token 配置 ==========
 
     /**
@@ -180,6 +194,8 @@ public class AuthSecurityProperties {
         validateRange("verifyLockMinutes", verifyLockMinutes, 1, 120, "验证码错误锁定时间");
         validateRange("userCacheExpireMinutes", userCacheExpireMinutes, 1, 1440, "用户缓存有效期");
         validateRange("captchaTriggerFailCount", captchaTriggerFailCount, 1, 10, "登录失败触发图形验证码阈值");
+        validateRange("ipLoginLimitPerHour", ipLoginLimitPerHour, 1, 100, "IP 每小时登录次数限制");
+        validateRange("ipBlacklistMinutes", ipBlacklistMinutes, 1, 1440, "IP 黑名单锁定时间");
         validateRange("refreshThresholdHours", refreshThresholdHours, 1, 72, "社交 Token 刷新阈值");
         validateRange("bindLockTimeoutSeconds", bindLockTimeoutSeconds, 1, 300, "绑定锁超时时间");
         validateRange("ipChangeThreshold", ipChangeThreshold, 1, 10, "IP 变化次数阈值");
