@@ -35,6 +35,9 @@ public class AsyncConfig {
         executor.setRejectedExecutionHandler((r, e) -> {
             r.run();
         });
+        // 优雅关闭配置
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(60);
         executor.initialize();
         return executor;
     }
@@ -56,6 +59,9 @@ public class AsyncConfig {
             // 队列满时由调用线程执行，确保预热任务不丢失
             r.run();
         });
+        // 优雅关闭配置
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(30);
         executor.initialize();
         return executor;
     }
