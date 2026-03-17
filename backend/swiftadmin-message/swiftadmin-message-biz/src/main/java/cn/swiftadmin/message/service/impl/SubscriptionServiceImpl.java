@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import static cn.swiftadmin.message.api.entity.table.MsgSubscriptionTableDef.MSG_SUBSCRIPTION;
@@ -87,8 +88,43 @@ public class SubscriptionServiceImpl extends ServiceImpl<MsgSubscriptionMapper, 
         if (CollectionUtils.isEmpty(dtoList)) {
             return;
         }
+
+        Long userId = SecurityUtils.getCurrentUserId();
+        if (userId == null) {
+            throw new BusinessException(401, "用户未登录");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        List<MsgSubscription> toInsert = new ArrayList<>();
+        List<MsgSubscription> toUpdate = new ArrayList<>();
+
         for (SubscriptionDTO dto : dtoList) {
-            update(dto);
+            MsgSubscription existing = getOne(QueryWrapper.create()
+                    .where(MSG_SUBSCRIPTION.USER_ID.eq(userId))
+                    .and(MSG_SUBSCRIPTION.MSG_TYPE.eq(dto.getMsgType()))
+                    .and(MSG_SUBSCRIPTION.CHANNEL_TYPE.eq(dto.getChannelType())));
+
+            if (existing != null) {
+                existing.setSubscribed(dto.getSubscribed());
+                existing.setUpdateTime(now);
+                toUpdate.add(existing);
+            } else {
+                toInsert.add(MsgSubscription.builder()
+                        .userId(userId)
+                        .msgType(dto.getMsgType())
+                        .channelType(dto.getChannelType())
+                        .subscribed(dto.getSubscribed())
+                        .createTime(now)
+                        .updateTime(now)
+                        .build());
+            }
+        }
+
+        if (!toInsert.isEmpty()) {
+            saveBatch(toInsert);
+        }
+        if (!toUpdate.isEmpty()) {
+            updateBatch(toUpdate);
         }
     }
 
@@ -107,19 +143,20 @@ public class SubscriptionServiceImpl extends ServiceImpl<MsgSubscriptionMapper, 
     @Transactional(rollbackFor = Exception.class)
     public void initDefaultSubscriptions(Long userId) {
         LocalDateTime now = LocalDateTime.now();
+        List<MsgSubscription> subscriptions = new ArrayList<>(DEFAULT_MSG_TYPES.length);
 
         for (String msgType : DEFAULT_MSG_TYPES) {
-            MsgSubscription subscription = MsgSubscription.builder()
+            subscriptions.add(MsgSubscription.builder()
                     .userId(userId)
                     .msgType(msgType)
                     .channelType(DEFAULT_CHANNEL)
                     .subscribed(1)
                     .createTime(now)
                     .updateTime(now)
-                    .build();
-            save(subscription);
+                    .build());
         }
 
+        saveBatch(subscriptions);
         log.info("初始化用户默认订阅: userId={}", userId);
     }
 }

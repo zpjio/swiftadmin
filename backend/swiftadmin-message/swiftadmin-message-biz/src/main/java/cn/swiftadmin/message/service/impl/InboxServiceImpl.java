@@ -101,17 +101,18 @@ public class InboxServiceImpl extends ServiceImpl<MsgUserInboxMapper, MsgUserInb
             return UnreadCountVO.of(0L, Collections.emptyMap());
         }
 
-        // 获取总数
-        Long total = mapper.selectCountByQuery(QueryWrapper.create()
+        // 一次查询获取所有未读消息，在内存中统计（减少数据库查询次数）
+        List<MsgUserInbox> unreadList = list(QueryWrapper.create()
+                .select(MSG_USER_INBOX.MSG_TYPE)
                 .where(MSG_USER_INBOX.USER_ID.eq(userId))
                 .and(MSG_USER_INBOX.IS_READ.eq(0)));
 
-        // 按类型统计
-        List<MsgUserInbox> list = list(QueryWrapper.create()
-                .where(MSG_USER_INBOX.USER_ID.eq(userId))
-                .and(MSG_USER_INBOX.IS_READ.eq(0)));
+        if (CollectionUtils.isEmpty(unreadList)) {
+            return UnreadCountVO.of(0L, Collections.emptyMap());
+        }
 
-        Map<String, Long> byType = list.stream()
+        long total = unreadList.size();
+        Map<String, Long> byType = unreadList.stream()
                 .filter(inbox -> StringUtils.hasText(inbox.getMsgType()))
                 .collect(Collectors.groupingBy(MsgUserInbox::getMsgType, Collectors.counting()));
 

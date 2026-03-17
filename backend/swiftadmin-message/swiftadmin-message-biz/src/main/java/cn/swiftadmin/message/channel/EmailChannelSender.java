@@ -14,13 +14,15 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 邮件渠道发送器
+ * <p>使用本地缓存避免每次发送都创建新的 JavaMailSender</p>
  *
  * @author zhangpengju
  * @since 2026-03-13
@@ -32,6 +34,12 @@ public class EmailChannelSender extends AbstractChannelSender {
 
     private final ObjectMapper objectMapper;
 
+    /** JavaMailSender 缓存：渠道ID -> JavaMailSender */
+    private final Map<Long, JavaMailSender> senderCache = new ConcurrentHashMap<>();
+
+    /** 渠道配置缓存：渠道ID -> config JSON string，用于检测配置变更 */
+    private final Map<Long, String> configCache = new ConcurrentHashMap<>();
+
     @Override
     public ChannelType getChannelType() {
         return ChannelType.EMAIL;
@@ -40,10 +48,13 @@ public class EmailChannelSender extends AbstractChannelSender {
     @Override
     protected SendResult doSend(MessageContext context) {
         try {
-            JsonNode config = objectMapper.readTree(context.getChannel().getConfig());
-            JavaMailSender mailSender = createMailSender(config);
+            Long channelId = context.getChannel().getId();
+            String config = context.getChannel().getConfig();
 
-            String from = config.has("from") ? config.get("from").asText() : "";
+            JavaMailSender mailSender = getOrCreateMailSender(channelId, config);
+
+            JsonNode configNode = objectMapper.readTree(config);
+            String from = configNode.has("from") ? configNode.get("from").asText() : "";
             String subject = context.getSubject();
             String content = context.getContent();
             String to = context.getTo();
@@ -103,6 +114,36 @@ public class EmailChannelSender extends AbstractChannelSender {
         }
     }
 
+    /**
+     * 获取或创建 JavaMailSender（带缓存）
+     */
+    private JavaMailSender getOrCreateMailSender(Long channelId, String config) {
+        // 检查配置是否变更
+        String cachedConfig = configCache.get(channelId);
+        if (cachedConfig != null && cachedConfig.equals(config)) {
+            JavaMailSender cached = senderCache.get(channelId);
+            if (cached != null) {
+                return cached;
+            }
+        }
+
+        // 配置变更或首次创建
+        try {
+            JsonNode configNode = objectMapper.readTree(config);
+            JavaMailSender mailSender = createMailSender(configNode);
+            senderCache.put(channelId, mailSender);
+            configCache.put(channelId, config);
+            log.debug("创建/更新 JavaMailSender 缓存: channelId={}", channelId);
+            return mailSender;
+        } catch (Exception e) {
+            log.error("解析邮件配置失败: channelId={}", channelId, e);
+            throw new RuntimeException("邮件配置解析失败", e);
+        }
+    }
+
+    /**
+     * 创建 JavaMailSender
+     */
     private JavaMailSender createMailSender(JsonNode config) {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost(config.get("host").asText());
@@ -123,5 +164,23 @@ public class EmailChannelSender extends AbstractChannelSender {
         }
 
         return mailSender;
+    }
+
+    /**
+     * 清除指定渠道的缓存
+     */
+    public void clearCache(Long channelId) {
+        senderCache.remove(channelId);
+        configCache.remove(channelId);
+        log.info("清除邮件发送器缓存: channelId={}", channelId);
+    }
+
+    /**
+     * 清除所有缓存
+     */
+    public void clearAllCache() {
+        senderCache.clear();
+        configCache.clear();
+        log.info("清除所有邮件发送器缓存");
     }
 }

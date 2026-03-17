@@ -4,6 +4,11 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Arrays;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 /**
  * 消息渠道类型枚举
  *
@@ -40,18 +45,17 @@ public enum ChannelType {
 
     private final String name;
 
+    /** code -> ChannelType 映射缓存 */
+    private static final Map<String, ChannelType> CODE_MAP = Arrays.stream(values())
+            .collect(Collectors.toMap(ChannelType::getCode, Function.identity()));
+
     /**
      * 根据编码获取枚举
      *
      * @param code 编码
-     * @return 枚举值
+     * @return 枚举值，不存在返回 null
      */
     public static ChannelType fromCode(String code) {
-        for (ChannelType type : values()) {
-            if (type.getCode().equals(code)) {
-                return type;
-            }
-        }
-        return null;
+        return CODE_MAP.get(code);
     }
 }

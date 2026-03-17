@@ -13,9 +13,11 @@ import cn.swiftadmin.message.api.enums.ChannelType;
 import cn.swiftadmin.message.api.service.ChannelService;
 import cn.swiftadmin.message.api.vo.ChannelVO;
 import cn.swiftadmin.message.channel.ChannelSenderFactory;
+import cn.swiftadmin.message.channel.EmailChannelSender;
 import cn.swiftadmin.message.mapper.MsgChannelMapper;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
+import com.mybatisflex.core.update.UpdateChain;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +42,7 @@ import static cn.swiftadmin.message.api.entity.table.MsgChannelTableDef.MSG_CHAN
 public class ChannelServiceImpl extends ServiceImpl<MsgChannelMapper, MsgChannel> implements ChannelService {
 
     private final ChannelSenderFactory senderFactory;
+    private final EmailChannelSender emailChannelSender;
 
     @Override
     public Page<ChannelVO> page(ChannelQueryDTO query) {
@@ -132,6 +135,12 @@ public class ChannelServiceImpl extends ServiceImpl<MsgChannelMapper, MsgChannel
             throw new BusinessException(400, "渠道编码已存在");
         }
 
+        // 配置变更时清除邮件发送器缓存
+        if (ChannelType.EMAIL.getCode().equals(existing.getChannelType())
+                && !existing.getConfig().equals(dto.getConfig())) {
+            emailChannelSender.clearCache(dto.getId());
+        }
+
         existing.setChannelName(dto.getChannelName());
         existing.setChannelType(dto.getChannelType());
         existing.setChannelCode(dto.getChannelCode());
@@ -152,6 +161,11 @@ public class ChannelServiceImpl extends ServiceImpl<MsgChannelMapper, MsgChannel
             return;
         }
 
+        // 清除邮件渠道的缓存
+        for (Long id : ids) {
+            emailChannelSender.clearCache(id);
+        }
+
         // MyBatis-Flex 会自动处理逻辑删除（因为 @Column(isLogicDelete = true)）
         removeByIds(ids);
         log.info("渠道删除成功: ids={}", ids);
@@ -160,14 +174,11 @@ public class ChannelServiceImpl extends ServiceImpl<MsgChannelMapper, MsgChannel
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long id, Integer status) {
-        MsgChannel channel = getById(id);
-        if (channel == null) {
-            throw new BusinessException(404, "渠道不存在");
-        }
-
-        channel.setStatus(status);
-        channel.setUpdateTime(LocalDateTime.now());
-        updateById(channel);
+        UpdateChain.of(MsgChannel.class)
+                .set(MSG_CHANNEL.STATUS, status)
+                .set(MSG_CHANNEL.UPDATE_TIME, LocalDateTime.now())
+                .where(MSG_CHANNEL.ID.eq(id))
+                .update();
         log.info("渠道状态更新: id={}, status={}", id, status);
     }
 
