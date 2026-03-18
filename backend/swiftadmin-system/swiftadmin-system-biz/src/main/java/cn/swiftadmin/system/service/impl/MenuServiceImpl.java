@@ -83,9 +83,6 @@ public class MenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impleme
                 .sortOrder(dto.getSortOrder() != null ? dto.getSortOrder() : 0)
                 .permission(dto.getPermission())
                 .status(dto.getStatus() != null ? CommonStatus.fromCode(dto.getStatus()) : CommonStatus.ENABLED)
-                .createTime(LocalDateTime.now())
-                .updateTime(LocalDateTime.now())
-                .deleted(0)
                 .build();
 
         save(menu);

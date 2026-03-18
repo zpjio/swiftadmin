@@ -78,11 +78,11 @@ public class ScheduleJob {
     private String remark;
 
     /** 创建时间 */
-    @Column
+    @Column(onInsertValue = "now()")
     private LocalDateTime createTime;
 
     /** 更新时间 */
-    @Column
+    @Column(onInsertValue = "now()", onUpdateValue = "now()")
     private LocalDateTime updateTime;
 
     /** 创建人 */

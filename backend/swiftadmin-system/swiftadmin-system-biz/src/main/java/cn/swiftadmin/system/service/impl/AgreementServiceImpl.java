@@ -86,9 +86,6 @@ public class AgreementServiceImpl extends ServiceImpl<SysAgreementMapper, SysAgr
                 .content(dto.getContent())
                 .status(dto.getStatus() != null ? dto.getStatus() : 1)
                 .effectiveDate(dto.getEffectiveDate())
-                .createTime(LocalDateTime.now())
-                .updateTime(LocalDateTime.now())
-                .deleted(0)
                 .build();
 
         save(agreement);
@@ -170,7 +167,6 @@ public class AgreementServiceImpl extends ServiceImpl<SysAgreementMapper, SysAgr
                     .agreementType(agreementType)
                     .agreedVersion(version)
                     .agreedTime(LocalDateTime.now())
-                    .createTime(LocalDateTime.now())
                     .build();
             userAgreementMapper.insert(record);
         }

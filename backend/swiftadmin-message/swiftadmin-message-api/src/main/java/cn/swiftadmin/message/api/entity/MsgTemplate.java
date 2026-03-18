@@ -64,14 +64,6 @@ public class MsgTemplate {
     @Column
     private String remark;
 
-    /** 创建时间 */
-    @Column
-    private LocalDateTime createTime;
-
-    /** 更新时间 */
-    @Column
-    private LocalDateTime updateTime;
-
     /** 创建人 ID */
     @Column
     private Long createBy;
@@ -80,7 +72,16 @@ public class MsgTemplate {
     @Column
     private Long updateBy;
 
-    /** 删除标记：0=正常，1=已删除 */
+    /** 创建时间 */
+    @Column(onInsertValue = "now()")
+    private LocalDateTime createTime;
+
+    /** 更新时间 */
+    @Column(onInsertValue = "now()", onUpdateValue = "now()")
+    private LocalDateTime updateTime;
+
+    /** 是否删除：0=未删除，1=已删除 */
     @Column(isLogicDelete = true)
     private Integer deleted;
+
 }

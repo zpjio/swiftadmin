@@ -57,14 +57,14 @@ public class MsgChannel {
     private String remark;
 
     /** 创建时间 */
-    @Column
+    @Column(onInsertValue = "now()")
     private LocalDateTime createTime;
 
     /** 更新时间 */
-    @Column
+    @Column(onInsertValue = "now()", onUpdateValue = "now()")
     private LocalDateTime updateTime;
 
-    /** 删除标记：0=正常，1=已删除 */
+    /** 是否删除：0=未删除，1=已删除 */
     @Column(isLogicDelete = true)
     private Integer deleted;
 

@@ -134,7 +134,6 @@ public class SocialBindServiceImpl extends ServiceImpl<SysSocialBindMapper, SysS
                 .tokenExpiresAt(calculateTokenExpiresAt(userInfo.getExpiresIn()))
                 .extraInfo(serializeExtraInfo(userInfo))
                 .bindTime(LocalDateTime.now())
-                .updateTime(LocalDateTime.now())
                 .build();
 
         try {

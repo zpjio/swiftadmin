@@ -103,9 +103,6 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
                 .description(dto.getDescription())
                 .dataScope(dto.getDataScope() != null ? dto.getDataScope() : 5)
                 .status(dto.getStatus() != null ? CommonStatus.fromCode(dto.getStatus()) : CommonStatus.ENABLED)
-                .createTime(LocalDateTime.now())
-                .updateTime(LocalDateTime.now())
-                .deleted(0)
                 .build();
 
         save(role);

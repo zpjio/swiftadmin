@@ -47,7 +47,6 @@ public class PasswordHistoryServiceImpl extends ServiceImpl<SysPasswordHistoryMa
         SysPasswordHistory history = SysPasswordHistory.builder()
                 .userId(userId)
                 .passwordHash(passwordHash)
-                .createTime(LocalDateTime.now())
                 .build();
         save(history);
     }

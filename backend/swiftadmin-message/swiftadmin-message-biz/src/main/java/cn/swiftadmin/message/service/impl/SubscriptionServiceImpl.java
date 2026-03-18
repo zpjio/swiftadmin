@@ -67,7 +67,6 @@ public class SubscriptionServiceImpl extends ServiceImpl<MsgSubscriptionMapper, 
 
         if (existing != null) {
             existing.setSubscribed(dto.getSubscribed());
-            existing.setUpdateTime(LocalDateTime.now());
             updateById(existing);
         } else {
             MsgSubscription subscription = MsgSubscription.builder()
@@ -75,8 +74,6 @@ public class SubscriptionServiceImpl extends ServiceImpl<MsgSubscriptionMapper, 
                     .msgType(dto.getMsgType())
                     .channelType(dto.getChannelType())
                     .subscribed(dto.getSubscribed())
-                    .createTime(LocalDateTime.now())
-                    .updateTime(LocalDateTime.now())
                     .build();
             save(subscription);
         }
@@ -94,7 +91,6 @@ public class SubscriptionServiceImpl extends ServiceImpl<MsgSubscriptionMapper, 
             throw new BusinessException(401, "用户未登录");
         }
 
-        LocalDateTime now = LocalDateTime.now();
         List<MsgSubscription> toInsert = new ArrayList<>();
         List<MsgSubscription> toUpdate = new ArrayList<>();
 
@@ -106,7 +102,6 @@ public class SubscriptionServiceImpl extends ServiceImpl<MsgSubscriptionMapper, 
 
             if (existing != null) {
                 existing.setSubscribed(dto.getSubscribed());
-                existing.setUpdateTime(now);
                 toUpdate.add(existing);
             } else {
                 toInsert.add(MsgSubscription.builder()
@@ -114,8 +109,6 @@ public class SubscriptionServiceImpl extends ServiceImpl<MsgSubscriptionMapper, 
                         .msgType(dto.getMsgType())
                         .channelType(dto.getChannelType())
                         .subscribed(dto.getSubscribed())
-                        .createTime(now)
-                        .updateTime(now)
                         .build());
             }
         }

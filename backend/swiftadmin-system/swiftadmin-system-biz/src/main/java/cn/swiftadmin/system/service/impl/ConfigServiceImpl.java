@@ -156,8 +156,6 @@ public class ConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig> i
                 .configName(dto.getConfigName())
                 .configType(configType)
                 .remark(dto.getRemark())
-                .createTime(LocalDateTime.now())
-                .updateTime(LocalDateTime.now())
                 .build();
 
         save(config);

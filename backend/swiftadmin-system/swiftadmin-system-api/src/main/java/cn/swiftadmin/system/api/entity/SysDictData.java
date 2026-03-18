@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 @Table("sys_dict_data")
 public class SysDictData {
 
-    /** 字典数据 ID */
+    /** 主键 ID */
     @Id(keyType = KeyType.Generator, value = "snowFlakeId")
     private Long id;
 
@@ -54,11 +54,11 @@ public class SysDictData {
     private String remark;
 
     /** 创建时间 */
-    @Column
+    @Column(onInsertValue = "now()")
     private LocalDateTime createTime;
 
     /** 更新时间 */
-    @Column
+    @Column(onInsertValue = "now()", onUpdateValue = "now()")
     private LocalDateTime updateTime;
 
     /** 是否删除：0=未删除，1=已删除 */

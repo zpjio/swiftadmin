@@ -100,9 +100,6 @@ public class TemplateServiceImpl extends ServiceImpl<MsgTemplateMapper, MsgTempl
                 .variables(dto.getVariables())
                 .status(dto.getStatus() != null ? dto.getStatus() : 1)
                 .remark(dto.getRemark())
-                .createTime(LocalDateTime.now())
-                .updateTime(LocalDateTime.now())
-                .deleted(0)
                 .build();
 
         save(template);

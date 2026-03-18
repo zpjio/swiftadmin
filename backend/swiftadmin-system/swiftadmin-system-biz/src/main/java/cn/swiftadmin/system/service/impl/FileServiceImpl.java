@@ -79,8 +79,6 @@ public class FileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impleme
                     .uploadUserName(uploadUserName)
                     .downloadCount(0)
                     .status(1)
-                    .createTime(LocalDateTime.now())
-                    .updateTime(LocalDateTime.now())
                     .deleted(0)
                     .build();
 

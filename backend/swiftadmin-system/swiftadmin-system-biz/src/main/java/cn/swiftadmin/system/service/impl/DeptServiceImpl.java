@@ -76,9 +76,6 @@ public class DeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impleme
                 .phone(dto.getPhone())
                 .email(dto.getEmail())
                 .status(dto.getStatus() != null ? CommonStatus.fromCode(dto.getStatus()) : CommonStatus.ENABLED)
-                .createTime(LocalDateTime.now())
-                .updateTime(LocalDateTime.now())
-                .deleted(0)
                 .build();
 
         save(dept);

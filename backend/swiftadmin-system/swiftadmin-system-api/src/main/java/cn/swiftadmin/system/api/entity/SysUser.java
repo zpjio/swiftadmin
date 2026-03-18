@@ -31,7 +31,7 @@ import java.time.LocalDateTime;
 @Table("sys_user")
 public class SysUser {
 
-    /** 用户 ID */
+    /** 主键 ID */
     @Id(keyType = KeyType.Generator, value = "snowFlakeId")
     private Long id;
 
@@ -73,18 +73,6 @@ public class SysUser {
     @Column
     private YesNo isSuper;
 
-    /** 创建时间 */
-    @Column
-    private LocalDateTime createTime;
-
-    /** 更新时间 */
-    @Column
-    private LocalDateTime updateTime;
-
-    /** 是否删除：0=未删除，1=已删除 */
-    @Column(isLogicDelete = true)
-    private Integer deleted;
-
     /** 登录失败次数 */
     @Column
     private Integer loginFailCount;
@@ -100,5 +88,17 @@ public class SysUser {
     /** 是否强制修改密码 */
     @Column
     private YesNo forceChangePassword;
+
+    /** 创建时间 */
+    @Column(onInsertValue = "now()")
+    private LocalDateTime createTime;
+
+    /** 更新时间 */
+    @Column(onInsertValue = "now()", onUpdateValue = "now()")
+    private LocalDateTime updateTime;
+
+    /** 是否删除：0=未删除，1=已删除 */
+    @Column(isLogicDelete = true)
+    private Integer deleted;
 
 }

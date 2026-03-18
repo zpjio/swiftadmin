@@ -359,7 +359,6 @@ public class MessageServiceImpl extends ServiceImpl<MsgRecordMapper, MsgRecord> 
                 .bizId(dto.getBizId())
                 .status(MessageStatus.PENDING.getCode())
                 .retryCount(0)
-                .createTime(LocalDateTime.now())
                 .build();
     }
 

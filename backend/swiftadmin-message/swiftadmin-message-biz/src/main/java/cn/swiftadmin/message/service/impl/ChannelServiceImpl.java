@@ -108,9 +108,6 @@ public class ChannelServiceImpl extends ServiceImpl<MsgChannelMapper, MsgChannel
                 .status(dto.getStatus() != null ? dto.getStatus() : 1)
                 .priority(dto.getPriority() != null ? dto.getPriority() : 0)
                 .remark(dto.getRemark())
-                .createTime(LocalDateTime.now())
-                .updateTime(LocalDateTime.now())
-                .deleted(0)
                 .build();
 
         save(channel);
@@ -148,7 +145,6 @@ public class ChannelServiceImpl extends ServiceImpl<MsgChannelMapper, MsgChannel
         existing.setStatus(dto.getStatus());
         existing.setPriority(dto.getPriority());
         existing.setRemark(dto.getRemark());
-        existing.setUpdateTime(LocalDateTime.now());
 
         updateById(existing);
         log.info("渠道更新成功: id={}", existing.getId());
