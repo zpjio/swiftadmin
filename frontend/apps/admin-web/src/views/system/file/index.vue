@@ -2,68 +2,69 @@
   <div class="h-full">
     <NCard :bordered="false">
       <!-- 搜索栏 -->
-      <NForm :model="queryForm" inline label-width="80" class="mb-4">
-        <NFormItem label="文件名" path="fileName">
-          <NInput
-            v-model:value="queryForm.fileName"
-            placeholder="请输入文件名"
-            clearable
-            class="w-48"
-          />
-        </NFormItem>
-        <NFormItem label="文件类型" path="fileType">
-          <NSelect
-            v-model:value="queryForm.fileType"
-            :options="fileTypeOptions"
-            placeholder="请选择类型"
-            clearable
-            class="w-48"
-          />
-        </NFormItem>
-        <NFormItem>
-          <NSpace>
-            <NButton type="primary" @click="handleSearch">
-              <template #icon><icon-mdi-magnify /></template>
-              搜索
-            </NButton>
-            <NButton @click="handleReset">
-              <template #icon><icon-mdi-refresh /></template>
-              重置
-            </NButton>
-          </NSpace>
-        </NFormItem>
-      </NForm>
+      <div class="flex justify-between items-start flex-wrap gap-4 mb-4">
+        <NForm :model="queryForm" inline label-width="80" class="flex flex-wrap gap-4">
+          <NFormItem label="文件名" path="fileName">
+            <NInput
+              v-model:value="queryForm.fileName"
+              placeholder="请输入文件名"
+              clearable
+              style="width: 180px"
+            />
+          </NFormItem>
+          <NFormItem label="文件类型" path="fileType">
+            <NSelect
+              v-model:value="queryForm.fileType"
+              :options="fileTypeOptions"
+              placeholder="请选择类型"
+              clearable
+              style="width: 150px"
+            />
+          </NFormItem>
+          <NFormItem>
+            <NSpace>
+              <NButton type="primary" @click="handleSearch">
+                <template #icon><icon-mdi-magnify /></template>
+                搜索
+              </NButton>
+              <NButton @click="handleReset">
+                <template #icon><icon-mdi-refresh /></template>
+                重置
+              </NButton>
+            </NSpace>
+          </NFormItem>
+        </NForm>
 
-      <!-- 操作按钮 -->
-      <NSpace class="mb-4">
-        <NUpload
-          :action="uploadUrl"
-          :headers="uploadHeaders"
-          :name="'file'"
-          :show-file-list="false"
-          @finish="handleUploadFinish"
-          @error="handleUploadError"
-        >
-          <NButton type="primary">
-            <template #icon><icon-mdi-upload /></template>
-            上传文件
+        <NSpace>
+          <NUpload
+            :action="uploadUrl"
+            :headers="uploadHeaders"
+            :name="'file'"
+            :show-file-list="false"
+            @finish="handleUploadFinish"
+            @error="handleUploadError"
+          >
+            <NButton type="primary">
+              <template #icon><icon-mdi-upload /></template>
+              上传文件
+            </NButton>
+          </NUpload>
+          <NButton @click="handleCreateFolder">
+            <template #icon><icon-mdi-folder-plus /></template>
+            新建文件夹
           </NButton>
-        </NUpload>
-        <NButton @click="handleCreateFolder">
-          <template #icon><icon-mdi-folder-plus /></template>
-          新建文件夹
-        </NButton>
-        <NButton
-          type="error"
-          :disabled="!hasSelection"
-          @click="handleBatchDelete"
-        >
-          <template #icon><icon-mdi-delete /></template>
-          批量删除
-        </NButton>
-      </NSpace>
+          <NButton
+            type="error"
+            :disabled="!hasSelection"
+            @click="handleBatchDelete"
+          >
+            <template #icon><icon-mdi-delete /></template>
+            批量删除
+          </NButton>
+        </NSpace>
+      </div>
 
-      <!-- 文件列表（表格模式） -->
+      <!-- 文件列表 -->
       <NDataTable
         :columns="columns"
         :data="tableData"
@@ -91,30 +92,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, h, onMounted, computed } from 'vue'
+import { ref, h, computed } from 'vue'
 import { useMessage, type DataTableColumns } from 'naive-ui'
 import { getFilePageApi, deleteFileApi, downloadFileApi } from '@/api/file'
 import type { FileVO, FileQuery } from '@/api/file'
 import { getIconClass } from '@/utils/icon'
 import { buildAuthHeader } from '@/utils/auth'
 import { formatDateTime } from '@/utils/date'
-import { usePagination, useTableSelection } from '@/composables'
+import { useTablePage, useConfirm, useTableActions } from '@/composables'
 
 const message = useMessage()
-const loading = ref(false)
-const tableData = ref<FileVO[]>([])
-const { selectedKeys, hasSelection, clearSelection, onSelectionChange } = useTableSelection<FileVO>()
-
-const queryForm = reactive<FileQuery>({
-  fileName: undefined,
-  fileType: undefined,
-})
-
-// 分页
-const { paginationProps, setTotal, getIndex } = usePagination({
-  onChange: () => loadData(),
-  onPageSizeChange: () => loadData(),
-})
+const { confirmDelete, confirmBatchDelete } = useConfirm()
+const { renderActions } = useTableActions()
 
 const fileTypeOptions = [
   { label: '图片', value: 'image' },
@@ -127,6 +116,33 @@ const fileTypeOptions = [
 // 上传配置
 const uploadUrl = computed(() => `${import.meta.env.VITE_API_BASE_URL}/system/file/upload`)
 const uploadHeaders = computed(() => buildAuthHeader())
+
+// 表格分页
+const {
+  loading,
+  tableData,
+  queryForm,
+  paginationProps,
+  getIndex,
+  loadData,
+  handleSearch,
+  handleReset,
+  selection,
+} = useTablePage<FileVO, FileQuery>({
+  fetchFn: getFilePageApi,
+  defaultQuery: {
+    fileName: undefined,
+    fileType: undefined,
+  },
+  enableSelection: true,
+  immediate: true,
+})
+
+// 选择相关的便捷访问
+const selectedKeys = selection!.selectedKeys
+const hasSelection = selection!.hasSelection
+const clearSelection = selection!.clearSelection
+const onSelectionChange = selection!.onSelectionChange
 
 const columns: DataTableColumns<FileVO> = [
   { type: 'selection', fixed: 'left' },
@@ -156,12 +172,11 @@ const columns: DataTableColumns<FileVO> = [
     key: 'actions',
     width: 200,
     fixed: 'right',
-    render: (row) =>
-      h('div', { class: 'flex gap-2' }, [
-        h('button', { class: 'text-blue-600 hover:underline', onClick: () => handlePreview(row) }, '预览'),
-        h('button', { class: 'text-green-600 hover:underline', onClick: () => handleDownload(row) }, '下载'),
-        h('button', { class: 'text-red-600 hover:underline', onClick: () => handleDelete(row) }, '删除'),
-      ]),
+    render: (row) => renderActions([
+      { label: '预览', color: '#2563eb', onClick: () => handlePreview(row) },
+      { label: '下载', color: '#059669', onClick: () => handleDownload(row) },
+      { label: '删除', color: '#dc2626', onClick: () => handleDelete(row) },
+    ]),
   },
 ]
 
@@ -170,29 +185,6 @@ const showPreview = ref(false)
 const previewTitle = ref('')
 const previewUrl = ref('')
 const previewType = ref<'image' | 'video' | 'pdf' | 'other'>('other')
-
-const loadData = async () => {
-  loading.value = true
-  try {
-    const res = await getFilePageApi(queryForm)
-    tableData.value = res.records || []
-    setTotal(res.totalRow || 0)
-  } catch (error: any) {
-    message.error(error.message || '加载失败')
-  } finally {
-    loading.value = false
-  }
-}
-
-const handleSearch = () => {
-  loadData()
-}
-
-const handleReset = () => {
-  queryForm.fileName = undefined
-  queryForm.fileType = undefined
-  loadData()
-}
 
 const handleUploadFinish = ({ event }: any) => {
   const res = JSON.parse(event.target.responseText)
@@ -212,29 +204,25 @@ const handleCreateFolder = () => {
   message.info('新建文件夹功能开发中...')
 }
 
-const handleDelete = async (row: FileVO) => {
-  try {
+const handleDelete = (row: FileVO) => {
+  confirmDelete(`确定要删除文件 "${row.fileName}" 吗？`, async () => {
     await deleteFileApi([row.id])
     message.success('删除成功')
     loadData()
-  } catch (error: any) {
-    message.error(error.message || '删除失败')
-  }
+  })
 }
 
-const handleBatchDelete = async () => {
+const handleBatchDelete = () => {
   if (!hasSelection.value) {
     message.warning('请选择要删除的文件')
     return
   }
-  try {
-    await deleteFileApi(selectedKeys.value)
+  confirmBatchDelete(selectedKeys.value.length, async () => {
+    await deleteFileApi(selectedKeys.value as string[])
     message.success('删除成功')
     clearSelection()
     loadData()
-  } catch (error: any) {
-    message.error(error.message || '删除失败')
-  }
+  })
 }
 
 const handlePreview = (row: FileVO) => {
@@ -302,9 +290,3 @@ const getFileIcon = (type?: string) => {
   if (['mp3', 'wav', 'flac'].includes(t)) return 'music'
   return 'file'
 }
-
-onMounted(() => {
-  loadData()
-})
-</script>
-

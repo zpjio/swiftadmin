@@ -1,14 +1,7 @@
 import { ref, reactive, type Ref, type ComputedRef } from 'vue'
 import { usePagination, type PaginationParams, type PaginationState } from './usePagination'
 import { useTableSelection, type UseTableSelectionReturn } from './useTableSelection'
-
-/**
- * 分页结果接口（后端返回格式）
- */
-export interface PageResult<T> {
-  records: T[]
-  totalRow: number
-}
+import type { PageResult } from '@/types'
 
 /**
  * 分页查询函数类型

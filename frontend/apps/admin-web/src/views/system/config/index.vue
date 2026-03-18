@@ -2,51 +2,52 @@
   <div class="h-full">
     <NCard title="系统配置" :bordered="false">
       <!-- 搜索栏 -->
-      <NForm :model="queryForm" inline class="mb-4">
-        <NFormItem label="配置名称" path="configName">
-          <NInput v-model:value="queryForm.configName" placeholder="请输入配置名称" clearable style="width: 180px" />
-        </NFormItem>
-        <NFormItem label="配置键" path="configKey">
-          <NInput v-model:value="queryForm.configKey" placeholder="请输入配置键" clearable style="width: 180px" />
-        </NFormItem>
-        <NFormItem label="配置类型" path="configType">
-          <NSelect
-            v-model:value="queryForm.configType"
-            :options="configTypeOptions"
-            placeholder="请选择配置类型"
-            clearable
-            style="width: 150px"
-          />
-        </NFormItem>
-        <NFormItem>
-          <NSpace>
-            <NButton type="primary" @click="handleSearch">
-              <template #icon><icon-mdi-magnify /></template>
-              搜索
-            </NButton>
-            <NButton @click="handleReset">
-              <template #icon><icon-mdi-refresh /></template>
-              重置
-            </NButton>
-          </NSpace>
-        </NFormItem>
-      </NForm>
+      <div class="flex justify-between items-start flex-wrap gap-4 mb-4">
+        <NForm :model="queryForm" inline class="flex flex-wrap gap-4">
+          <NFormItem label="配置名称" path="configName">
+            <NInput v-model:value="queryForm.configName" placeholder="请输入配置名称" clearable style="width: 180px" />
+          </NFormItem>
+          <NFormItem label="配置键" path="configKey">
+            <NInput v-model:value="queryForm.configKey" placeholder="请输入配置键" clearable style="width: 180px" />
+          </NFormItem>
+          <NFormItem label="配置类型" path="configType">
+            <NSelect
+              v-model:value="queryForm.configType"
+              :options="configTypeOptions"
+              placeholder="请选择配置类型"
+              clearable
+              style="width: 150px"
+            />
+          </NFormItem>
+          <NFormItem>
+            <NSpace>
+              <NButton type="primary" @click="handleSearch">
+                <template #icon><icon-mdi-magnify /></template>
+                搜索
+              </NButton>
+              <NButton @click="handleReset">
+                <template #icon><icon-mdi-refresh /></template>
+                重置
+              </NButton>
+            </NSpace>
+          </NFormItem>
+        </NForm>
 
-      <!-- 操作按钮 -->
-      <NSpace class="mb-4">
-        <NButton v-auth="'system:config:add'" type="primary" @click="handleAdd">
-          <template #icon><icon-mdi-plus /></template>
-          新增配置
-        </NButton>
-        <NButton @click="handleRefreshCache">
-          <template #icon><icon-mdi-refresh /></template>
-          刷新缓存
-        </NButton>
-        <NButton v-auth="'system:config:delete'" type="error" :disabled="!hasSelection" @click="handleBatchDelete">
-          <template #icon><icon-mdi-delete /></template>
-          批量删除
-        </NButton>
-      </NSpace>
+        <NSpace>
+          <NButton v-auth="'system:config:add'" type="primary" @click="handleAdd">
+            <template #icon><icon-mdi-plus /></template>
+            新增配置
+          </NButton>
+          <NButton @click="handleRefreshCache">
+            <template #icon><icon-mdi-refresh /></template>
+            刷新缓存
+          </NButton>
+          <NButton v-auth="'system:config:delete'" type="error" :disabled="!hasSelection" @click="handleBatchDelete">
+            <template #icon><icon-mdi-delete /></template>
+            批量删除
+          </NButton>
+        </NSpace>
+      </div>
 
       <!-- 表格 -->
       <NDataTable
@@ -62,25 +63,25 @@
 
     <!-- 新增/编辑弹窗 -->
     <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 500px;">
-      <NForm ref="formRef" :model="form" :rules="rules" label-width="100">
+      <NForm ref="formRef" :model="formData" :rules="rules" label-width="100">
         <NFormItem label="配置名称" path="configName">
-          <NInput v-model:value="form.configName" placeholder="请输入配置名称" />
+          <NInput v-model:value="formData.configName" placeholder="请输入配置名称" />
         </NFormItem>
         <NFormItem label="配置键" path="configKey">
-          <NInput v-model:value="form.configKey" placeholder="请输入配置键（如：system.name）" :disabled="isEdit" />
+          <NInput v-model:value="formData.configKey" placeholder="请输入配置键（如：system.name）" :disabled="isEdit" />
         </NFormItem>
         <NFormItem label="配置值" path="configValue">
-          <NInput v-model:value="form.configValue" placeholder="请输入配置值" />
+          <NInput v-model:value="formData.configValue" placeholder="请输入配置值" />
         </NFormItem>
         <NFormItem label="配置类型" path="configType">
           <NSelect
-            v-model:value="form.configType"
+            v-model:value="formData.configType"
             :options="configTypeOptions"
             placeholder="请选择配置类型"
           />
         </NFormItem>
         <NFormItem label="描述" path="description">
-          <NInput v-model:value="form.description" type="textarea" placeholder="请输入配置描述" :rows="3" />
+          <NInput v-model:value="formData.description" type="textarea" placeholder="请输入配置描述" :rows="3" />
         </NFormItem>
       </NForm>
 
@@ -95,8 +96,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, h } from 'vue'
-import { useMessage, useDialog, type DataTableColumns } from 'naive-ui'
+import { ref } from 'vue'
+import { useMessage, type DataTableColumns, type FormInst, type FormRules } from 'naive-ui'
 import {
   getConfigPageApi,
   getConfigDetailApi,
@@ -108,13 +109,14 @@ import {
   type ConfigDTO,
   type ConfigQuery,
 } from '@/api/config'
-import { useDict } from '@/composables/useDict'
-import { usePermission, useTablePage } from '@/composables'
+import { useDict, usePermission, useTablePage, useConfirm, useTableActions, useFormReset } from '@/composables'
 
 const message = useMessage()
-const dialog = useDialog()
 const { hasPermission } = usePermission()
-const formRef = ref<any>(null)
+const { confirmDelete, confirmBatchDelete } = useConfirm()
+const { renderActions, edit, del } = useTableActions()
+
+const formRef = ref<FormInst | null>(null)
 const showModal = ref(false)
 const saving = ref(false)
 const isEdit = ref(false)
@@ -151,7 +153,9 @@ const hasSelection = selection!.hasSelection
 const clearSelection = selection!.clearSelection
 const onSelectionChange = selection!.onSelectionChange
 
-const form = reactive<ConfigDTO>({
+// 使用 useFormReset 管理表单
+const { formData, resetForm, setForm } = useFormReset<ConfigDTO>({
+  id: undefined,
   configName: '',
   configKey: '',
   configValue: '',
@@ -159,7 +163,7 @@ const form = reactive<ConfigDTO>({
   description: '',
 })
 
-const rules = {
+const rules: FormRules = {
   configName: [{ required: true, message: '请输入配置名称', trigger: 'blur' }],
   configKey: [{ required: true, message: '请输入配置键', trigger: 'blur' }],
   configValue: [{ required: true, message: '请输入配置值', trigger: 'blur' }],
@@ -189,24 +193,17 @@ const columns: DataTableColumns<ConfigVO> = [
     key: 'actions',
     width: 150,
     fixed: 'right',
-    render: (row) =>
-      h('div', { style: { display: 'flex', gap: '8px' } }, [
-        hasPermission('system:config:edit') ? h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer' }, onClick: () => handleEdit(row) }, '编辑') : null,
-        hasPermission('system:config:delete') ? h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer' }, onClick: () => handleDelete(row) }, '删除') : null,
-      ]),
+    render: (row) => renderActions([
+      edit(() => handleEdit(row), hasPermission('system:config:edit')),
+      del(() => handleDelete(row), hasPermission('system:config:delete')),
+    ]),
   },
 ]
 
 const handleAdd = () => {
   isEdit.value = false
   modalTitle.value = '新增配置'
-  Object.assign(form, {
-    configName: '',
-    configKey: '',
-    configValue: '',
-    configType: '',
-    description: '',
-  })
+  resetForm()
   showModal.value = true
 }
 
@@ -215,7 +212,7 @@ const handleEdit = async (row: ConfigVO) => {
   modalTitle.value = '编辑配置'
   try {
     const detail = await getConfigDetailApi(row.id)
-    Object.assign(form, detail)
+    setForm(detail)
     showModal.value = true
   } catch (error: any) {
     message.error(error.message || '获取详情失败')
@@ -228,9 +225,9 @@ const handleSave = async () => {
     saving.value = true
 
     if (isEdit.value) {
-      await updateConfigApi(form as ConfigDTO)
+      await updateConfigApi(formData)
     } else {
-      await createConfigApi(form as ConfigDTO)
+      await createConfigApi(formData)
     }
 
     message.success('保存成功')
@@ -244,20 +241,10 @@ const handleSave = async () => {
 }
 
 const handleDelete = (row: ConfigVO) => {
-  dialog.warning({
-    title: '确认删除',
-    content: `确定要删除配置 "${row.configName}" 吗？`,
-    positiveText: '确定',
-    negativeText: '取消',
-    onPositiveClick: async () => {
-      try {
-        await deleteConfigApi([row.id])
-        message.success('删除成功')
-        loadData()
-      } catch (error: any) {
-        message.error(error.message || '删除失败')
-      }
-    },
+  confirmDelete(`确定要删除配置 "${row.configName}" 吗？`, async () => {
+    await deleteConfigApi([row.id])
+    message.success('删除成功')
+    loadData()
   })
 }
 
@@ -266,21 +253,11 @@ const handleBatchDelete = () => {
     message.warning('请选择要删除的配置')
     return
   }
-  dialog.warning({
-    title: '确认删除',
-    content: `确定要删除选中的 ${selectedKeys.value.length} 个配置吗？`,
-    positiveText: '确定',
-    negativeText: '取消',
-    onPositiveClick: async () => {
-      try {
-        await deleteConfigApi(selectedKeys.value)
-        message.success('删除成功')
-        clearSelection()
-        loadData()
-      } catch (error: any) {
-        message.error(error.message || '删除失败')
-      }
-    },
+  confirmBatchDelete(selectedKeys.value.length, async () => {
+    await deleteConfigApi(selectedKeys.value as string[])
+    message.success('删除成功')
+    clearSelection()
+    loadData()
   })
 }
 
