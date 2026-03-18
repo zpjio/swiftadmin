@@ -2,6 +2,8 @@ package cn.swiftadmin.common.mybatis.datascope;
 
 import cn.swiftadmin.common.mybatis.aspect.DataScopeAspect;
 
+import java.util.function.Supplier;
+
 /**
  * 数据权限助手类
  * <p>提供跳过数据权限的工具方法</p>
@@ -21,7 +23,7 @@ public final class DataScopeHelper {
      * @param <T>      返回类型
      * @return 查询结果
      */
-    public static <T> T withoutDataScope(java.util.function.Supplier<T> supplier) {
+    public static <T> T withoutDataScope(Supplier<T> supplier) {
         return DataScopeAspect.withoutDataScope(supplier);
     }
 

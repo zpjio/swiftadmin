@@ -12,6 +12,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * 数据权限切面
@@ -81,7 +82,7 @@ public class DataScopeAspect {
     /**
      * 跳过数据权限执行
      */
-    public static <T> T withoutDataScope(java.util.function.Supplier<T> supplier) {
+    public static <T> T withoutDataScope(Supplier<T> supplier) {
         IGNORE_FLAG.set(Boolean.TRUE);
         try {
             return supplier.get();

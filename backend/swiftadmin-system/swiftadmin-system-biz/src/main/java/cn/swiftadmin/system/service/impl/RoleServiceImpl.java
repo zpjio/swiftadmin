@@ -55,6 +55,7 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<RoleVO> page(RoleQueryDTO query) {
         QueryWrapper queryWrapper = QueryWrapper.create()
                 .where(SYS_ROLE.NAME.like(PageHelper.likeIfPresent(query.getName())))
@@ -66,6 +67,7 @@ public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impleme
     }
 
     @Override
+    @Transactional(readOnly = true)
     public RoleVO getDetail(Long id) {
         SysRole role = getById(id);
         if (role == null) {

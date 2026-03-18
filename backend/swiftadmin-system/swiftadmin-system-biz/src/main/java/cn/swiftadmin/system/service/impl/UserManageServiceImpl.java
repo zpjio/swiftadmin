@@ -61,6 +61,7 @@ public class UserManageServiceImpl implements UserManageService {
     private final PasswordValidator passwordValidator;
 
     @Override
+    @Transactional(readOnly = true)
     @DataScope(userAlias = "u", userIdField = "id")
     public Page<UserVO> page(UserQueryDTO query) {
         QueryWrapper queryWrapper = QueryWrappers.create()
@@ -81,6 +82,7 @@ public class UserManageServiceImpl implements UserManageService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserVO getDetail(Long id) {
         SysUser user = userService.getById(id);
         if (user == null) {

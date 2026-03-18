@@ -14,6 +14,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.*;
@@ -112,8 +113,11 @@ public class DataScopeValidateAspect {
         Set<Long> permittedUserIds = new HashSet<>();
         Set<Long> deniedUserIds = new HashSet<>();
 
+        // 批量查询用户部门，避免 N+1 问题
+        Map<Long, Long> userDeptMap = batchQueryUserDepts(userIds);
+
         for (Long userId : userIds) {
-            Long deptId = queryUserDept(userId);
+            Long deptId = userDeptMap.getOrDefault(userId, null);
             boolean hasPermission = validationService.validateDataScope(userId, deptId);
 
             if (hasPermission) {
@@ -168,6 +172,23 @@ public class DataScopeValidateAspect {
     }
 
     /**
+     * 批量查询用户部门
+     * <p>避免 N+1 查询问题</p>
+     */
+    private Map<Long, Long> batchQueryUserDepts(List<Long> userIds) {
+        if (userInfoQueryService == null) {
+            log.warn("UserInfoQueryService 未注入，无法批量查询用户部门");
+            return Collections.emptyMap();
+        }
+        try {
+            return userInfoQueryService.getDeptIdsByUserIds(userIds);
+        } catch (Exception e) {
+            log.warn("批量查询用户部门失败: userIds={}", userIds, e);
+            return Collections.emptyMap();
+        }
+    }
+
+    /**
      * 提取用户ID列表参数
      */
     @SuppressWarnings("unchecked")
@@ -191,7 +212,7 @@ public class DataScopeValidateAspect {
                                         .collect(Collectors.toList());
                             }
                         } catch (ClassCastException e) {
-                            // ignore
+                            log.debug("参数 {} 类型转换失败", paramName, e);
                         }
                     }
                 }
@@ -216,7 +237,7 @@ public class DataScopeValidateAspect {
                                 .collect(Collectors.toList());
                     }
                 } catch (Exception e) {
-                    // ignore
+                    log.debug("从 DTO 提取用户ID列表失败", e);
                 }
             }
         }
@@ -226,12 +247,67 @@ public class DataScopeValidateAspect {
 
     /**
      * 注入过滤后的用户ID列表
+     * <p>通过修改 List 参数内容来实现参数注入</p>
      */
+    @SuppressWarnings("unchecked")
     private void injectFilteredUserIds(ProceedingJoinPoint joinPoint, Set<Long> permittedUserIds) {
-        // 通过修改参数数组来注入过滤后的用户ID
-        // 注意：这需要方法参数是可修改的集合类型
-        // 实际应用中可能需要更复杂的处理
-        log.debug("注入过滤后的用户ID列表: {}", permittedUserIds);
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        Method method = signature.getMethod();
+        Parameter[] parameters = method.getParameters();
+        Object[] args = joinPoint.getArgs();
+
+        List<Long> filteredList = new ArrayList<>(permittedUserIds);
+
+        // 查找并修改 List<Long> 类型的参数
+        for (String paramName : USER_IDS_PARAMS) {
+            for (int i = 0; i < parameters.length; i++) {
+                if (parameters[i].getName().equals(paramName) && args[i] instanceof List) {
+                    try {
+                        List<Object> list = (List<Object>) args[i];
+                        // 清空原列表并添加过滤后的ID
+                        list.clear();
+                        list.addAll(filteredList);
+                        log.debug("注入过滤后的用户ID列表: {} -> {}", paramName, filteredList);
+                        return;
+                    } catch (UnsupportedOperationException e) {
+                        // 不可修改的列表（如 Collections.unmodifiableList）
+                        log.warn("参数 {} 是不可修改的列表，无法注入过滤后的用户ID", paramName);
+                    } catch (ClassCastException e) {
+                        log.debug("参数 {} 类型转换失败", paramName);
+                    }
+                }
+            }
+        }
+
+        // 尝试修改 DTO 中的字段
+        Object dto = findDtoParameter(joinPoint, method);
+        if (dto != null) {
+            injectFilteredUserIdsToDto(dto, filteredList);
+        }
+    }
+
+    /**
+     * 将过滤后的用户ID注入到 DTO 对象中
+     */
+    private void injectFilteredUserIdsToDto(Object dto, List<Long> filteredList) {
+        for (String fieldName : USER_IDS_PARAMS) {
+            try {
+                Field field = findField(dto.getClass(), fieldName);
+                if (field != null && List.class.isAssignableFrom(field.getType())) {
+                    field.setAccessible(true);
+                    @SuppressWarnings("unchecked")
+                    List<Object> list = (List<Object>) field.get(dto);
+                    if (list != null) {
+                        list.clear();
+                        list.addAll(filteredList);
+                        log.debug("注入过滤后的用户ID列表到 DTO 字段: {} -> {}", fieldName, filteredList);
+                        return;
+                    }
+                }
+            } catch (Exception e) {
+                log.debug("注入 DTO 字段 {} 失败", fieldName, e);
+            }
+        }
     }
 
     /**
@@ -260,7 +336,7 @@ public class DataScopeValidateAspect {
                     try {
                         return type.cast(args[i]);
                     } catch (ClassCastException e) {
-                        // ignore
+                        log.debug("参数 {} 类型转换失败，期望类型: {}", paramName, type.getName(), e);
                     }
                 }
             }
@@ -295,7 +371,7 @@ public class DataScopeValidateAspect {
         Class<?> clazz = obj.getClass();
         for (String fieldName : fieldNames) {
             try {
-                java.lang.reflect.Field field = findField(clazz, fieldName);
+                Field field = findField(clazz, fieldName);
                 if (field != null) {
                     field.setAccessible(true);
                     Object value = field.get(obj);
@@ -304,7 +380,7 @@ public class DataScopeValidateAspect {
                     }
                 }
             } catch (Exception e) {
-                // ignore
+                log.debug("提取字段 {} 值失败", fieldName, e);
             }
         }
 
@@ -320,7 +396,7 @@ public class DataScopeValidateAspect {
         return null;
     }
 
-    private java.lang.reflect.Field findField(Class<?> clazz, String fieldName) {
+    private Field findField(Class<?> clazz, String fieldName) {
         try {
             return clazz.getDeclaredField(fieldName);
         } catch (NoSuchFieldException e) {
@@ -328,6 +404,7 @@ public class DataScopeValidateAspect {
             if (superClass != null && superClass != Object.class) {
                 return findField(superClass, fieldName);
             }
+            log.debug("未找到字段: {} in {}", fieldName, clazz.getName());
             return null;
         }
     }

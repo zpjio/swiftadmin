@@ -1,5 +1,9 @@
 package cn.swiftadmin.common.mybatis.service;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 /**
  * 用户信息查询服务接口
  * <p>用于数据权限校验时查询用户部门信息</p>
@@ -17,6 +21,17 @@ public interface UserInfoQueryService {
      * @return 部门ID，不存在返回 null
      */
     Long getDeptIdByUserId(Long userId);
+
+    /**
+     * 批量根据用户ID查询部门ID
+     * <p>避免 N+1 查询问题</p>
+     *
+     * @param userIds 用户ID列表
+     * @return 用户ID -> 部门ID 映射
+     */
+    default Map<Long, Long> getDeptIdsByUserIds(List<Long> userIds) {
+        return Collections.emptyMap();
+    }
 
     /**
      * 根据用户ID查询用户名

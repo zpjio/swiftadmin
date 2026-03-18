@@ -3,6 +3,7 @@ package cn.swiftadmin.auth.service.impl;
 import cn.swiftadmin.auth.api.service.CaptchaService;
 import cn.swiftadmin.auth.api.vo.CaptchaVO;
 import cn.swiftadmin.auth.captcha.CaptchaGenerator;
+import cn.swiftadmin.common.core.constants.RedisKeyConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -26,9 +27,6 @@ public class CaptchaServiceImpl implements CaptchaService {
 
     private final StringRedisTemplate redisTemplate;
 
-    /** 验证码 Redis Key 前缀 */
-    private static final String CAPTCHA_KEY_PREFIX = "captcha:";
-
     /** 验证码有效期（分钟） */
     private static final int EXPIRE_MINUTES = 5;
 
@@ -44,7 +42,7 @@ public class CaptchaServiceImpl implements CaptchaService {
         String image = CaptchaGenerator.generateImage(code);
 
         // 存储到 Redis（验证时使用小写比较，不区分大小写）
-        String key = CAPTCHA_KEY_PREFIX + captchaId;
+        String key = RedisKeyConstants.captcha(captchaId);
         redisTemplate.opsForValue().set(key, code.toLowerCase(), EXPIRE_MINUTES, TimeUnit.MINUTES);
 
         log.debug("生成验证码：id={}, code={}", captchaId, code);
@@ -61,7 +59,7 @@ public class CaptchaServiceImpl implements CaptchaService {
             return false;
         }
 
-        String key = CAPTCHA_KEY_PREFIX + captchaId;
+        String key = RedisKeyConstants.captcha(captchaId);
 
         // 使用 Lua 脚本原子性地获取并删除验证码
         String verifyAndDeleteScript =
@@ -93,7 +91,7 @@ public class CaptchaServiceImpl implements CaptchaService {
 
     @Override
     public boolean isCaptchaRequired(String ip, int threshold) {
-        String key = "sms:ip_count:" + ip;
+        String key = RedisKeyConstants.smsIpCount(ip);
         String countStr = redisTemplate.opsForValue().get(key);
         if (countStr == null) {
             return false;

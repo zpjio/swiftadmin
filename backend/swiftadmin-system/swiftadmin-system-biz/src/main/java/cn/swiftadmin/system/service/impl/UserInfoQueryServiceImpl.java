@@ -5,10 +5,18 @@ import cn.swiftadmin.system.api.entity.SysDept;
 import cn.swiftadmin.system.api.entity.SysUser;
 import cn.swiftadmin.system.api.service.UserService;
 import cn.swiftadmin.system.mapper.SysDeptMapper;
+import com.mybatisflex.core.query.QueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * 用户信息查询服务实现
@@ -31,6 +39,20 @@ public class UserInfoQueryServiceImpl implements UserInfoQueryService {
         }
         SysUser user = userService.getById(userId);
         return user != null ? user.getDeptId() : null;
+    }
+
+    @Override
+    public Map<Long, Long> getDeptIdsByUserIds(List<Long> userIds) {
+        if (CollectionUtils.isEmpty(userIds)) {
+            return Collections.emptyMap();
+        }
+        List<SysUser> users = userService.listByIds(userIds);
+        if (CollectionUtils.isEmpty(users)) {
+            return Collections.emptyMap();
+        }
+        return users.stream()
+                .filter(u -> u.getDeptId() != null)
+                .collect(Collectors.toMap(SysUser::getId, SysUser::getDeptId, (v1, v2) -> v1));
     }
 
     @Override

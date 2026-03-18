@@ -1,5 +1,6 @@
 package cn.swiftadmin.system.service.impl;
 
+import cn.swiftadmin.common.core.constants.RedisKeyConstants;
 import cn.swiftadmin.common.core.exception.BusinessException;
 import com.mybatisflex.core.paginate.Page;
 import cn.swiftadmin.common.core.util.BeanCopyUtils;
@@ -41,9 +42,6 @@ public class ConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig> i
 
     private final StringRedisTemplate redisTemplate;
 
-    /** 配置缓存前缀 */
-    private static final String CACHE_PREFIX = "swiftadmin:config:";
-
     /** 缓存过期时间（小时） */
     private static final int CACHE_EXPIRE_HOURS = 24;
 
@@ -59,7 +57,7 @@ public class ConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig> i
     @Override
     public String getValue(String key, String defaultValue) {
         // 1. 先从 Redis 缓存获取
-        String cacheKey = CACHE_PREFIX + key;
+        String cacheKey = RedisKeyConstants.sysConfig(key);
         String cachedValue = redisTemplate.opsForValue().get(cacheKey);
         if (cachedValue != null) {
             return cachedValue;
@@ -104,6 +102,7 @@ public class ConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig> i
     // ==================== 配置管理方法 ====================
 
     @Override
+    @Transactional(readOnly = true)
     public Page<ConfigVO> page(ConfigQueryDTO query) {
         QueryWrapper queryWrapper = QueryWrapper.create()
                 .where(SYS_CONFIG.CONFIG_KEY.like(PageHelper.likeIfPresent(query.getConfigKey())))
@@ -115,12 +114,14 @@ public class ConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig> i
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ConfigVO getDetail(Long id) {
         SysConfig config = getById(id);
         return config != null ? BeanCopyUtils.copy(config, ConfigVO::new) : null;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ConfigVO getByKey(String configKey) {
         SysConfig config = getOne(QueryWrapper.create()
                 .where(SYS_CONFIG.CONFIG_KEY.eq(configKey)));
@@ -236,7 +237,7 @@ public class ConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig> i
             log.info("配置缓存已刷新: {}", configKey);
         } else {
             // 刷新全部缓存
-            Set<String> keys = redisTemplate.keys(CACHE_PREFIX + "*");
+            Set<String> keys = redisTemplate.keys(RedisKeyConstants.SYS_CONFIG + "*");
             if (!CollectionUtils.isEmpty(keys)) {
                 redisTemplate.delete(keys);
             }
@@ -263,7 +264,7 @@ public class ConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig> i
      */
     private void cacheValue(String key, String value) {
         if (value != null) {
-            String cacheKey = CACHE_PREFIX + key;
+            String cacheKey = RedisKeyConstants.sysConfig(key);
             redisTemplate.opsForValue().set(cacheKey, value, CACHE_EXPIRE_HOURS, TimeUnit.HOURS);
         }
     }
@@ -272,7 +273,7 @@ public class ConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig> i
      * 清除缓存
      */
     private void evictCache(String key) {
-        String cacheKey = CACHE_PREFIX + key;
+        String cacheKey = RedisKeyConstants.sysConfig(key);
         redisTemplate.delete(cacheKey);
     }
 

@@ -5,6 +5,7 @@ import cn.swiftadmin.auth.api.service.CaptchaService;
 import cn.swiftadmin.auth.api.service.SmsService;
 import cn.swiftadmin.auth.config.AuthSecurityProperties;
 import cn.swiftadmin.auth.mapper.SysSmsCodeMapper;
+import cn.swiftadmin.common.core.constants.RedisKeyConstants;
 import cn.swiftadmin.common.core.exception.BusinessException;
 import cn.swiftadmin.common.core.result.ErrorCode;
 import cn.swiftadmin.common.core.util.SensitiveUtils;
@@ -52,20 +53,20 @@ public class SmsServiceImpl implements SmsService {
     @Override
     public void sendCode(String phone, String scene, String ip, String captchaId, String captchaCode) {
         // 0. 检查验证错误锁定
-        String lockKey = "sms:verify_lock:" + phone;
+        String lockKey = RedisKeyConstants.smsVerifyLock(phone);
         if (Boolean.TRUE.equals(redisTemplate.hasKey(lockKey))) {
             throw new BusinessException(ErrorCode.RATE_LIMIT_EXCEEDED);
         }
 
         // 1. 检查发送频率（1 分钟内只能发送 1 次）
-        String intervalKey = "sms:interval:" + phone;
+        String intervalKey = RedisKeyConstants.smsInterval(phone);
         Boolean exists = redisTemplate.hasKey(intervalKey);
         if (Boolean.TRUE.equals(exists)) {
             throw new BusinessException(ErrorCode.SEND_TOO_FREQUENT);
         }
 
         // 2. 检查 1 小时内发送次数（手机号维度）
-        String hourCountKey = "sms:hour_count:" + phone;
+        String hourCountKey = RedisKeyConstants.smsHourCount(phone);
         String countStr = redisTemplate.opsForValue().get(hourCountKey);
         int count = countStr != null ? Integer.parseInt(countStr) : 0;
         if (count >= securityProperties.getMaxSendPerHour()) {
@@ -74,7 +75,7 @@ public class SmsServiceImpl implements SmsService {
 
         // 3. IP 级别限流
         if (StringUtils.hasText(ip)) {
-            String ipCountKey = "sms:ip_count:" + ip;
+            String ipCountKey = RedisKeyConstants.smsIpCount(ip);
             String ipCountStr = redisTemplate.opsForValue().get(ipCountKey);
             int ipCount = ipCountStr != null ? Integer.parseInt(ipCountStr) : 0;
 
@@ -113,7 +114,7 @@ public class SmsServiceImpl implements SmsService {
         smsCodeMapper.insert(smsCode);
 
         // 6. 存入 Redis（用于快速验证）
-        String redisKey = "sms:code:" + phone + ":" + scene;
+        String redisKey = RedisKeyConstants.smsCode(phone, scene);
         redisTemplate.opsForValue().set(redisKey, code, securityProperties.getCodeExpireMinutes(), TimeUnit.MINUTES);
 
         // 7. 设置发送间隔锁
@@ -160,13 +161,13 @@ public class SmsServiceImpl implements SmsService {
     @Override
     public boolean verifyCode(String phone, String code, String scene) {
         // 检查验证错误锁定
-        String lockKey = "sms:verify_lock:" + phone;
+        String lockKey = RedisKeyConstants.smsVerifyLock(phone);
         if (Boolean.TRUE.equals(redisTemplate.hasKey(lockKey))) {
             log.warn("验证码验证被锁定：{}", SensitiveUtils.maskPhone(phone));
             return false;
         }
 
-        String redisKey = "sms:code:" + phone + ":" + scene;
+        String redisKey = RedisKeyConstants.smsCode(phone, scene);
 
         // 使用 Lua 脚本原子性地获取并删除验证码
         String verifyAndDeleteScript =
@@ -191,7 +192,7 @@ public class SmsServiceImpl implements SmsService {
             log.warn("验证码错误：{}", SensitiveUtils.maskPhone(phone));
 
             // 增加错误计数
-            String failKey = "sms:verify_fail:" + phone;
+            String failKey = RedisKeyConstants.smsVerifyFail(phone);
             Long failCount = redisTemplate.opsForValue().increment(failKey);
             redisTemplate.expire(failKey, securityProperties.getVerifyLockMinutes(), TimeUnit.MINUTES);
 
@@ -205,7 +206,7 @@ public class SmsServiceImpl implements SmsService {
         }
 
         // 验证成功，清除错误计数
-        String failKey = "sms:verify_fail:" + phone;
+        String failKey = RedisKeyConstants.smsVerifyFail(phone);
         redisTemplate.delete(failKey);
 
         // 异步更新数据库状态（仅用于审计）

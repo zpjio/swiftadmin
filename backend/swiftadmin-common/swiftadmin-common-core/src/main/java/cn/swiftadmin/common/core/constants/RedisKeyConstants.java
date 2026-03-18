@@ -33,6 +33,21 @@ public final class RedisKeyConstants {
     /** 短信验证码前缀 */
     public static final String SMS_CODE = "auth:sms:";
 
+    /** 短信验证锁定前缀 */
+    public static final String SMS_VERIFY_LOCK = "sms:verify_lock:";
+
+    /** 短信发送间隔前缀 */
+    public static final String SMS_INTERVAL = "sms:interval:";
+
+    /** 短信小时计数前缀 */
+    public static final String SMS_HOUR_COUNT = "sms:hour_count:";
+
+    /** 短信 IP 计数前缀 */
+    public static final String SMS_IP_COUNT = "sms:ip_count:";
+
+    /** 短信验证失败计数前缀 */
+    public static final String SMS_VERIFY_FAIL = "sms:verify_fail:";
+
     /** OAuth State 前缀 */
     public static final String OAUTH_STATE = "oauth:state:";
 
@@ -68,6 +83,9 @@ public final class RedisKeyConstants {
     /** 用户权限缓存前缀 */
     public static final String USER_PERMISSION = "user:permission:";
 
+    /** 用户菜单缓存前缀 */
+    public static final String USER_MENUS = "user:menus:";
+
     /** 用户 Token 列表 */
     public static final String USER_TOKENS = "user:tokens:";
 
@@ -77,7 +95,7 @@ public final class RedisKeyConstants {
     // ==================== 系统配置 ====================
 
     /** 系统配置缓存前缀 */
-    public static final String SYS_CONFIG = "sys:config:";
+    public static final String SYS_CONFIG = "swiftadmin:config:";
 
     /** 字典缓存前缀 */
     public static final String SYS_DICT = "sys:dict:";
@@ -121,10 +139,18 @@ public final class RedisKeyConstants {
     }
 
     /**
-     * 构建用户信息缓存 Key
+     * 构建用户信息缓存 Key（按用户 ID）
      */
     public static String userInfo(Long userId) {
         return USER_INFO + userId;
+    }
+
+    /**
+     * 构建用户信息缓存 Key（按用户名）
+     * <p>用于 UserDetailsServiceImpl 缓存登录用户信息</p>
+     */
+    public static String userInfoByUsername(String username) {
+        return USER_INFO + "username:" + username;
     }
 
     /**
@@ -132,6 +158,13 @@ public final class RedisKeyConstants {
      */
     public static String userPermission(Long userId) {
         return USER_PERMISSION + userId;
+    }
+
+    /**
+     * 构建用户菜单缓存 Key
+     */
+    public static String userMenus(Long userId) {
+        return USER_MENUS + userId;
     }
 
     /**
@@ -261,6 +294,67 @@ public final class RedisKeyConstants {
      */
     public static String oauthTempToken(String tempToken) {
         return OAUTH_TEMP_TOKEN + tempToken;
+    }
+
+    /**
+     * 构建短信验证码 Key
+     *
+     * @param phone 手机号
+     * @param scene 场景
+     * @return Redis Key
+     */
+    public static String smsCode(String phone, String scene) {
+        return "sms:code:" + phone + ":" + scene;
+    }
+
+    /**
+     * 构建短信验证锁定 Key
+     *
+     * @param phone 手机号
+     * @return Redis Key
+     */
+    public static String smsVerifyLock(String phone) {
+        return SMS_VERIFY_LOCK + phone;
+    }
+
+    /**
+     * 构建短信发送间隔 Key
+     *
+     * @param phone 手机号
+     * @return Redis Key
+     */
+    public static String smsInterval(String phone) {
+        return SMS_INTERVAL + phone;
+    }
+
+    /**
+     * 构建短信小时计数 Key
+     *
+     * @param phone 手机号
+     * @return Redis Key
+     */
+    public static String smsHourCount(String phone) {
+        return SMS_HOUR_COUNT + phone;
+    }
+
+    /**
+     * 构建短信 IP 计数 Key
+     *
+     * @param ip IP 地址
+     * @return Redis Key
+     */
+    public static String smsIpCount(String ip) {
+        return SMS_IP_COUNT + ip;
+    }
+
+    /**
+     * 构建短信验证失败计数 Key
+     *
+     * @param phone 手机号
+     * @return Redis Key
+     */
+    public static String smsVerifyFail(String phone) {
+        return SMS_VERIFY_FAIL + phone;
     }
 
 }

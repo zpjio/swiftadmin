@@ -1,5 +1,6 @@
 package cn.swiftadmin.system.service.impl;
 
+import cn.swiftadmin.common.core.constants.RedisKeyConstants;
 import cn.swiftadmin.common.security.domain.LoginUser;
 import cn.swiftadmin.common.security.service.PermissionCacheService;
 import cn.swiftadmin.common.security.service.PermissionWarmupService;
@@ -32,11 +33,6 @@ public class PermissionWarmupServiceImpl implements PermissionWarmupService {
     private final PermissionCacheService permissionCacheService;
     private final MenuService menuService;
     private final RedisTemplate<String, Object> redisTemplate;
-
-    /**
-     * 用户菜单缓存 Key 前缀
-     */
-    private static final String USER_MENU_CACHE_KEY = "user:menus:";
 
     /**
      * 缓存过期时间（小时）
@@ -84,7 +80,7 @@ public class PermissionWarmupServiceImpl implements PermissionWarmupService {
         try {
             log.debug("开始预热用户菜单数据: userId={}", userId);
 
-            String cacheKey = USER_MENU_CACHE_KEY + userId;
+            String cacheKey = RedisKeyConstants.userMenus(userId);
 
             // 1. 检查缓存是否已存在
             Object cached = redisTemplate.opsForValue().get(cacheKey);

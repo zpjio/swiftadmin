@@ -48,6 +48,7 @@ public class DictServiceImpl implements DictService {
     // ==================== 字典类型管理 ====================
 
     @Override
+    @Transactional(readOnly = true)
     public Page<SysDictType> pageDictType(DictTypeQueryDTO query) {
         QueryWrapper queryWrapper = QueryWrapper.create()
                 .where(SYS_DICT_TYPE.DICT_NAME.like(PageHelper.likeIfPresent(query.getDictName())))
@@ -59,6 +60,7 @@ public class DictServiceImpl implements DictService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public SysDictType getDictTypeById(Long id) {
         return dictTypeMapper.selectOneById(id);
     }
@@ -89,6 +91,7 @@ public class DictServiceImpl implements DictService {
     // ==================== 字典数据管理 ====================
 
     @Override
+    @Transactional(readOnly = true)
     public Page<SysDictData> pageDictData(DictDataQueryDTO query) {
         QueryWrapper queryWrapper = QueryWrapper.create()
                 .where(SYS_DICT_DATA.DICT_TYPE.eq(query.getDictType(), query.getDictType() != null && !query.getDictType().isEmpty()))
@@ -100,6 +103,7 @@ public class DictServiceImpl implements DictService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public SysDictData getDictDataById(Long id) {
         return dictDataMapper.selectOneById(id);
     }

@@ -1,5 +1,6 @@
 package cn.swiftadmin.auth.service;
 
+import cn.swiftadmin.common.core.constants.RedisKeyConstants;
 import cn.swiftadmin.common.security.domain.LoginUser;
 import cn.swiftadmin.common.security.service.UserDetailsService;
 import cn.swiftadmin.system.api.entity.SysDept;
@@ -34,9 +35,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private final PermissionService permissionService;
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
-
-    /** 用户信息缓存 Key 前缀 */
-    private static final String USER_CACHE_PREFIX = "user:info:";
 
     /** 缓存有效期（分钟） */
     private static final int CACHE_EXPIRE_MINUTES = 30;
@@ -100,12 +98,12 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         }
 
         // 2. 清除用户信息缓存
-        String cacheKey = USER_CACHE_PREFIX + user.getUsername();
+        String cacheKey = RedisKeyConstants.userInfoByUsername(user.getUsername());
         redisTemplate.delete(cacheKey);
         log.info("已清除用户信息缓存：userId={}, username={}", userId, user.getUsername());
 
         // 3. 清除权限缓存（PermissionService 中的缓存）
-        String permCacheKey = "user:permissions:" + userId;
+        String permCacheKey = RedisKeyConstants.userPermission(userId);
         redisTemplate.delete(permCacheKey);
         log.info("已清除用户权限缓存：userId={}", userId);
 
@@ -126,7 +124,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
      * @param username 用户名
      */
     public void clearUserCache(String username) {
-        String cacheKey = USER_CACHE_PREFIX + username;
+        String cacheKey = RedisKeyConstants.userInfoByUsername(username);
         redisTemplate.delete(cacheKey);
         log.debug("清除用户缓存: {}", username);
     }
@@ -136,7 +134,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
      */
     private LoginUser getUserFromCache(String username) {
         try {
-            String cacheKey = USER_CACHE_PREFIX + username;
+            String cacheKey = RedisKeyConstants.userInfoByUsername(username);
             String cached = redisTemplate.opsForValue().get(cacheKey);
             if (cached != null) {
                 return objectMapper.readValue(cached, LoginUser.class);
@@ -152,7 +150,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
      */
     private void cacheUser(String username, LoginUser loginUser) {
         try {
-            String cacheKey = USER_CACHE_PREFIX + username;
+            String cacheKey = RedisKeyConstants.userInfoByUsername(username);
             String json = objectMapper.writeValueAsString(loginUser);
             redisTemplate.opsForValue().set(cacheKey, json, CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES);
             log.debug("用户信息已缓存: {}", username);
