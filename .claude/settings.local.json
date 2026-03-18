@@ -10,7 +10,9 @@
       "mcp__zread__get_repo_structure",
       "mcp__zread__search_doc",
       "mcp__zread__read_file",
-      "mcp__web-reader__webReader"
+      "mcp__web-reader__webReader",
+      "mcp__web-search-prime__web_search_prime",
+      "WebFetch(domain:central.sonatype.com)"
     ]
   },
   "dangerouslyDisableSandbox": true

@@ -183,3 +183,23 @@ export const ACTION_COLORS = {
   danger: '#dc2626',
   info: '#0891b2',
 } as const
+
+/**
+ * 状态颜色映射
+ */
+export const StatusColors: Record<number, string> = {
+  [Status.DISABLED]: ACTION_COLORS.danger,
+  [Status.ENABLED]: ACTION_COLORS.success,
+}
+
+/**
+ * 渲染状态标签
+ * @param status 状态值
+ * @returns 带颜色的状态文本
+ */
+export function renderStatus(status: StatusType): { text: string; color: string } {
+  return {
+    text: getStatusLabel(status),
+    color: StatusColors[status] || ACTION_COLORS.info,
+  }
+}

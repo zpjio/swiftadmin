@@ -105,117 +105,23 @@
           </NDescriptions>
 
           <!-- 编辑表单 -->
-          <NForm v-else :model="formData" :rules="formRules" ref="editFormRef" label-placement="left" label-width="100">
-            <NFormItem label="菜单类型" path="type">
-              <NRadioGroup v-model:value="formData.type">
-                <NRadio :value="1">目录</NRadio>
-                <NRadio :value="2">菜单</NRadio>
-                <NRadio :value="3">按钮</NRadio>
-              </NRadioGroup>
-            </NFormItem>
-            <NFormItem label="上级菜单" path="parentId">
-              <NTreeSelect
-                v-model:value="formData.parentId"
-                :options="menuSelectTreeData"
-                placeholder="请选择上级菜单"
-                clearable
-                default-expand-all
-              />
-            </NFormItem>
-            <NFormItem label="菜单名称" path="name">
-              <NInput v-model:value="formData.name" placeholder="请输入菜单名称" />
-            </NFormItem>
-            <NFormItem label="路由地址" path="path" v-if="formData.type !== 3">
-              <NInput v-model:value="formData.path" placeholder="请输入路由地址，如：/system/user" />
-            </NFormItem>
-            <NFormItem label="组件路径" path="component" v-if="formData.type === 2">
-              <NInput v-model:value="formData.component" placeholder="请输入组件路径，如：system/user/index" />
-            </NFormItem>
-            <NFormItem label="权限标识" path="permission" v-if="formData.type === 3">
-              <NInput v-model:value="formData.permission" placeholder="请输入权限标识，如：system:user:add" />
-            </NFormItem>
-            <NFormItem label="菜单图标" path="icon" v-if="formData.type !== 3">
-              <div class="flex items-center gap-2">
-                <IconSelect v-model="formData.icon" />
-                <NInput v-model:value="formData.icon" placeholder="或手动输入，如：mdi-account" style="width: 200px" />
-              </div>
-            </NFormItem>
-            <NFormItem label="排序" path="sortOrder">
-              <NInputNumber v-model:value="formData.sortOrder" :min="0" />
-            </NFormItem>
-            <NFormItem label="状态" path="status">
-              <NRadioGroup v-model:value="formData.status">
-                <NRadio :value="1">正常</NRadio>
-                <NRadio :value="0">禁用</NRadio>
-              </NRadioGroup>
-            </NFormItem>
-            <NFormItem label="是否外链" path="isExternal" v-if="formData.type !== 3">
-              <NSwitch v-model:value="formData.isExternal" />
-            </NFormItem>
-            <NFormItem label="是否缓存" path="isCache" v-if="formData.type === 2">
-              <NSwitch v-model:value="formData.isCache" />
-            </NFormItem>
-            <NFormItem label="是否显示" path="isVisible" v-if="formData.type !== 3">
-              <NSwitch v-model:value="formData.isVisible" />
-            </NFormItem>
-          </NForm>
+          <MenuForm
+            v-if="isEditing"
+            ref="editFormRef"
+            v-model="formData"
+            :menu-options="menuSelectTreeData"
+          />
         </template>
       </div>
     </div>
 
     <!-- 新增弹窗 -->
     <NModal v-model:show="showAddModal" title="新增菜单" preset="card" style="width: 600px;">
-      <NForm :model="formData" :rules="formRules" ref="addFormRef" label-placement="left" label-width="100">
-        <NFormItem label="菜单类型" path="type">
-          <NRadioGroup v-model:value="formData.type">
-            <NRadio :value="1">目录</NRadio>
-            <NRadio :value="2">菜单</NRadio>
-            <NRadio :value="3">按钮</NRadio>
-          </NRadioGroup>
-        </NFormItem>
-        <NFormItem label="上级菜单" path="parentId">
-          <NTreeSelect
-            v-model:value="formData.parentId"
-            :options="menuSelectTreeData"
-            placeholder="请选择上级菜单"
-            clearable
-            default-expand-all
-          />
-        </NFormItem>
-        <NFormItem label="菜单名称" path="name">
-          <NInput v-model:value="formData.name" placeholder="请输入菜单名称" />
-        </NFormItem>
-        <NFormItem label="路由地址" path="path" v-if="formData.type !== 3">
-          <NInput v-model:value="formData.path" placeholder="请输入路由地址，如：/system/user" />
-        </NFormItem>
-        <NFormItem label="组件路径" path="component" v-if="formData.type === 2">
-          <NInput v-model:value="formData.component" placeholder="请输入组件路径，如：system/user/index" />
-        </NFormItem>
-        <NFormItem label="权限标识" path="permission" v-if="formData.type === 3">
-          <NInput v-model:value="formData.permission" placeholder="请输入权限标识，如：system:user:add" />
-        </NFormItem>
-        <NFormItem label="菜单图标" path="icon" v-if="formData.type !== 3">
-          <NInput v-model:value="formData.icon" placeholder="请输入图标名称，如：mdi-account" />
-        </NFormItem>
-        <NFormItem label="排序" path="sortOrder">
-          <NInputNumber v-model:value="formData.sortOrder" :min="0" />
-        </NFormItem>
-        <NFormItem label="状态" path="status">
-          <NRadioGroup v-model:value="formData.status">
-            <NRadio :value="1">正常</NRadio>
-            <NRadio :value="0">禁用</NRadio>
-          </NRadioGroup>
-        </NFormItem>
-        <NFormItem label="是否外链" path="isExternal" v-if="formData.type !== 3">
-          <NSwitch v-model:value="formData.isExternal" />
-        </NFormItem>
-        <NFormItem label="是否缓存" path="isCache" v-if="formData.type === 2">
-          <NSwitch v-model:value="formData.isCache" />
-        </NFormItem>
-        <NFormItem label="是否显示" path="isVisible" v-if="formData.type !== 3">
-          <NSwitch v-model:value="formData.isVisible" />
-        </NFormItem>
-      </NForm>
+      <MenuForm
+        ref="addFormRef"
+        v-model="formData"
+        :menu-options="menuSelectTreeData"
+      />
       <template #footer>
         <NSpace justify="end">
           <NButton @click="showAddModal = false">取消</NButton>
@@ -228,10 +134,10 @@
 
 <script setup lang="ts">
 import { reactive, ref, h, computed, onMounted, nextTick } from 'vue'
-import { useMessage, NTag, type FormInst, type FormRules, type TreeSelectOption, type TreeOption } from 'naive-ui'
+import { useMessage, NTag, type FormInst, type TreeSelectOption, type TreeOption } from 'naive-ui'
 import { getMenuTreeApi, getMenuSelectTreeApi, getMenuDetailApi, createMenuApi, updateMenuApi, deleteMenuApi } from '@/api/menu'
 import type { MenuVO, MenuDTO, MenuTreeVO } from '@/api/menu'
-import IconSelect from '@/components/IconSelect.vue'
+import MenuForm from './MenuForm.vue'
 import { Icon } from '@iconify/vue'
 import { normalizeIconName } from '@/utils/icon'
 import { getParentIds, convertToTreeSelectOptions } from '@/utils/tree'
@@ -341,22 +247,6 @@ const formData = reactive<MenuDTO & { isExternal?: boolean; isCache?: boolean; i
   isCache: false,
   isVisible: true,
 })
-
-const formRules: FormRules = {
-  name: { required: true, message: '请输入菜单名称', trigger: 'blur' },
-  type: [
-    {
-      required: true,
-      validator: (rule, value) => {
-        if (value === undefined || value === null || value === '') {
-          return new Error('请选择菜单类型')
-        }
-        return true
-      },
-      trigger: 'change',
-    },
-  ],
-}
 
 // 类型相关
 const getTypeLabel = (type: number) => {

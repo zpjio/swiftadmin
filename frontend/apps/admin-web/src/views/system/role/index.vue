@@ -180,7 +180,7 @@ import { generateRoleCode } from '@/utils/codeGenerator'
 import { usePermission, useTablePage, useConfirm, useTableActions, useFormReset } from '@/composables'
 import { formatDateTime } from '@/utils/date'
 import { convertToTreeOptions, getAllIds, getParentIds } from '@/utils/tree'
-import { StatusOptions, StatusLabels } from '@/utils/constants'
+import { StatusOptions, renderStatus } from '@/utils/constants'
 
 const message = useMessage()
 const { confirmDelete, confirmBatchDelete } = useConfirm()
@@ -259,7 +259,10 @@ const columns: DataTableColumns<RoleVO> = [
     title: '状态',
     key: 'status',
     width: 80,
-    render: (row) => h('span', { style: { color: row.status === 1 ? '#52c41a' : '#ff4d4f' } }, StatusLabels[row.status] || '未知'),
+    render: (row) => {
+      const { text, color } = renderStatus(row.status)
+      return h('span', { style: { color } }, text)
+    },
   },
   { title: '创建时间', key: 'createTime', width: 160, render: (row) => formatDateTime(row.createTime) },
   {

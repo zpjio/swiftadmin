@@ -68,17 +68,19 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, h, computed, onMounted } from 'vue'
-import { useMessage, useDialog, type DataTableColumns, type FormInst, type FormRules, type TreeSelectOption } from 'naive-ui'
+import { ref, computed, onMounted, h } from 'vue'
+import { useMessage, type DataTableColumns, type FormInst, type FormRules, type TreeSelectOption } from 'naive-ui'
 import { getDeptTreeApi, getDeptDetailApi, createDeptApi, updateDeptApi, deleteDeptApi } from '@/api/dept'
 import type { DeptVO, DeptDTO } from '@/api/dept'
 
-import { usePermission } from '@/composables'
+import { usePermission, useConfirm, useTableActions, useFormReset } from '@/composables'
 import { convertToTreeSelectOptions, getParentIds } from '@/utils/tree'
+import { renderStatus } from '@/utils/constants'
 
 const message = useMessage()
-const dialog = useDialog()
 const { hasPermission } = usePermission()
+const { confirmDelete } = useConfirm()
+const { renderActions, edit, del } = useTableActions()
 
 const loading = ref(false)
 const tableData = ref<DeptVO[]>([])
@@ -113,17 +115,25 @@ const columns: DataTableColumns<DeptVO> = [
     title: '状态',
     key: 'status',
     width: 80,
-    render: (row) => h('span', { style: { color: row.status === 1 ? '#52c41a' : '#ff4d4f' } }, row.status === 1 ? '正常' : '禁用'),
+    render: (row) => {
+      const { text, color } = renderStatus(row.status)
+      return h('span', { style: { color } }, text)
+    },
   },
   {
     title: '操作',
     key: 'actions',
     width: 180,
     fixed: 'right',
-    render: (row) => h('div', { style: { display: 'flex', gap: '8px' } }, [
-      hasPermission('system:dept:add') ? h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#1890ff', cursor: 'pointer' }, onClick: (_e: MouseEvent) => handleAdd(_e, row.id) }, '新增') : null,
-      hasPermission('system:dept:edit') ? h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#faad14', cursor: 'pointer' }, onClick: () => handleEdit(row) }, '编辑') : null,
-      hasPermission('system:dept:delete') ? h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer' }, onClick: () => handleDelete(row) }, '删除') : null,
+    render: (row) => renderActions([
+      {
+        label: '新增',
+        color: '#1890ff',
+        onClick: () => handleAdd(row.id),
+        show: hasPermission('system:dept:add'),
+      },
+      edit(() => handleEdit(row), hasPermission('system:dept:edit')),
+      del(() => handleDelete(row), hasPermission('system:dept:delete')),
     ]),
   },
 ]
@@ -135,7 +145,8 @@ const submitLoading = ref(false)
 const formRef = ref<FormInst | null>(null)
 const deptSelectTreeData = ref<TreeSelectOption[]>([])
 
-const formData = reactive<DeptDTO>({
+// 使用 useFormReset 管理表单状态
+const { formData, resetForm } = useFormReset<DeptDTO>({
   parentId: '',
   name: '',
   sortOrder: 0,
@@ -171,18 +182,9 @@ const loadDeptTree = async () => {
 }
 
 // 新增
-const handleAdd = (_e: MouseEvent, parentId?: string) => {
+const handleAdd = (parentId?: string) => {
   modalTitle.value = parentId ? '新增子部门' : '新增顶级部门'
-  Object.assign(formData, {
-    id: undefined,
-    parentId: parentId || '',
-    name: '',
-    sortOrder: 0,
-    leader: '',
-    phone: '',
-    email: '',
-    status: 1,
-  })
+  resetForm({ parentId: parentId || '' })
   showModal.value = true
 }
 
@@ -191,7 +193,7 @@ const handleEdit = async (row: DeptVO) => {
   modalTitle.value = '编辑部门'
   try {
     const detail = await getDeptDetailApi(row.id)
-    Object.assign(formData, {
+    resetForm({
       id: detail.id,
       parentId: detail.parentId,
       name: detail.name,
@@ -202,27 +204,17 @@ const handleEdit = async (row: DeptVO) => {
       status: detail.status,
     })
     showModal.value = true
-  } catch (error: any) {
-    message.error(error.message || '获取部门详情失败')
+  } catch (error: unknown) {
+    message.error(error instanceof Error ? error.message : '获取部门详情失败')
   }
 }
 
 // 删除
 const handleDelete = (row: DeptVO) => {
-  dialog.warning({
-    title: '确认删除',
-    content: `确定要删除部门 "${row.name}" 吗？如有子部门将一并删除。`,
-    positiveText: '确定',
-    negativeText: '取消',
-    onPositiveClick: async () => {
-      try {
-        await deleteDeptApi(row.id)
-        message.success('删除成功')
-        loadDeptTree()
-      } catch (error: any) {
-        message.error(error.message || '删除失败')
-      }
-    },
+  confirmDelete(`确定要删除部门 "${row.name}" 吗？如有子部门将一并删除。`, async () => {
+    await deleteDeptApi(row.id)
+    message.success('删除成功')
+    loadDeptTree()
   })
 }
 
@@ -242,12 +234,12 @@ const handleSubmit = async () => {
       }
       showModal.value = false
       loadDeptTree()
-    } catch (error: any) {
-      message.error(error.message || '操作失败')
+    } catch (error: unknown) {
+      message.error(error instanceof Error ? error.message : '操作失败')
     } finally {
       submitLoading.value = false
     }
-  } catch (errors: any) {
+  } catch {
     // 验证失败
   }
 }

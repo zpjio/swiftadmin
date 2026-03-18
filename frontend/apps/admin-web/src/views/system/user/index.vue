@@ -169,7 +169,7 @@ import { usePermission, useTablePage, useConfirm, useTableActions, useFormReset 
 import { useUserStore } from '@/store'
 import { formatDateTime } from '@/utils/date'
 import { convertToTreeSelectOptions } from '@/utils/tree'
-import { StatusOptions, StatusLabels, SexOptions, SexLabels } from '@/utils/constants'
+import { StatusOptions, SexOptions, SexLabels, renderStatus } from '@/utils/constants'
 
 const message = useMessage()
 const { confirmDelete, confirmBatchDelete } = useConfirm()
@@ -250,7 +250,10 @@ const columns: DataTableColumns<UserVO> = [
     title: '状态',
     key: 'status',
     width: 80,
-    render: (row) => h('span', { style: { color: row.status === 1 ? '#52c41a' : '#ff4d4f' } }, StatusLabels[row.status] || '未知'),
+    render: (row) => {
+      const { text, color } = renderStatus(row.status)
+      return h('span', { style: { color } }, text)
+    },
   },
   { title: '部门', key: 'deptName', width: 120 },
   { title: '创建时间', key: 'createTime', width: 180, render: (row) => formatDateTime(row.createTime) },

@@ -95,13 +95,10 @@ const rules: FormRules = {
   },
 }
 
-// 获取验证码
+// 获取验证码（预留功能，默认关闭）
 const getCaptcha = async () => {
   try {
-    // TODO: 调用后端验证码接口
-    // const res = await getCaptchaApi()
-    // captchaId.value = res.data.captchaId
-    // captchaUrl.value = res.data.captchaImage
+    // 验证码功能暂未启用，后续可通过 /api/auth/captcha 接口实现
   } catch (error) {
     console.error('获取验证码失败:', error)
   }

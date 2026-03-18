@@ -22,6 +22,10 @@ public record SendResult(
         return new SendResult(true, messageId, toAddress, null, costTime);
     }
 
+    public static SendResult success(String messageId, String toAddress) {
+        return new SendResult(true, messageId, toAddress, null, null);
+    }
+
     public static SendResult fail(String toAddress, String errorMsg) {
         return new SendResult(false, null, toAddress, errorMsg, null);
     }

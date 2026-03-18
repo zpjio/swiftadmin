@@ -35,6 +35,10 @@
         <swagger-annotations.version>2.2.20</swagger-annotations.version>
         <aws-sdk.version>2.20.100</aws-sdk.version>
 
+        <!-- 短信 SDK -->
+        <aliyun-dysmsapi.version>3.0.0</aliyun-dysmsapi.version>
+        <tencentcloud-sdk.version>3.1.1281</tencentcloud-sdk.version>
+
         <!-- GraalVM Native Build Tools -->
         <graalvm-native.version>0.10.2</graalvm-native.version>
     </properties>
@@ -106,6 +110,20 @@
                 <groupId>software.amazon.awssdk</groupId>
                 <artifactId>s3</artifactId>
                 <version>${aws-sdk.version}</version>
+            </dependency>
+
+            <!-- 阿里云短信 SDK -->
+            <dependency>
+                <groupId>com.aliyun</groupId>
+                <artifactId>dysmsapi20170525</artifactId>
+                <version>${aliyun-dysmsapi.version}</version>
+            </dependency>
+
+            <!-- 腾讯云短信 SDK -->
+            <dependency>
+                <groupId>com.tencentcloudapi</groupId>
+                <artifactId>tencentcloud-sdk-java-sms</artifactId>
+                <version>${tencentcloud-sdk.version}</version>
             </dependency>
 
             <!-- Lombok -->

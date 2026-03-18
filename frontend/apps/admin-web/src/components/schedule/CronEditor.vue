@@ -644,8 +644,7 @@ const updateExpression = () => {
   const expr = generateExpression()
   cronExpression.value = expr
   updateDescription()
-  // TODO: Implement calculateNextExecuteTime
-  // calculateNextExecuteTime()
+  // 可选功能：计算下次执行时间（需引入 cron 解析库）
 }
 
 const updateDescription = () => {
