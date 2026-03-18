@@ -1,5 +1,9 @@
 server:
   port: 8080
+  compression:
+    enabled: true
+    mime-types: application/json,text/html,text/xml,text/plain,application/xml
+    min-response-size: 1024
 
 spring:
   application:
@@ -8,6 +12,18 @@ spring:
     active: dev
   aop:
     proxy-target-class: true
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    default-property-inclusion: non_null
+
+# 文件上传配置
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 100MB
+      file-size-threshold: 2MB
 
 # 日志配置
 logging:
@@ -15,6 +31,14 @@ logging:
     cn.swiftadmin: debug
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    path: ./logs
+    name: ${logging.file.path}/swiftadmin.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 30
+      total-size-cap: 1GB
 
 # Springdoc OpenAPI 配置
 springdoc:
@@ -30,10 +54,15 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when_authorized
 
 # MyBatis-Flex 配置
 mybatis-flex:
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: cn.swiftadmin.**.entity
   configuration:
     map-underscore-to-camel-case: true
 
