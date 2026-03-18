@@ -74,6 +74,7 @@ import { getDeptTreeApi, getDeptDetailApi, createDeptApi, updateDeptApi, deleteD
 import type { DeptVO, DeptDTO } from '@/api/dept'
 
 import { usePermission } from '@/composables'
+import { convertToTreeSelectOptions, getParentIds } from '@/utils/tree'
 
 const message = useMessage()
 const dialog = useDialog()
@@ -148,21 +149,6 @@ const formRules: FormRules = {
   name: { required: true, message: '请输入部门名称', trigger: 'blur' },
 }
 
-// 获取所有部门ID（用于展开全部）
-const getAllDeptIds = (depts: DeptVO[]): string[] => {
-  const ids: string[] = []
-  const traverse = (items: DeptVO[]) => {
-    items.forEach((item) => {
-      if (item.children && item.children.length > 0) {
-        ids.push(item.id)
-        traverse(item.children)
-      }
-    })
-  }
-  traverse(depts)
-  return ids
-}
-
 // 加载部门树
 const loadDeptTree = async () => {
   loading.value = true
@@ -170,8 +156,11 @@ const loadDeptTree = async () => {
     const res = await getDeptTreeApi()
     const treeData = res as DeptVO[]
     tableData.value = treeData
-    deptSelectTreeData.value = convertSelectTree(treeData)
-    allDeptIds.value = getAllDeptIds(treeData)
+    deptSelectTreeData.value = convertToTreeSelectOptions(treeData, {
+      rootLabel: '顶级部门',
+      rootKey: '',
+    })
+    allDeptIds.value = getParentIds(treeData) as string[]
     // 默认展开全部
     expandedRowKeys.value = [...allDeptIds.value]
   } catch (error) {
@@ -179,24 +168,6 @@ const loadDeptTree = async () => {
   } finally {
     loading.value = false
   }
-}
-
-// 转换选择树数据
-const convertSelectTree = (items: DeptVO[]): TreeSelectOption[] => {
-  const result: TreeSelectOption[] = [{ key: '', label: '顶级部门', children: [] }]
-
-  const convert = (items: DeptVO[]): TreeSelectOption[] => {
-    return items.map((item) => ({
-      key: item.id,
-      label: item.name,
-      children: item.children ? convert(item.children) : undefined,
-    }))
-  }
-
-  if (result[0]) {
-    result[0].children = convert(items)
-  }
-  return result
 }
 
 // 新增

@@ -61,7 +61,7 @@
       :columns="columns"
       :data="tableData"
       :loading="loading"
-      :pagination="pagination"
+      :pagination="paginationProps"
       :row-key="(row) => row.id"
       :checked-row-keys="selectedRowKeys"
       @update:checked-row-keys="onChecked"
@@ -171,9 +171,10 @@ import type { UserVO, UserDTO, UserQuery } from '@/api/user'
 import type { DeptVO } from '@/api/dept'
 import type { RoleVO } from '@/api/role'
 
-import { usePermission } from '@/composables'
+import { usePermission, usePagination } from '@/composables'
 import { useUserStore } from '@/store'
 import { formatDateTime } from '@/utils/date'
+import { convertToTreeSelectOptions } from '@/utils/tree'
 
 const message = useMessage()
 const dialog = useDialog()
@@ -186,34 +187,17 @@ const currentUserId = computed(() => userStore.userInfo?.id)
 const loading = ref(false)
 const tableData = ref<UserVO[]>([])
 const selectedRowKeys = ref<string[]>([])
-const queryForm = reactive<UserQuery>({
-  page: 1,
-  pageSize: 10,
-})
+const queryForm = reactive<UserQuery>({})
 
 // 部门选择树数据
 const deptSelectTreeData = ref<TreeSelectOption[]>([])
 // 角色选项
 const roleOptions = ref<{ label: string; value: string }[]>([])
 
-const pagination = reactive({
-  page: 1,
-  pageSize: 10,
-  showSizePicker: true,
-  pageSizes: [10, 20, 50, 100],
-  itemCount: 0,
-  onChange: (page: number) => {
-    pagination.page = page
-    queryForm.page = page
-    loadData()
-  },
-  onUpdatePageSize: (pageSize: number) => {
-    pagination.pageSize = pageSize
-    pagination.page = 1
-    queryForm.page = 1
-    queryForm.pageSize = pageSize
-    loadData()
-  },
+// 分页
+const { paginationProps, setTotal, getIndex } = usePagination({
+  onChange: () => loadData(),
+  onPageSizeChange: () => loadData(),
 })
 
 // 表格列定义
@@ -223,7 +207,7 @@ const columns: DataTableColumns<UserVO> = [
     title: '序号',
     key: 'index',
     width: 60,
-    render: (_row, index) => (pagination.page - 1) * pagination.pageSize + index + 1,
+    render: (_row, index) => getIndex(index),
   },
   {
     title: '用户名',
@@ -347,20 +331,11 @@ const loadDeptTree = async () => {
   try {
     // 使用静默模式，权限不足时不显示错误提示
     const res = await getDeptTreeApi(undefined, true)
-    deptSelectTreeData.value = convertDeptTree(res as DeptVO[])
+    deptSelectTreeData.value = convertToTreeSelectOptions(res as DeptVO[])
   } catch (error) {
     // 权限不足时静默处理
     console.debug('加载部门树失败，可能缺少权限')
   }
-}
-
-// 转换部门树数据
-const convertDeptTree = (items: DeptVO[]): TreeSelectOption[] => {
-  return items.map((item) => ({
-    key: item.id,
-    label: item.name,
-    children: item.children ? convertDeptTree(item.children) : undefined,
-  }))
 }
 
 // 加载角色列表
@@ -381,9 +356,7 @@ const loadData = async () => {
   try {
     const res = await getUserPageApi(queryForm)
     tableData.value = res.records
-    pagination.page = res.pageNumber
-    pagination.pageSize = res.pageSize
-    pagination.itemCount = res.totalRow
+    setTotal(res.totalRow)
   } catch (error) {
     console.error('加载数据失败:', error)
   } finally {
@@ -393,8 +366,6 @@ const loadData = async () => {
 
 // 搜索
 const handleSearch = () => {
-  pagination.page = 1
-  queryForm.page = 1
   loadData()
 }
 
@@ -404,7 +375,7 @@ const handleReset = () => {
   queryForm.phone = undefined
   queryForm.status = undefined
   queryForm.deptId = undefined
-  handleSearch()
+  loadData()
 }
 
 // 新增

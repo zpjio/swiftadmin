@@ -15,6 +15,7 @@ import cn.swiftadmin.system.mapper.SysConfigMapper;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.update.UpdateChain;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -38,6 +39,7 @@ import static cn.swiftadmin.system.api.entity.table.SysConfigTableDef.SYS_CONFIG
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class ConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig> implements ConfigService {
 
     private final StringRedisTemplate redisTemplate;
@@ -47,10 +49,6 @@ public class ConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig> i
 
     /** 配置类型字典 */
     private static final String CONFIG_TYPE_DICT = "sys_config_type";
-
-    public ConfigServiceImpl(StringRedisTemplate redisTemplate) {
-        this.redisTemplate = redisTemplate;
-    }
 
     // ==================== 配置读取方法 ====================
 

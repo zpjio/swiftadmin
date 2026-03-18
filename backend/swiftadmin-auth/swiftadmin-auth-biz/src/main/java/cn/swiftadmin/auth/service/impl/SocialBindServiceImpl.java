@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.update.UpdateChain;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
@@ -43,6 +44,7 @@ import static cn.swiftadmin.auth.api.entity.table.SysSocialBindTableDef.SYS_SOCI
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class SocialBindServiceImpl extends ServiceImpl<SysSocialBindMapper, SysSocialBind> implements SocialBindService {
 
     private final ObjectMapper objectMapper;
@@ -54,13 +56,6 @@ public class SocialBindServiceImpl extends ServiceImpl<SysSocialBindMapper, SysS
 
     /** 分布式锁超时时间（秒） */
     private static final int LOCK_TIMEOUT_SECONDS = 30;
-
-    public SocialBindServiceImpl(
-            ObjectMapper objectMapper,
-            StringRedisTemplate redisTemplate) {
-        this.objectMapper = objectMapper;
-        this.redisTemplate = redisTemplate;
-    }
 
     @Override
     public SysSocialBind getBySourceAndOpenId(String source, String openId) {

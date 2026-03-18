@@ -62,30 +62,9 @@ public class UserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impleme
             throw new BusinessException(404, "用户不存在");
         }
 
-        // 校验密码强度
-        validatePasswordStrength(newPassword, user.getUsername());
-
-        // 检查密码历史
-        checkPasswordHistory(userId, newPassword);
-
         // 检查是否需要强制修改
         boolean forceChange = configService.isForceChangeOnReset();
-
-        // 加密密码
-        String encodedPassword = passwordEncoder.encode(newPassword);
-
-        // 更新密码和策略字段
-        UpdateChain.of(SysUser.class)
-                .set(SYS_USER.PASSWORD, encodedPassword)
-                .set(SYS_USER.PASSWORD_UPDATE_TIME, LocalDateTime.now())
-                .set(SYS_USER.FORCE_CHANGE_PASSWORD, forceChange ? YesNo.YES : YesNo.NO)
-                .set(SYS_USER.UPDATE_TIME, LocalDateTime.now())
-                .where(SYS_USER.ID.eq(userId))
-                .update();
-
-        // 记录密码历史
-        passwordHistoryService.addHistory(userId, encodedPassword);
-        passwordHistoryService.cleanOldHistory(userId, configService.getPasswordHistoryCount());
+        doUpdatePassword(userId, newPassword, user.getUsername(), forceChange);
     }
 
     /**
@@ -215,28 +194,8 @@ public class UserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impleme
             throw new BusinessException(400, "旧密码错误");
         }
 
-        // 校验新密码强度
-        validatePasswordStrength(newPassword, user.getUsername());
-
-        // 检查密码历史
-        checkPasswordHistory(userId, newPassword);
-
-        // 加密密码
-        String encodedPassword = passwordEncoder.encode(newPassword);
-
-        // 更新密码和策略字段
-        UpdateChain.of(SysUser.class)
-                .set(SYS_USER.PASSWORD, encodedPassword)
-                .set(SYS_USER.PASSWORD_UPDATE_TIME, LocalDateTime.now())
-                .set(SYS_USER.FORCE_CHANGE_PASSWORD, YesNo.NO)
-                .set(SYS_USER.UPDATE_TIME, LocalDateTime.now())
-                .where(SYS_USER.ID.eq(userId))
-                .update();
-
-        // 记录密码历史
-        passwordHistoryService.addHistory(userId, encodedPassword);
-        passwordHistoryService.cleanOldHistory(userId, configService.getPasswordHistoryCount());
-
+        // 更新密码（用户自行修改，不强制）
+        doUpdatePassword(userId, newPassword, user.getUsername(), false);
         return true;
     }
 
@@ -251,28 +210,8 @@ public class UserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impleme
             throw new BusinessException(404, "用户不存在");
         }
 
-        // 校验密码强度
-        validatePasswordStrength(newPassword, user.getUsername());
-
-        // 检查密码历史
-        checkPasswordHistory(userId, newPassword);
-
-        // 加密密码
-        String encodedPassword = passwordEncoder.encode(newPassword);
-
-        // 更新密码和策略字段
-        UpdateChain.of(SysUser.class)
-                .set(SYS_USER.PASSWORD, encodedPassword)
-                .set(SYS_USER.PASSWORD_UPDATE_TIME, LocalDateTime.now())
-                .set(SYS_USER.FORCE_CHANGE_PASSWORD, YesNo.NO)
-                .set(SYS_USER.UPDATE_TIME, LocalDateTime.now())
-                .where(SYS_USER.ID.eq(userId))
-                .update();
-
-        // 记录密码历史
-        passwordHistoryService.addHistory(userId, encodedPassword);
-        passwordHistoryService.cleanOldHistory(userId, configService.getPasswordHistoryCount());
-
+        // 更新密码（强制修改场景，不强制再次修改）
+        doUpdatePassword(userId, newPassword, user.getUsername(), false);
         return true;
     }
 
@@ -322,6 +261,38 @@ public class UserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impleme
         if (passwordHistoryService.isPasswordInHistory(userId, newPassword, historyCount)) {
             throw new BusinessException(400, "新密码不能与最近 " + historyCount + " 次密码相同");
         }
+    }
+
+    /**
+     * 执行密码更新（核心逻辑）
+     *
+     * @param userId      用户ID
+     * @param newPassword 新密码（明文）
+     * @param username    用户名（用于密码强度校验）
+     * @param forceChange 是否强制下次登录修改密码
+     */
+    private void doUpdatePassword(Long userId, String newPassword, String username, boolean forceChange) {
+        // 校验密码强度
+        validatePasswordStrength(newPassword, username);
+
+        // 检查密码历史
+        checkPasswordHistory(userId, newPassword);
+
+        // 加密密码
+        String encodedPassword = passwordEncoder.encode(newPassword);
+
+        // 更新密码和策略字段
+        UpdateChain.of(SysUser.class)
+                .set(SYS_USER.PASSWORD, encodedPassword)
+                .set(SYS_USER.PASSWORD_UPDATE_TIME, LocalDateTime.now())
+                .set(SYS_USER.FORCE_CHANGE_PASSWORD, forceChange ? YesNo.YES : YesNo.NO)
+                .set(SYS_USER.UPDATE_TIME, LocalDateTime.now())
+                .where(SYS_USER.ID.eq(userId))
+                .update();
+
+        // 记录密码历史
+        passwordHistoryService.addHistory(userId, encodedPassword);
+        passwordHistoryService.cleanOldHistory(userId, configService.getPasswordHistoryCount());
     }
 
 }

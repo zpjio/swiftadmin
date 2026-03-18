@@ -115,7 +115,7 @@
         :data="tableData"
         :loading="loading"
         :row-key="(row) => row.id"
-        :pagination="pagination"
+        :pagination="paginationProps"
       />
     </NCard>
 
@@ -179,6 +179,7 @@ import {
   type ChannelType,
 } from '@/api/message'
 import { useDict } from '@/composables/useDict'
+import { usePagination } from '@/composables'
 import { formatDateTime } from '@/utils/date'
 
 const message = useMessage()
@@ -227,30 +228,14 @@ const channelGroups = computed<ChannelGroup[]>(() => {
 })
 
 const queryForm = reactive({
-  page: 1,
-  pageSize: 10,
   channelName: undefined as string | undefined,
   channelType: undefined as ChannelType | undefined,
 })
 
-const pagination = reactive({
-  page: 1,
-  pageSize: 10,
-  showSizePicker: true,
-  pageSizes: [10, 20, 50, 100],
-  itemCount: 0,
-  onChange: (page: number) => {
-    pagination.page = page
-    queryForm.page = page
-    loadData()
-  },
-  onUpdatePageSize: (pageSize: number) => {
-    pagination.pageSize = pageSize
-    queryForm.pageSize = pageSize
-    pagination.page = 1
-    queryForm.page = 1
-    loadData()
-  },
+// 分页
+const { paginationProps, setTotal, getParams } = usePagination({
+  onChange: () => loadData(),
+  onPageSizeChange: () => loadData(),
 })
 
 const form = reactive({
@@ -313,9 +298,9 @@ onMounted(() => {
 async function loadData() {
   loading.value = true
   try {
-    const res = await getChannelPageApi(queryForm)
+    const res = await getChannelPageApi({ ...queryForm, ...getParams() })
     tableData.value = res?.records || []
-    pagination.itemCount = res?.totalRow || 0
+    setTotal(res?.totalRow || 0)
   } catch (error) {
     console.error('加载数据失败:', error)
   } finally {
@@ -324,15 +309,13 @@ async function loadData() {
 }
 
 function handleSearch() {
-  pagination.page = 1
-  queryForm.page = 1
   loadData()
 }
 
 function handleReset() {
   queryForm.channelName = undefined
   queryForm.channelType = undefined
-  handleSearch()
+  loadData()
 }
 
 function handleAdd() {

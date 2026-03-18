@@ -14,6 +14,7 @@ import cn.swiftadmin.system.mapper.SysDictDataMapper;
 import cn.swiftadmin.system.mapper.SysDictTypeMapper;
 import cn.swiftadmin.common.core.util.BeanCopyUtils;
 import com.mybatisflex.core.query.QueryWrapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,16 +35,12 @@ import static cn.swiftadmin.system.api.entity.table.SysDictTypeTableDef.SYS_DICT
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class DictServiceImpl implements DictService {
 
     private final SysDictTypeMapper dictTypeMapper;
     private final SysDictDataMapper dictDataMapper;
     private final Map<String, List<DictDataVO>> dictCache = new ConcurrentHashMap<>();
-
-    public DictServiceImpl(SysDictTypeMapper dictTypeMapper, SysDictDataMapper dictDataMapper) {
-        this.dictTypeMapper = dictTypeMapper;
-        this.dictDataMapper = dictDataMapper;
-    }
 
     // ==================== 字典类型管理 ====================
 

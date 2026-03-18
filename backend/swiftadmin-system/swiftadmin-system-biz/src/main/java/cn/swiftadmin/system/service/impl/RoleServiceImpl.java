@@ -19,6 +19,7 @@ import cn.swiftadmin.system.mapper.SysRoleDeptMapper;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.update.UpdateChain;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -40,19 +41,12 @@ import static cn.swiftadmin.system.api.entity.table.SysUserRoleTableDef.SYS_USER
  * @since 2026-03-10
  */
 @Service
+@RequiredArgsConstructor
 public class RoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> implements RoleService {
 
     private final SysRoleMenuMapper roleMenuMapper;
     private final SysRoleDeptMapper roleDeptMapper;
     private final PermissionCacheRefreshService cacheRefreshService;
-
-    public RoleServiceImpl(SysRoleMenuMapper roleMenuMapper,
-                          SysRoleDeptMapper roleDeptMapper,
-                          PermissionCacheRefreshService cacheRefreshService) {
-        this.roleMenuMapper = roleMenuMapper;
-        this.roleDeptMapper = roleDeptMapper;
-        this.cacheRefreshService = cacheRefreshService;
-    }
 
     @Override
     @Transactional(readOnly = true)

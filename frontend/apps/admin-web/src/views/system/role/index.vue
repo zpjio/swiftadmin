@@ -52,7 +52,7 @@
       :columns="columns"
       :data="tableData"
       :loading="loading"
-      :pagination="pagination"
+      :pagination="paginationProps"
       :row-key="(row) => row.id"
       :checked-row-keys="selectedRowKeys"
       @update:checked-row-keys="onChecked"
@@ -181,8 +181,9 @@ import type { RoleVO, RoleDTO, RoleQuery } from '@/api/role'
 import type { MenuVO } from '@/api/menu'
 import type { DeptVO } from '@/api/dept'
 import { generateRoleCode } from '@/utils/codeGenerator'
-import { usePermission } from '@/composables'
+import { usePermission, usePagination } from '@/composables'
 import { formatDateTime } from '@/utils/date'
+import { convertToTreeOptions, getParentIds } from '@/utils/tree'
 
 const message = useMessage()
 const dialog = useDialog()
@@ -191,10 +192,7 @@ const { hasPermission } = usePermission()
 const loading = ref(false)
 const tableData = ref<RoleVO[]>([])
 const selectedRowKeys = ref<string[]>([])
-const queryForm = reactive<RoleQuery>({
-  page: 1,
-  pageSize: 10,
-})
+const queryForm = reactive<RoleQuery>({})
 
 // 数据范围选项
 const dataScopeOptions = [
@@ -205,24 +203,10 @@ const dataScopeOptions = [
   { label: '仅本人', value: 5 },
 ]
 
-const pagination = reactive({
-  page: 1,
-  pageSize: 10,
-  showSizePicker: true,
-  pageSizes: [10, 20, 50, 100],
-  itemCount: 0,
-  onChange: (page: number) => {
-    pagination.page = page
-    queryForm.page = page
-    loadData()
-  },
-  onUpdatePageSize: (pageSize: number) => {
-    pagination.pageSize = pageSize
-    pagination.page = 1
-    queryForm.page = 1
-    queryForm.pageSize = pageSize
-    loadData()
-  },
+// 分页
+const { paginationProps, setTotal, getIndex } = usePagination({
+  onChange: () => loadData(),
+  onPageSizeChange: () => loadData(),
 })
 
 // 表格列定义
@@ -232,7 +216,7 @@ const columns: DataTableColumns<RoleVO> = [
     title: '序号',
     key: 'index',
     width: 60,
-    render: (_row, index) => (pagination.page - 1) * pagination.pageSize + index + 1,
+    render: (_row, index) => getIndex(index),
   },
   {
     title: '角色名称',
@@ -358,7 +342,7 @@ const loadDeptTree = async () => {
   try {
     const res = await getDeptTreeApi()
     const deptData = res as DeptVO[]
-    deptTreeData.value = convertDeptToTree(deptData)
+    deptTreeData.value = convertToTreeOptions(deptData)
     allDeptIds.value = getAllDeptIds(deptData)
   } catch (error) {
     console.error('加载部门树失败:', error)
@@ -376,15 +360,6 @@ const getAllDeptIds = (depts: DeptVO[]): string[] => {
   }
   traverse(depts)
   return ids
-}
-
-// 转换部门数据为树形结构
-const convertDeptToTree = (depts: DeptVO[]): TreeOption[] => {
-  return depts.map((dept) => ({
-    key: dept.id,
-    label: dept.name,
-    children: dept.children ? convertDeptToTree(dept.children) : undefined,
-  }))
 }
 
 // 部门选中变化
@@ -407,7 +382,7 @@ const loadMenuTree = async () => {
   try {
     const res = await getMenuTreeApi()
     const menuData = res as MenuVO[]
-    menuTreeData.value = convertMenuToTree(menuData)
+    menuTreeData.value = convertToTreeOptions(menuData)
     allMenuIds.value = getAllMenuIds(menuData)
   } catch (error) {
     console.error('加载菜单树失败:', error)
@@ -425,30 +400,6 @@ const getAllMenuIds = (menus: MenuVO[]): string[] => {
   }
   traverse(menus)
   return ids
-}
-
-// 获取所有菜单ID用于展开
-const getAllMenuKeysForExpand = (menus: MenuVO[]): string[] => {
-  const keys: string[] = []
-  const traverse = (items: MenuVO[]) => {
-    items.forEach((item) => {
-      if (item.children && item.children.length > 0) {
-        keys.push(item.id)
-        traverse(item.children)
-      }
-    })
-  }
-  traverse(menus)
-  return keys
-}
-
-// 转换菜单数据为树形结构
-const convertMenuToTree = (menus: MenuVO[]): TreeOption[] => {
-  return menus.map((menu) => ({
-    key: menu.id,
-    label: menu.name,
-    children: menu.children ? convertMenuToTree(menu.children) : undefined,
-  }))
 }
 
 // 菜单选中变化
@@ -474,7 +425,7 @@ const handleUnselectAllMenu = () => {
 // 展开全部菜单
 const handleExpandAllMenu = () => {
   getMenuTreeApi().then((data) => {
-    expandedMenuKeys.value = getAllMenuKeysForExpand(data as MenuVO[])
+    expandedMenuKeys.value = getParentIds(data as MenuVO[])
   })
 }
 
@@ -489,9 +440,7 @@ const loadData = async () => {
   try {
     const res = await getRolePageApi(queryForm)
     tableData.value = res.records
-    pagination.page = res.pageNumber
-    pagination.pageSize = res.pageSize
-    pagination.itemCount = res.totalRow
+    setTotal(res.totalRow)
   } catch (error) {
     console.error('加载数据失败:', error)
   } finally {
@@ -501,8 +450,6 @@ const loadData = async () => {
 
 // 搜索
 const handleSearch = () => {
-  pagination.page = 1
-  queryForm.page = 1
   loadData()
 }
 
@@ -511,7 +458,7 @@ const handleReset = () => {
   queryForm.name = undefined
   queryForm.code = undefined
   queryForm.status = undefined
-  handleSearch()
+  loadData()
 }
 
 // 新增
@@ -559,7 +506,7 @@ const handlePermission = async (row: RoleVO) => {
     const detail = await getRoleDetailApi(row.id)
     permissionForm.roleId = detail.id
     permissionForm.menuIds = detail.menuIds || []
-    expandedMenuKeys.value = getAllMenuKeysForExpand(await getMenuTreeApi() as MenuVO[])
+    expandedMenuKeys.value = getParentIds(await getMenuTreeApi() as MenuVO[])
     showPermissionModal.value = true
   } catch (error: any) {
     message.error(error.message || '获取角色详情失败')

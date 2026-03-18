@@ -34,7 +34,7 @@
       :columns="columns"
       :data="tableData"
       :loading="loading"
-      :pagination="pagination"
+      :pagination="paginationProps"
       :row-key="(row) => row.sessionId"
       :checked-row-keys="checkedRowKeys"
       @update:checked-row-keys="onChecked"
@@ -48,35 +48,19 @@ import { useMessage, useDialog, type DataTableColumns } from 'naive-ui'
 import { getOnlineUserPageApi, forceLogoutApi, forceLogoutBatchApi } from '@/api/online'
 import type { OnlineUserVO, OnlineUserQuery } from '@/api/online'
 import { formatDateTime } from '@/utils/date'
+import { usePagination } from '@/composables'
 
 const message = useMessage()
 const dialog = useDialog()
 
 const loading = ref(false)
 const tableData = ref<OnlineUserVO[]>([])
-const queryForm = reactive<OnlineUserQuery>({
-  page: 1,
-  pageSize: 10,
-})
+const queryForm = reactive<OnlineUserQuery>({})
 
-const pagination = reactive({
-  page: 1,
-  pageSize: 10,
-  showSizePicker: true,
-  pageSizes: [10, 20, 50, 100],
-  itemCount: 0,
-  onChange: (page: number) => {
-    pagination.page = page
-    queryForm.page = page
-    loadData()
-  },
-  onUpdatePageSize: (pageSize: number) => {
-    pagination.pageSize = pageSize
-    pagination.page = 1
-    queryForm.page = 1
-    queryForm.pageSize = pageSize
-    loadData()
-  },
+// 分页
+const { paginationProps, setTotal } = usePagination({
+  onChange: () => loadData(),
+  onPageSizeChange: () => loadData(),
 })
 
 const checkedRowKeys = ref<string[]>([])
@@ -165,9 +149,7 @@ const loadData = async () => {
   try {
     const res = await getOnlineUserPageApi(queryForm)
     tableData.value = res.records || []
-    pagination.page = res.pageNumber || 1
-    pagination.pageSize = res.pageSize || 10
-    pagination.itemCount = res.totalRow || 0
+    setTotal(res.totalRow || 0)
   } catch (error) {
     console.error('加载数据失败:', error)
   } finally {
@@ -177,7 +159,6 @@ const loadData = async () => {
 
 // 搜索
 const handleSearch = () => {
-  pagination.page = 1
   loadData()
 }
 
@@ -185,7 +166,7 @@ const handleSearch = () => {
 const handleReset = () => {
   queryForm.username = undefined
   queryForm.ip = undefined
-  handleSearch()
+  loadData()
 }
 
 // 强退单个用户

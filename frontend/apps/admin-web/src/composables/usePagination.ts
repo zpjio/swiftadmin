@@ -1,4 +1,4 @@
-import { reactive } from 'vue'
+import { reactive, computed, type ComputedRef } from 'vue'
 
 /**
  * 分页参数接口
@@ -15,19 +15,52 @@ export interface PaginationState extends PaginationParams {
   showSizePicker: boolean
   pageSizes: number[]
   itemCount: number
+  onChange?: (page: number) => void
+  onUpdatePageSize?: (pageSize: number) => void
+}
+
+/**
+ * 分页组合式函数返回值
+ */
+export interface UsePaginationReturn {
+  state: PaginationState
+  getParams: () => PaginationParams
+  paginationProps: ComputedRef<PaginationState>
+  goToPage: (page: number) => void
+  setPageSize: (pageSize: number) => void
+  reset: () => void
+  setTotal: (total: number) => void
+  getIndex: (index: number) => number
 }
 
 /**
  * 分页组合式函数
  * @param options 分页配置选项
  * @returns 分页状态和操作方法
+ *
+ * @example
+ * ```ts
+ * const { state, paginationProps, setTotal, getParams } = usePagination({
+ *   onChange: () => loadData(),
+ *   onPageSizeChange: () => loadData(),
+ * })
+ *
+ * // 在模板中
+ * <NDataTable :pagination="paginationProps" />
+ *
+ * // 加载数据后设置总数
+ * setTotal(res.totalRow)
+ *
+ * // 获取请求参数
+ * const params = { ...queryForm, ...getParams() }
+ * ```
  */
 export function usePagination(options: {
   defaultPageSize?: number
   pageSizes?: number[]
   onChange?: (page: number) => void
   onPageSizeChange?: (pageSize: number) => void
-} = {}) {
+} = {}): UsePaginationReturn {
   const {
     defaultPageSize = 10,
     pageSizes = [10, 20, 50, 100],
@@ -41,6 +74,15 @@ export function usePagination(options: {
     showSizePicker: true,
     pageSizes,
     itemCount: 0,
+    onChange: (page: number) => {
+      state.page = page
+      onChange?.(page)
+    },
+    onUpdatePageSize: (pageSize: number) => {
+      state.pageSize = pageSize
+      state.page = 1 // 重置到第一页
+      onPageSizeChange?.(pageSize)
+    },
   })
 
   /**
@@ -56,7 +98,7 @@ export function usePagination(options: {
    */
   const setPageSize = (pageSize: number) => {
     state.pageSize = pageSize
-    state.page = 1 // 重置到第一页
+    state.page = 1
     onPageSizeChange?.(pageSize)
   }
 
@@ -76,7 +118,7 @@ export function usePagination(options: {
   }
 
   /**
-   * 获取分页请求参数（直接返回响应式对象的属性）
+   * 获取分页请求参数
    */
   const getParams = (): PaginationParams => ({
     page: state.page,
@@ -91,22 +133,14 @@ export function usePagination(options: {
   }
 
   /**
-   * Naive UI 分页配置
+   * Naive UI 分页配置（computed 以支持响应式更新）
    */
-  const getPaginationProps = () => ({
-    page: state.page,
-    pageSize: state.pageSize,
-    showSizePicker: state.showSizePicker,
-    pageSizes: state.pageSizes,
-    itemCount: state.itemCount,
-    onChange: goToPage,
-    onUpdatePageSize: setPageSize,
-  })
+  const paginationProps = computed(() => state)
 
   return {
     state,
     getParams,
-    getPaginationProps,
+    paginationProps,
     goToPage,
     setPageSize,
     reset,

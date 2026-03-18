@@ -79,9 +79,8 @@
         :loading="loading"
         :row-key="(row) => row.id"
         :checked-row-keys="selectedRowKeys"
-        :pagination="pagination"
+        :pagination="paginationProps"
         @update:checked-row-keys="onCheckedRowKeysChange"
-        @update:page="onPageChange"
       />
     </NCard>
   </div>
@@ -93,6 +92,7 @@ import { useMessage, type DataTableColumns, type DataTableRowKey } from 'naive-u
 import { getLoginLogPageApi, deleteLoginLogApi, clearLoginLogApi } from '@/api/loginlog'
 import type { LoginLogVO, LoginLogQuery } from '@/api/loginlog'
 import { formatDateTime } from '@/utils/date'
+import { usePagination } from '@/composables'
 
 const message = useMessage()
 const loading = ref(false)
@@ -100,8 +100,6 @@ const tableData = ref<LoginLogVO[]>([])
 const selectedRowKeys = ref<DataTableRowKey[]>([])
 
 const queryForm = reactive<LoginLogQuery & { dateRange?: [number, number] }>({
-  page: 1,
-  pageSize: 10,
   username: '',
   ip: '',
   status: undefined,
@@ -110,24 +108,10 @@ const queryForm = reactive<LoginLogQuery & { dateRange?: [number, number] }>({
   dateRange: undefined,
 })
 
-const pagination = reactive({
-  page: 1,
-  pageSize: 10,
-  showSizePicker: true,
-  pageSizes: [10, 20, 50, 100],
-  itemCount: 0,
-  onChange: (page: number) => {
-    pagination.page = page
-    queryForm.page = page
-    loadData()
-  },
-  onUpdatePageSize: (pageSize: number) => {
-    pagination.pageSize = pageSize
-    queryForm.pageSize = pageSize
-    pagination.page = 1
-    queryForm.page = 1
-    loadData()
-  },
+// 分页
+const { paginationProps, setTotal, getIndex } = usePagination({
+  onChange: () => loadData(),
+  onPageSizeChange: () => loadData(),
 })
 
 const statusOptions = [
@@ -141,7 +125,7 @@ const columns: DataTableColumns<LoginLogVO> = [
     title: '序号',
     key: 'index',
     width: 60,
-    render: (_row, index) => (pagination.page - 1) * pagination.pageSize + index + 1,
+    render: (_row, index) => getIndex(index),
   },
   { title: '用户名', key: 'username', width: 120, ellipsis: { tooltip: true } },
   {
@@ -170,7 +154,7 @@ const loadData = async () => {
   try {
     const res = await getLoginLogPageApi(queryForm)
     tableData.value = res.records || []
-    pagination.itemCount = res.totalRow || 0
+    setTotal(res.totalRow || 0)
   } catch (error: any) {
     message.error(error.message || '加载失败')
   } finally {
@@ -179,8 +163,6 @@ const loadData = async () => {
 }
 
 const handleSearch = () => {
-  queryForm.page = 1
-  pagination.page = 1
   loadData()
 }
 
@@ -191,7 +173,7 @@ const handleReset = () => {
   queryForm.beginTime = ''
   queryForm.endTime = ''
   queryForm.dateRange = undefined
-  handleSearch()
+  loadData()
 }
 
 const onDateRangeChange = (value: [number, number] | null) => {
@@ -241,12 +223,6 @@ const handleClearAll = async () => {
 
 const onCheckedRowKeysChange = (keys: DataTableRowKey[]) => {
   selectedRowKeys.value = keys
-}
-
-const onPageChange = (page: number) => {
-  pagination.page = page
-  queryForm.page = page
-  loadData()
 }
 
 onMounted(() => {

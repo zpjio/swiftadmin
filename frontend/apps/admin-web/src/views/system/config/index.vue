@@ -55,7 +55,7 @@
         :loading="loading"
         :row-key="(row) => row.id"
         :checked-row-keys="selectedRowKeys"
-        :pagination="pagination"
+        :pagination="paginationProps"
         @update:checked-row-keys="onCheckedRowKeysChange"
       />
     </NCard>
@@ -108,7 +108,7 @@ import {
   type ConfigDTO,
 } from '@/api/config'
 import { useDict } from '@/composables/useDict'
-import { usePermission } from '@/composables'
+import { usePermission, usePagination } from '@/composables'
 
 const message = useMessage()
 const dialog = useDialog()
@@ -126,31 +126,15 @@ const modalTitle = ref('')
 const { options: configTypeOptions, getLabel: getConfigTypeLabel } = useDict('sys_config_type')
 
 const queryForm = reactive({
-  page: 1,
-  pageSize: 10,
   configName: undefined as string | undefined,
   configKey: undefined as string | undefined,
   configType: undefined as string | undefined,
 })
 
-const pagination = reactive({
-  page: 1,
-  pageSize: 10,
-  showSizePicker: true,
-  pageSizes: [10, 20, 50, 100],
-  itemCount: 0,
-  onChange: (page: number) => {
-    pagination.page = page
-    queryForm.page = page
-    loadData()
-  },
-  onUpdatePageSize: (pageSize: number) => {
-    pagination.pageSize = pageSize
-    queryForm.pageSize = pageSize
-    pagination.page = 1
-    queryForm.page = 1
-    loadData()
-  },
+// 分页
+const { paginationProps, setTotal, getIndex } = usePagination({
+  onChange: () => loadData(),
+  onPageSizeChange: () => loadData(),
 })
 
 const form = reactive<ConfigDTO>({
@@ -174,7 +158,7 @@ const columns: DataTableColumns<ConfigVO> = [
     title: '序号',
     key: 'index',
     width: 60,
-    render: (_row, index) => (pagination.page - 1) * pagination.pageSize + index + 1,
+    render: (_row, index) => getIndex(index),
   },
   { title: '配置名称', key: 'configName', width: 150, ellipsis: { tooltip: true } },
   { title: '配置键', key: 'configKey', width: 180, ellipsis: { tooltip: true } },
@@ -204,7 +188,7 @@ const loadData = async () => {
   try {
     const res = await getConfigPageApi(queryForm)
     tableData.value = res.records || []
-    pagination.itemCount = res.totalRow || 0
+    setTotal(res.totalRow || 0)
   } catch (error: any) {
     message.error(error.message || '加载失败')
   } finally {
@@ -213,8 +197,6 @@ const loadData = async () => {
 }
 
 const handleSearch = () => {
-  queryForm.page = 1
-  pagination.page = 1
   loadData()
 }
 
@@ -222,7 +204,7 @@ const handleReset = () => {
   queryForm.configName = undefined
   queryForm.configKey = undefined
   queryForm.configType = undefined
-  handleSearch()
+  loadData()
 }
 
 const handleAdd = () => {

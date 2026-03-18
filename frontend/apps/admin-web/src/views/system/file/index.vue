@@ -70,9 +70,8 @@
         :loading="loading"
         :row-key="(row) => row.id"
         :checked-row-keys="selectedRowKeys"
-        :pagination="pagination"
+        :pagination="paginationProps"
         @update:checked-row-keys="onCheckedRowKeysChange"
-        @update:page="onPageChange"
       />
 
       <!-- 文件预览弹窗 -->
@@ -99,6 +98,7 @@ import type { FileVO, FileQuery } from '@/api/file'
 import { getIconClass } from '@/utils/icon'
 import { buildAuthHeader } from '@/utils/auth'
 import { formatDateTime } from '@/utils/date'
+import { usePagination } from '@/composables'
 
 const message = useMessage()
 const loading = ref(false)
@@ -106,30 +106,14 @@ const tableData = ref<FileVO[]>([])
 const selectedRowKeys = ref<string[]>([])
 
 const queryForm = reactive<FileQuery>({
-  page: 1,
-  pageSize: 10,
   fileName: undefined,
   fileType: undefined,
 })
 
-const pagination = reactive({
-  page: 1,
-  pageSize: 10,
-  showSizePicker: true,
-  pageSizes: [10, 20, 50, 100],
-  itemCount: 0,
-  onChange: (page: number) => {
-    pagination.page = page
-    queryForm.page = page
-    loadData()
-  },
-  onUpdatePageSize: (pageSize: number) => {
-    pagination.pageSize = pageSize
-    queryForm.pageSize = pageSize
-    pagination.page = 1
-    queryForm.page = 1
-    loadData()
-  },
+// 分页
+const { paginationProps, setTotal, getIndex } = usePagination({
+  onChange: () => loadData(),
+  onPageSizeChange: () => loadData(),
 })
 
 const fileTypeOptions = [
@@ -150,7 +134,7 @@ const columns: DataTableColumns<FileVO> = [
     title: '序号',
     key: 'index',
     width: 60,
-    render: (_row, index) => (pagination.page - 1) * pagination.pageSize + index + 1,
+    render: (_row, index) => getIndex(index),
   },
   {
     title: '文件名',
@@ -192,7 +176,7 @@ const loadData = async () => {
   try {
     const res = await getFilePageApi(queryForm)
     tableData.value = res.records || []
-    pagination.itemCount = res.totalRow || 0
+    setTotal(res.totalRow || 0)
   } catch (error: any) {
     message.error(error.message || '加载失败')
   } finally {
@@ -201,15 +185,13 @@ const loadData = async () => {
 }
 
 const handleSearch = () => {
-  queryForm.page = 1
-  pagination.page = 1
   loadData()
 }
 
 const handleReset = () => {
   queryForm.fileName = undefined
   queryForm.fileType = undefined
-  handleSearch()
+  loadData()
 }
 
 const handleUploadFinish = ({ event }: any) => {
@@ -299,12 +281,6 @@ const handleDownload = async (row: FileVO) => {
 
 const onCheckedRowKeysChange = (keys: (string | number)[]) => {
   selectedRowKeys.value = keys.map(String)
-}
-
-const onPageChange = (page: number) => {
-  pagination.page = page
-  queryForm.page = page
-  loadData()
 }
 
 const formatFileSize = (bytes?: number) => {

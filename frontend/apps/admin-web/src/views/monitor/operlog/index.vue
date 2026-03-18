@@ -104,9 +104,8 @@
         :loading="loading"
         :row-key="(row) => row.id"
         :checked-row-keys="selectedRowKeys"
-        :pagination="pagination"
+        :pagination="paginationProps"
         @update:checked-row-keys="onCheckedRowKeysChange"
-        @update:page="onPageChange"
       />
     </NCard>
 
@@ -175,6 +174,7 @@ import { useMessage, type DataTableColumns, type DataTableRowKey } from 'naive-u
 import { getOperLogPageApi, deleteOperLogApi, clearOperLogApi, getOperLogDetailApi } from '@/api/operlog'
 import type { OperLogVO, OperLogQuery } from '@/api/operlog'
 import { formatDateTime } from '@/utils/date'
+import { usePagination } from '@/composables'
 
 const message = useMessage()
 const loading = ref(false)
@@ -184,8 +184,6 @@ const showDetailModal = ref(false)
 const currentDetail = ref<OperLogVO | null>(null)
 
 const queryForm = reactive<OperLogQuery & { dateRange?: [number, number] }>({
-  page: 1,
-  pageSize: 10,
   title: '',
   module: '',
   operName: '',
@@ -196,24 +194,10 @@ const queryForm = reactive<OperLogQuery & { dateRange?: [number, number] }>({
   dateRange: undefined,
 })
 
-const pagination = reactive({
-  page: 1,
-  pageSize: 10,
-  showSizePicker: true,
-  pageSizes: [10, 20, 50, 100],
-  itemCount: 0,
-  onChange: (page: number) => {
-    pagination.page = page
-    queryForm.page = page
-    loadData()
-  },
-  onUpdatePageSize: (pageSize: number) => {
-    pagination.pageSize = pageSize
-    queryForm.pageSize = pageSize
-    pagination.page = 1
-    queryForm.page = 1
-    loadData()
-  },
+// 分页
+const { paginationProps, setTotal, getIndex } = usePagination({
+  onChange: () => loadData(),
+  onPageSizeChange: () => loadData(),
 })
 
 // 业务类型选项
@@ -245,7 +229,7 @@ const columns: DataTableColumns<OperLogVO> = [
     title: '序号',
     key: 'index',
     width: 60,
-    render: (_row, index) => (pagination.page - 1) * pagination.pageSize + index + 1,
+    render: (_row, index) => getIndex(index),
   },
   {
     title: '操作标题',
@@ -335,7 +319,7 @@ const loadData = async () => {
   try {
     const res = await getOperLogPageApi(queryForm)
     tableData.value = res.records || []
-    pagination.itemCount = res.totalRow || 0
+    setTotal(res.totalRow || 0)
   } catch (error: any) {
     message.error(error.message || '加载失败')
   } finally {
@@ -345,8 +329,6 @@ const loadData = async () => {
 
 // 搜索
 const handleSearch = () => {
-  queryForm.page = 1
-  pagination.page = 1
   loadData()
 }
 
@@ -360,7 +342,7 @@ const handleReset = () => {
   queryForm.beginTime = ''
   queryForm.endTime = ''
   queryForm.dateRange = undefined
-  handleSearch()
+  loadData()
 }
 
 // 日期范围变化
@@ -433,13 +415,6 @@ const formatJson = (json?: string) => {
 // 选中行变化
 const onCheckedRowKeysChange = (keys: DataTableRowKey[]) => {
   selectedRowKeys.value = keys
-}
-
-// 分页变化
-const onPageChange = (page: number) => {
-  pagination.page = page
-  queryForm.page = page
-  loadData()
 }
 
 onMounted(() => {

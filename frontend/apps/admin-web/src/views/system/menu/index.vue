@@ -234,6 +234,7 @@ import type { MenuVO, MenuDTO, MenuTreeVO } from '@/api/menu'
 import IconSelect from '@/components/IconSelect.vue'
 import { Icon } from '@iconify/vue'
 import { normalizeIconName } from '@/utils/icon'
+import { getParentIds, convertToTreeSelectOptions } from '@/utils/tree'
 
 import { usePermission } from '@/composables'
 
@@ -283,20 +284,6 @@ const convertToTreeOptions = (menus: MenuVO[]): TreeOption[] => {
   }))
 }
 
-// 获取所有父级菜单ID
-const getParentMenuIds = (menus: MenuVO[]): string[] => {
-  const ids: string[] = []
-  const traverse = (items: MenuVO[]) => {
-    items.forEach(item => {
-      if (item.children && item.children.length > 0) {
-        ids.push(item.id)
-        traverse(item.children)
-      }
-    })
-  }
-  traverse(menus)
-  return ids
-}
 
 // 渲染树节点标签
 const renderTreeLabel = ({ option }: { option: TreeOption }) => {
@@ -484,22 +471,6 @@ const handleSubmit = async () => {
   }
 }
 
-// 转换选择树数据
-const convertSelectTree = (items: MenuTreeVO[]): TreeSelectOption[] => {
-  const result: TreeSelectOption[] = [{ key: '0', label: '顶级菜单', children: [] }]
-  const convert = (items: MenuTreeVO[]): TreeSelectOption[] => {
-    return items.map(item => ({
-      key: item.id,
-      label: item.label,
-      children: item.children ? convert(item.children) : undefined,
-    }))
-  }
-  if (result[0]) {
-    result[0].children = convert(items)
-  }
-  return result
-}
-
 // 加载菜单树
 const loadMenuTree = async () => {
   loading.value = true
@@ -508,8 +479,12 @@ const loadMenuTree = async () => {
     const treeData = treeRes as MenuVO[]
     const selectTreeData = selectTreeRes as MenuTreeVO[]
     rawTreeData.value = treeData
-    menuSelectTreeData.value = convertSelectTree(selectTreeData)
-    parentMenuIds.value = getParentMenuIds(treeData)
+    menuSelectTreeData.value = convertToTreeSelectOptions(selectTreeData, {
+      labelField: 'label',
+      rootLabel: '顶级菜单',
+      rootKey: '0',
+    })
+    parentMenuIds.value = getParentIds(treeData)
     expandedKeys.value = [...parentMenuIds.value]
   } catch (error) {
     console.error('加载菜单树失败:', error)

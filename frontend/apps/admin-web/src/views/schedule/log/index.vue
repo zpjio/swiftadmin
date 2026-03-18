@@ -47,7 +47,7 @@
         :data="tableData"
         :loading="loading"
         :row-key="(row) => row.id"
-        :pagination="pagination"
+        :pagination="paginationProps"
       />
     </NCard>
 
@@ -106,6 +106,7 @@ import {
   ExecuteType,
 } from '@/api/schedule'
 import { formatDateTime } from '@/utils/date'
+import { usePagination } from '@/composables'
 
 const message = useMessage()
 const loading = ref(false)
@@ -125,32 +126,16 @@ const executeTypeOptions = [
 ]
 
 const queryForm = reactive<JobLogQuery>({
-  page: 1,
-  pageSize: 10,
   jobName: undefined,
   jobGroup: undefined,
   executeStatus: undefined,
   executeType: undefined,
 })
 
-const pagination = reactive({
-  page: 1,
-  pageSize: 10,
-  showSizePicker: true,
-  pageSizes: [10, 20, 50, 100],
-  itemCount: 0,
-  onChange: (page: number) => {
-    pagination.page = page
-    queryForm.page = page
-    loadData()
-  },
-  onUpdatePageSize: (pageSize: number) => {
-    pagination.pageSize = pageSize
-    queryForm.pageSize = pageSize
-    pagination.page = 1
-    queryForm.page = 1
-    loadData()
-  },
+// 分页
+const { paginationProps, setTotal, getIndex } = usePagination({
+  onChange: () => loadData(),
+  onPageSizeChange: () => loadData(),
 })
 
 const columns: DataTableColumns<JobLogVO> = [
@@ -158,7 +143,7 @@ const columns: DataTableColumns<JobLogVO> = [
     title: '序号',
     key: 'index',
     width: 60,
-    render: (_row, index) => (pagination.page - 1) * pagination.pageSize + index + 1,
+    render: (_row, index) => getIndex(index),
   },
   { title: '任务名称', key: 'jobName', width: 150 },
   { title: '任务分组', key: 'jobGroup', width: 120 },
@@ -214,7 +199,7 @@ const loadData = async () => {
   try {
     const res = await getJobLogPageApi(queryForm)
     tableData.value = res.records
-    pagination.itemCount = res.totalRow
+    setTotal(res.totalRow)
   } catch (error) {
     message.error('加载日志列表失败')
   } finally {
@@ -223,15 +208,11 @@ const loadData = async () => {
 }
 
 const handleSearch = () => {
-  pagination.page = 1
-  queryForm.page = 1
   loadData()
 }
 
 const handleReset = () => {
   Object.assign(queryForm, {
-    page: 1,
-    pageSize: 10,
     jobName: undefined,
     jobGroup: undefined,
     executeStatus: undefined,

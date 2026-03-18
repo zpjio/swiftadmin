@@ -51,7 +51,7 @@
         :loading="loading"
         :row-key="(row) => row.id"
         :checked-row-keys="selectedRowKeys"
-        :pagination="pagination"
+        :pagination="paginationProps"
         @update:checked-row-keys="onCheckedRowKeysChange"
       />
     </NCard>
@@ -119,6 +119,7 @@ import {
   type ChannelType,
 } from '@/api/message'
 import { useDict } from '@/composables/useDict'
+import { usePagination } from '@/composables'
 import { formatDateTime } from '@/utils/date'
 
 const message = useMessage()
@@ -136,31 +137,15 @@ const modalTitle = ref('')
 const { options: channelTypeOptions, getLabel: getChannelTypeLabel } = useDict('msg_channel_type')
 
 const queryForm = reactive({
-  page: 1,
-  pageSize: 10,
   templateName: undefined as string | undefined,
   templateCode: undefined as string | undefined,
   channelType: undefined as ChannelType | undefined,
 })
 
-const pagination = reactive({
-  page: 1,
-  pageSize: 10,
-  showSizePicker: true,
-  pageSizes: [10, 20, 50, 100],
-  itemCount: 0,
-  onChange: (page: number) => {
-    pagination.page = page
-    queryForm.page = page
-    loadData()
-  },
-  onUpdatePageSize: (pageSize: number) => {
-    pagination.pageSize = pageSize
-    queryForm.pageSize = pageSize
-    pagination.page = 1
-    queryForm.page = 1
-    loadData()
-  },
+// 分页
+const { paginationProps, setTotal, getParams } = usePagination({
+  onChange: () => loadData(),
+  onPageSizeChange: () => loadData(),
 })
 
 const form = reactive({
@@ -225,9 +210,9 @@ onMounted(() => {
 async function loadData() {
   loading.value = true
   try {
-    const res = await getTemplatePageApi(queryForm)
+    const res = await getTemplatePageApi({ ...queryForm, ...getParams() })
     tableData.value = res?.records || []
-    pagination.itemCount = res?.totalRow || 0
+    setTotal(res?.totalRow || 0)
   } catch (error) {
     console.error('加载数据失败:', error)
   } finally {
@@ -236,8 +221,6 @@ async function loadData() {
 }
 
 function handleSearch() {
-  pagination.page = 1
-  queryForm.page = 1
   loadData()
 }
 
@@ -245,7 +228,7 @@ function handleReset() {
   queryForm.templateName = undefined
   queryForm.templateCode = undefined
   queryForm.channelType = undefined
-  handleSearch()
+  loadData()
 }
 
 function onCheckedRowKeysChange(keys: DataTableRowKey[]) {
