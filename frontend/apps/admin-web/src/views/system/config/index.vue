@@ -1,5 +1,5 @@
 <template>
-  <div class="config-container">
+  <div class="h-full">
     <NCard title="系统配置" :bordered="false">
       <!-- 搜索栏 -->
       <NForm :model="queryForm" inline class="mb-4">
@@ -42,7 +42,7 @@
           <template #icon><icon-mdi-refresh /></template>
           刷新缓存
         </NButton>
-        <NButton v-auth="'system:config:delete'" type="error" :disabled="selectedRowKeys.length === 0" @click="handleBatchDelete">
+        <NButton v-auth="'system:config:delete'" type="error" :disabled="!hasSelection" @click="handleBatchDelete">
           <template #icon><icon-mdi-delete /></template>
           批量删除
         </NButton>
@@ -54,9 +54,9 @@
         :data="tableData"
         :loading="loading"
         :row-key="(row) => row.id"
-        :checked-row-keys="selectedRowKeys"
+        :checked-row-keys="selectedKeys"
         :pagination="paginationProps"
-        @update:checked-row-keys="onCheckedRowKeysChange"
+        @update:checked-row-keys="onSelectionChange"
       />
     </NCard>
 
@@ -95,7 +95,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, h, onMounted } from 'vue'
+import { ref, reactive, h } from 'vue'
 import { useMessage, useDialog, type DataTableColumns } from 'naive-ui'
 import {
   getConfigPageApi,
@@ -106,17 +106,15 @@ import {
   refreshConfigCacheApi,
   type ConfigVO,
   type ConfigDTO,
+  type ConfigQuery,
 } from '@/api/config'
 import { useDict } from '@/composables/useDict'
-import { usePermission, usePagination } from '@/composables'
+import { usePermission, useTablePage } from '@/composables'
 
 const message = useMessage()
 const dialog = useDialog()
 const { hasPermission } = usePermission()
 const formRef = ref<any>(null)
-const loading = ref(false)
-const tableData = ref<ConfigVO[]>([])
-const selectedRowKeys = ref<string[]>([])
 const showModal = ref(false)
 const saving = ref(false)
 const isEdit = ref(false)
@@ -125,17 +123,33 @@ const modalTitle = ref('')
 // 配置类型选项（从字典获取）
 const { options: configTypeOptions, getLabel: getConfigTypeLabel } = useDict('sys_config_type')
 
-const queryForm = reactive({
-  configName: undefined as string | undefined,
-  configKey: undefined as string | undefined,
-  configType: undefined as string | undefined,
+// 表格分页
+const {
+  loading,
+  tableData,
+  queryForm,
+  paginationProps,
+  getIndex,
+  loadData,
+  handleSearch,
+  handleReset,
+  selection,
+} = useTablePage<ConfigVO, ConfigQuery>({
+  fetchFn: getConfigPageApi,
+  defaultQuery: {
+    configName: undefined,
+    configKey: undefined,
+    configType: undefined,
+  },
+  enableSelection: true,
+  immediate: true,
 })
 
-// 分页
-const { paginationProps, setTotal, getIndex } = usePagination({
-  onChange: () => loadData(),
-  onPageSizeChange: () => loadData(),
-})
+// 选择相关的便捷访问
+const selectedKeys = selection!.selectedKeys
+const hasSelection = selection!.hasSelection
+const clearSelection = selection!.clearSelection
+const onSelectionChange = selection!.onSelectionChange
 
 const form = reactive<ConfigDTO>({
   configName: '',
@@ -182,30 +196,6 @@ const columns: DataTableColumns<ConfigVO> = [
       ]),
   },
 ]
-
-const loadData = async () => {
-  loading.value = true
-  try {
-    const res = await getConfigPageApi(queryForm)
-    tableData.value = res.records || []
-    setTotal(res.totalRow || 0)
-  } catch (error: any) {
-    message.error(error.message || '加载失败')
-  } finally {
-    loading.value = false
-  }
-}
-
-const handleSearch = () => {
-  loadData()
-}
-
-const handleReset = () => {
-  queryForm.configName = undefined
-  queryForm.configKey = undefined
-  queryForm.configType = undefined
-  loadData()
-}
 
 const handleAdd = () => {
   isEdit.value = false
@@ -272,20 +262,20 @@ const handleDelete = (row: ConfigVO) => {
 }
 
 const handleBatchDelete = () => {
-  if (selectedRowKeys.value.length === 0) {
+  if (!hasSelection.value) {
     message.warning('请选择要删除的配置')
     return
   }
   dialog.warning({
     title: '确认删除',
-    content: `确定要删除选中的 ${selectedRowKeys.value.length} 个配置吗？`,
+    content: `确定要删除选中的 ${selectedKeys.value.length} 个配置吗？`,
     positiveText: '确定',
     negativeText: '取消',
     onPositiveClick: async () => {
       try {
-        await deleteConfigApi(selectedRowKeys.value)
+        await deleteConfigApi(selectedKeys.value)
         message.success('删除成功')
-        selectedRowKeys.value = []
+        clearSelection()
         loadData()
       } catch (error: any) {
         message.error(error.message || '删除失败')
@@ -302,46 +292,3 @@ const handleRefreshCache = async () => {
     message.error(error.message || '刷新失败')
   }
 }
-
-const onCheckedRowKeysChange = (keys: (string | number)[]) => {
-  selectedRowKeys.value = keys.map(String)
-}
-
-onMounted(() => {
-  loadData()
-})
-</script>
-
-<style scoped>
-.config-container {
-  height: 100%;
-}
-
-.mb-4 {
-  margin-bottom: 16px;
-}
-
-.w-48 {
-  width: 12rem;
-}
-
-.text-blue-600 {
-  color: #2563eb;
-}
-
-.text-red-600 {
-  color: #dc2626;
-}
-
-.hover\:underline:hover {
-  text-decoration: underline;
-}
-
-.flex {
-  display: flex;
-}
-
-.gap-2 {
-  gap: 8px;
-}
-</style>

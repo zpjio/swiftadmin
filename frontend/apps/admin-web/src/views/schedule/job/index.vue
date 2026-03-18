@@ -1,5 +1,5 @@
 <template>
-  <div class="job-container">
+  <div class="p-4 h-full">
     <NCard title="定时任务管理" :bordered="false">
       <!-- 搜索栏 -->
       <NForm :model="queryForm" inline class="mb-4">
@@ -38,7 +38,7 @@
           <template #icon><icon-mdi-plus /></template>
           新增任务
         </NButton>
-        <NButton v-auth="'schedule:job:delete'" type="error" :disabled="selectedRowKeys.length === 0" @click="handleBatchDelete">
+        <NButton v-auth="'schedule:job:delete'" type="error" :disabled="!hasSelection" @click="handleBatchDelete">
           <template #icon><icon-mdi-delete /></template>
           批量删除
         </NButton>
@@ -50,10 +50,10 @@
         :data="tableData"
         :loading="loading"
         :row-key="(row) => row.id"
-        :checked-row-keys="selectedRowKeys"
+        :checked-row-keys="selectedKeys"
         :pagination="paginationProps"
         :scroll-x="1400"
-        @update:checked-row-keys="onCheckedRowKeysChange"
+        @update:checked-row-keys="onSelectionChange"
       />
     </NCard>
 
@@ -132,14 +132,14 @@ import {
 } from '@/api/schedule'
 import CronEditor from '@/components/schedule/CronEditor.vue'
 import { formatDateTime } from '@/utils/date'
-import { usePagination } from '@/composables'
+import { usePagination, useTableSelection } from '@/composables'
 
 const message = useMessage()
 const dialog = useDialog()
 const formRef = ref<any>(null)
 const loading = ref(false)
 const tableData = ref<JobVO[]>([])
-const selectedRowKeys = ref<DataTableRowKey[]>([])
+const { selectedKeys, hasSelection, clearSelection, onSelectionChange } = useTableSelection<JobVO>()
 const showModal = ref(false)
 const saving = ref(false)
 const isEdit = ref(false)
@@ -374,14 +374,14 @@ const handleDelete = (row: JobVO) => {
 const handleBatchDelete = () => {
   dialog.warning({
     title: '确认删除',
-    content: `确定要删除选中的 ${selectedRowKeys.value.length} 个任务吗？`,
+    content: `确定要删除选中的 ${selectedKeys.value.length} 个任务吗？`,
     positiveText: '确定',
     negativeText: '取消',
     onPositiveClick: async () => {
       try {
-        await deleteJobApi(selectedRowKeys.value as string[])
+        await deleteJobApi(selectedKeys.value as string[])
         message.success('批量删除成功')
-        selectedRowKeys.value = []
+        clearSelection()
         loadData()
       } catch (error) {
         message.error('批量删除失败')
@@ -422,21 +422,8 @@ const handleTrigger = async (row: JobVO) => {
   })
 }
 
-const onCheckedRowKeysChange = (keys: DataTableRowKey[]) => {
-  selectedRowKeys.value = keys
-}
-
 onMounted(() => {
   loadData()
 })
 </script>
 
-<style scoped>
-.job-container {
-  padding: 16px;
-}
-
-.mb-4 {
-  margin-bottom: 16px;
-}
-</style>

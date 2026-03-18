@@ -1,5 +1,5 @@
 <template>
-  <div class="record-container">
+  <div class="p-4 h-full">
     <NCard title="发送记录" :bordered="false">
       <!-- 搜索栏 -->
       <NForm :model="queryForm" inline class="mb-4">
@@ -233,8 +233,3 @@ async function handleRetry() {
 }
 </script>
 
-<style scoped>
-.record-container {
-  padding: 16px;
-}
-</style>

@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -58,7 +57,6 @@ public class InboxChannelSender extends AbstractChannelSender {
                     .isRead(0)
                     .isStar(0)
                     .senderName("系统")
-                    .createTime(LocalDateTime.now())
                     .build();
 
             msgUserInboxMapper.insert(inbox);

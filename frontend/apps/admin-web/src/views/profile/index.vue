@@ -1,5 +1,5 @@
 <template>
-  <div class="profile-container">
+  <div class="w-full h-full flex items-start justify-center pt-5">
     <NCard title="个人设置" :bordered="false" class="w-full max-w-2xl">
       <NTabs type="line" animated>
         <NTabPane name="basic" tab="基本信息" display-directive="show">
@@ -307,13 +307,3 @@ const handleUpdatePassword = async () => {
 }
 </script>
 
-<style scoped>
-.profile-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: 20px;
-}
-</style>

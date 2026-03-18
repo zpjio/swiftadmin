@@ -38,7 +38,7 @@ public class SysPasswordHistory {
     private String passwordHash;
 
     /** 创建时间 */
-    @Column
+    @Column(onInsertValue = "now()")
     private LocalDateTime createTime;
 
 }

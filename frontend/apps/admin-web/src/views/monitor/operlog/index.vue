@@ -1,5 +1,5 @@
 <template>
-  <div class="operlog-container">
+  <div class="h-full">
     <NCard :bordered="false">
       <!-- 搜索栏 -->
       <NForm :model="queryForm" inline label-width="80" class="mb-4">
@@ -76,7 +76,7 @@
       <NSpace class="mb-4">
         <NButton
           type="error"
-          :disabled="selectedRowKeys.length === 0"
+          :disabled="!hasSelection"
           @click="handleBatchDelete"
         >
           <template #icon>
@@ -103,9 +103,9 @@
         :data="tableData"
         :loading="loading"
         :row-key="(row) => row.id"
-        :checked-row-keys="selectedRowKeys"
+        :checked-row-keys="selectedKeys"
         :pagination="paginationProps"
-        @update:checked-row-keys="onCheckedRowKeysChange"
+        @update:checked-row-keys="onSelectionChange"
       />
     </NCard>
 
@@ -174,12 +174,12 @@ import { useMessage, type DataTableColumns, type DataTableRowKey } from 'naive-u
 import { getOperLogPageApi, deleteOperLogApi, clearOperLogApi, getOperLogDetailApi } from '@/api/operlog'
 import type { OperLogVO, OperLogQuery } from '@/api/operlog'
 import { formatDateTime } from '@/utils/date'
-import { usePagination } from '@/composables'
+import { usePagination, useTableSelection } from '@/composables'
 
 const message = useMessage()
 const loading = ref(false)
 const tableData = ref<OperLogVO[]>([])
-const selectedRowKeys = ref<DataTableRowKey[]>([])
+const { selectedKeys, hasSelection, clearSelection, onSelectionChange } = useTableSelection<OperLogVO>()
 const showDetailModal = ref(false)
 const currentDetail = ref<OperLogVO | null>(null)
 
@@ -358,15 +358,15 @@ const onDateRangeChange = (value: [number, number] | null) => {
 
 // 批量删除
 const handleBatchDelete = async () => {
-  if (selectedRowKeys.value.length === 0) {
+  if (!hasSelection.value) {
     message.warning('请选择要删除的日志')
     return
   }
 
   try {
-    await deleteOperLogApi(selectedRowKeys.value as string[])
+    await deleteOperLogApi(selectedKeys.value as string[])
     message.success('删除成功')
-    selectedRowKeys.value = []
+    clearSelection()
     loadData()
   } catch (error: any) {
     message.error(error.message || '删除失败')
@@ -412,50 +412,6 @@ const formatJson = (json?: string) => {
   }
 }
 
-// 选中行变化
-const onCheckedRowKeysChange = (keys: DataTableRowKey[]) => {
-  selectedRowKeys.value = keys
-}
-
 onMounted(() => {
   loadData()
 })
-</script>
-
-<style scoped>
-.operlog-container {
-  height: 100%;
-}
-
-.mb-4 {
-  margin-bottom: 16px;
-}
-
-.w-48 {
-  width: 12rem;
-}
-
-.w-64 {
-  width: 16rem;
-}
-
-.font-mono {
-  font-family: monospace;
-}
-
-.text-green-600 {
-  color: #059669;
-}
-
-.text-red-600 {
-  color: #dc2626;
-}
-
-.text-blue-600 {
-  color: #2563eb;
-}
-
-.hover\:underline:hover {
-  text-decoration: underline;
-}
-</style>

@@ -2,7 +2,7 @@
   <NCard title="菜单管理" class="h-full">
     <div class="flex gap-4 h-full">
       <!-- 左侧树形结构 -->
-      <div class="w-80 flex-shrink-0 border-r pr-4">
+      <div class="w-80 flex-shrink-0 border-r border-gray-300 pr-4">
         <div class="mb-4">
           <NInput v-model:value="searchKey" placeholder="搜索菜单名称" clearable>
             <template #prefix>
@@ -496,91 +496,3 @@ const loadMenuTree = async () => {
 onMounted(() => {
   loadMenuTree()
 })
-</script>
-
-<style scoped>
-.h-full {
-  height: 100%;
-}
-
-.flex {
-  display: flex;
-}
-
-.gap-4 {
-  gap: 16px;
-}
-
-.gap-2 {
-  gap: 8px;
-}
-
-.w-80 {
-  width: 320px;
-}
-
-.flex-shrink-0 {
-  flex-shrink: 0;
-}
-
-.flex-1 {
-  flex: 1;
-}
-
-.min-w-0 {
-  min-width: 0;
-}
-
-.border-r {
-  border-right: 1px solid #e0e0e0;
-}
-
-.pr-4 {
-  padding-right: 16px;
-}
-
-.mb-4 {
-  margin-bottom: 16px;
-}
-
-.py-1 {
-  padding-top: 4px;
-  padding-bottom: 4px;
-}
-
-.text-base {
-  font-size: 14px;
-}
-
-.text-lg {
-  font-size: 18px;
-}
-
-.text-4xl {
-  font-size: 36px;
-}
-
-.font-medium {
-  font-weight: 500;
-}
-
-.text-gray-400 {
-  color: #9ca3af;
-}
-
-.text-center {
-  text-align: center;
-}
-
-.items-center {
-  align-items: center;
-}
-
-.justify-center {
-  justify-content: center;
-}
-
-.text-2xl {
-  font-size: 24px;
-}
-</style>

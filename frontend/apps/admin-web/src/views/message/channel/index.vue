@@ -1,5 +1,5 @@
 <template>
-  <div class="channel-container">
+  <div class="p-4 h-full">
     <NCard title="渠道管理" :bordered="false">
       <!-- 搜索栏 -->
       <NForm :model="queryForm" inline class="mb-4">
@@ -60,10 +60,13 @@
                 <div
                   v-for="(channel, index) in group.channels"
                   :key="channel.id"
-                  class="channel-item"
-                  :class="{ 'is-primary': index === 0, 'is-disabled': channel.status !== 1 }"
+                  class="py-2"
+                  :class="[
+                    index === 0 ? 'bg-gradient-to-r from-blue-500/5 to-transparent -my-2 -mx-3 px-3 py-2 rounded' : '',
+                    channel.status !== 1 ? 'opacity-60' : ''
+                  ]"
                 >
-                  <div class="channel-header">
+                  <div class="flex justify-between items-center">
                     <NSpace align="center">
                       <NTag
                         :type="index === 0 ? 'primary' : 'default'"
@@ -92,7 +95,7 @@
                       </NDropdown>
                     </NSpace>
                   </div>
-                  <div class="channel-meta">
+                  <div class="mt-1 pl-1">
                     <NSpace size="small">
                       <NText depth="3" style="font-size: 12px;">优先级: {{ channel.priority }}</NText>
                       <NText depth="3" style="font-size: 12px;">|</NText>
@@ -433,35 +436,3 @@ function handleAction(key: string, row: MessageChannel) {
   }
 }
 </script>
-
-<style scoped>
-.channel-container {
-  padding: 16px;
-}
-
-.channel-item {
-  padding: 8px 0;
-}
-
-.channel-item.is-primary {
-  background: linear-gradient(to right, rgba(24, 144, 255, 0.05), transparent);
-  margin: -8px -12px;
-  padding: 8px 12px;
-  border-radius: 4px;
-}
-
-.channel-item.is-disabled {
-  opacity: 0.6;
-}
-
-.channel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.channel-meta {
-  margin-top: 4px;
-  padding-left: 4px;
-}
-</style>

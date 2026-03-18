@@ -73,7 +73,7 @@ public class ScheduleJobLog {
     private Integer executeType;
 
     /** 创建时间 */
-    @Column
+    @Column(onInsertValue = "now()")
     private LocalDateTime createTime;
 
     /** 删除标识 */

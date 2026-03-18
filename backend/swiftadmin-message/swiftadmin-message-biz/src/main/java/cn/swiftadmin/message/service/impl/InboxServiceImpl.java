@@ -170,7 +170,6 @@ public class InboxServiceImpl extends ServiceImpl<MsgUserInboxMapper, MsgUserInb
                     .senderId(senderId)
                     .senderName(senderName)
                     .expireTime(expireTime)
-                    .createTime(now)
                     .build();
             inboxList.add(inbox);
 
@@ -187,7 +186,6 @@ public class InboxServiceImpl extends ServiceImpl<MsgUserInboxMapper, MsgUserInb
                     .sendTime(now)
                     .arriveTime(now)
                     .costTime(0)
-                    .createTime(now)
                     .build();
             records.add(record);
         }

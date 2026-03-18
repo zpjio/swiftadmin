@@ -1,6 +1,6 @@
 <template>
   <NCard title="在线用户">
-    <div class="toolbar mb-4">
+    <div class="flex justify-between items-start flex-wrap gap-4 mb-4">
       <NForm :model="queryForm" inline class="search-form">
         <NFormItem label="用户名" path="username">
           <NInput v-model:value="queryForm.username" placeholder="请输入用户名" clearable style="width: 180px" />
@@ -218,20 +218,3 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
-.toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.search-form {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
-.mb-4 {
-  margin-bottom: 16px;
-}
-</style>

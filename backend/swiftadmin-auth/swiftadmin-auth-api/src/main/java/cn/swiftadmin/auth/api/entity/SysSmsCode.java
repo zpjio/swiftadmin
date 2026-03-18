@@ -54,7 +54,7 @@ public class SysSmsCode {
     private String ipAddress;
 
     /** 创建时间 */
-    @Column
+    @Column(onInsertValue = "now()")
     private LocalDateTime createTime;
 
 }

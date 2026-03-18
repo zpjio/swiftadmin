@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -135,7 +134,6 @@ public class SubscriptionServiceImpl extends ServiceImpl<MsgSubscriptionMapper, 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void initDefaultSubscriptions(Long userId) {
-        LocalDateTime now = LocalDateTime.now();
         List<MsgSubscription> subscriptions = new ArrayList<>(DEFAULT_MSG_TYPES.length);
 
         for (String msgType : DEFAULT_MSG_TYPES) {
@@ -144,8 +142,6 @@ public class SubscriptionServiceImpl extends ServiceImpl<MsgSubscriptionMapper, 
                     .msgType(msgType)
                     .channelType(DEFAULT_CHANNEL)
                     .subscribed(1)
-                    .createTime(now)
-                    .updateTime(now)
                     .build());
         }
 

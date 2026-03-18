@@ -1,6 +1,6 @@
 <template>
   <NCard title="部门管理">
-    <div class="toolbar mb-4">
+    <div class="flex justify-between items-center mb-4">
       <NSpace>
         <NButton v-auth="'system:dept:add'" type="primary" @click="handleAdd">
           <template #icon><icon-mdi-plus /></template>
@@ -255,16 +255,3 @@ const handleSubmit = async () => {
 onMounted(() => {
   loadDeptTree()
 })
-</script>
-
-<style scoped>
-.toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.mb-4 {
-  margin-bottom: 16px;
-}
-</style>

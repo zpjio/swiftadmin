@@ -1,7 +1,7 @@
 <template>
   <NCard title="角色管理">
-    <div class="toolbar mb-4">
-      <NForm :model="queryForm" inline class="search-form">
+    <div class="flex justify-between items-start flex-wrap gap-4 mb-4">
+      <NForm :model="queryForm" inline class="flex flex-wrap gap-4">
         <NFormItem label="角色名称" path="name">
           <NInput v-model:value="queryForm.name" placeholder="请输入角色名称" clearable style="width: 180px" />
         </NFormItem>
@@ -34,13 +34,13 @@
         </NFormItem>
       </NForm>
 
-      <div class="actions">
+      <div>
         <NSpace>
           <NButton v-auth="'system:role:add'" type="primary" @click="handleAdd">
             <template #icon><icon-mdi-plus /></template>
             新增角色
           </NButton>
-          <NButton v-auth="'system:role:delete'" type="error" :disabled="selectedRowKeys.length === 0" @click="handleBatchDelete">
+          <NButton v-auth="'system:role:delete'" type="error" :disabled="!hasSelection" @click="handleBatchDelete">
             <template #icon><icon-mdi-delete /></template>
             批量删除
           </NButton>
@@ -54,8 +54,8 @@
       :loading="loading"
       :pagination="paginationProps"
       :row-key="(row) => row.id"
-      :checked-row-keys="selectedRowKeys"
-      @update:checked-row-keys="onChecked"
+      :checked-row-keys="selectedKeys"
+      @update:checked-row-keys="onSelectionChange"
     />
 
     <!-- 新增/编辑弹窗 -->
@@ -108,7 +108,7 @@
               <NButton size="small" @click="handleSelectAllDept">全选</NButton>
               <NButton size="small" @click="handleUnselectAllDept">取消全选</NButton>
             </NSpace>
-            <div class="dept-tree-container">
+            <div class="max-h-[300px] overflow-y-auto border border-gray-300 rounded p-2">
               <NTree
                 ref="deptTreeRef"
                 :data="deptTreeData"
@@ -146,7 +146,7 @@
         <NButton size="small" @click="handleExpandAllMenu">展开全部</NButton>
         <NButton size="small" @click="handleCollapseAllMenu">收起全部</NButton>
       </NSpace>
-      <div class="menu-tree-container">
+      <div class="max-h-[400px] overflow-y-auto border border-gray-300 rounded p-2">
         <NTree
           ref="menuTreeRef"
           :data="menuTreeData"
@@ -181,7 +181,7 @@ import type { RoleVO, RoleDTO, RoleQuery } from '@/api/role'
 import type { MenuVO } from '@/api/menu'
 import type { DeptVO } from '@/api/dept'
 import { generateRoleCode } from '@/utils/codeGenerator'
-import { usePermission, usePagination } from '@/composables'
+import { usePermission, usePagination, useTableSelection } from '@/composables'
 import { formatDateTime } from '@/utils/date'
 import { convertToTreeOptions, getParentIds } from '@/utils/tree'
 
@@ -191,7 +191,7 @@ const { hasPermission } = usePermission()
 
 const loading = ref(false)
 const tableData = ref<RoleVO[]>([])
-const selectedRowKeys = ref<string[]>([])
+const { selectedKeys, hasSelection, clearSelection, onSelectionChange } = useTableSelection<RoleVO>()
 const queryForm = reactive<RoleQuery>({})
 
 // 数据范围选项
@@ -549,26 +549,26 @@ const handleDelete = (row: RoleVO) => {
 
 // 批量删除
 const handleBatchDelete = () => {
-  if (selectedRowKeys.value.length === 0) {
+  if (!hasSelection.value) {
     message.warning('请选择要删除的角色')
     return
   }
   // 过滤掉超级管理员角色
-  const adminRoles = tableData.value.filter(r => selectedRowKeys.value.includes(r.id) && r.code === 'admin')
+  const adminRoles = tableData.value.filter(r => selectedKeys.value.includes(r.id) && r.code === 'admin')
   if (adminRoles.length > 0) {
     message.warning('超级管理员角色不可删除')
     return
   }
   dialog.warning({
     title: '确认删除',
-    content: `确定要删除选中的 ${selectedRowKeys.value.length} 个角色吗？`,
+    content: `确定要删除选中的 ${selectedKeys.value.length} 个角色吗？`,
     positiveText: '确定',
     negativeText: '取消',
     onPositiveClick: async () => {
       try {
-        await deleteRoleApi(selectedRowKeys.value)
+        await deleteRoleApi(selectedKeys.value as string[])
         message.success('删除成功')
-        selectedRowKeys.value = []
+        clearSelection()
         loadData()
       } catch (error: any) {
         message.error(error.message || '删除失败')
@@ -608,64 +608,8 @@ const handleSubmit = async () => {
   }
 }
 
-// 选择
-const onChecked = (rowKeys: (string | number)[]) => {
-  selectedRowKeys.value = rowKeys.map(String)
-}
-
 onMounted(() => {
   loadData()
   loadMenuTree()
   loadDeptTree()
 })
-</script>
-
-<style scoped>
-.toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.search-form {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
-.mb-4 {
-  margin-bottom: 16px;
-}
-
-.menu-tree-container {
-  max-height: 400px;
-  overflow-y: auto;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  padding: 8px;
-}
-
-.dept-tree-container {
-  max-height: 300px;
-  overflow-y: auto;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  padding: 8px;
-}
-
-.flex {
-  display: flex;
-}
-
-.items-center {
-  align-items: center;
-}
-
-.gap-4 {
-  gap: 16px;
-}
-
-.w-full {
-  width: 100%;
-}
-</style>

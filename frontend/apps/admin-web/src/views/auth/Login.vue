@@ -1,10 +1,10 @@
 <template>
-  <div class="login-container">
-    <div class="login-box">
-      <h1 class="title">SwiftAdmin</h1>
-      <p class="subtitle">高效、简洁、美观的后台管理系统</p>
-      
-      <NForm :model="form" :rules="rules" class="login-form">
+  <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#667eea] to-[#764ba2]">
+    <div class="w-[400px] p-10 bg-white rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.3)]">
+      <h1 class="text-center text-3xl font-bold text-blue-500 mb-2">SwiftAdmin</h1>
+      <p class="text-center text-gray-400 mb-8">高效、简洁、美观的后台管理系统</p>
+
+      <NForm :model="form" :rules="rules" class="flex flex-col gap-5">
         <NFormItem path="username">
           <NInput
             v-model:value="form.username"
@@ -17,7 +17,7 @@
             </template>
           </NInput>
         </NFormItem>
-        
+
         <NFormItem path="password">
           <NInput
             v-model:value="form.password"
@@ -31,25 +31,25 @@
             </template>
           </NInput>
         </NFormItem>
-        
+
         <NFormItem v-if="captchaEnabled" path="captchaCode">
-          <div class="captcha-input">
+          <div class="flex gap-3">
             <NInput
               v-model:value="form.captchaCode"
               placeholder="请输入验证码"
               size="large"
             />
-            <div class="captcha-image" @click="refreshCaptcha">
-              <img v-if="captchaUrl" :src="captchaUrl" alt="验证码" />
+            <div class="w-[120px] h-10 border border-gray-300 rounded cursor-pointer flex items-center justify-center bg-gray-100" @click="refreshCaptcha">
+              <img v-if="captchaUrl" :src="captchaUrl" alt="验证码" class="w-full h-full rounded" />
               <span v-else>点击获取</span>
             </div>
           </div>
         </NFormItem>
-        
+
         <NFormItem>
           <NCheckbox v-model:checked="form.remember">记住密码</NCheckbox>
         </NFormItem>
-        
+
         <NButton type="primary" size="large" block :loading="loading" @click="handleLogin">
           登录
         </NButton>
@@ -176,65 +176,3 @@ onMounted(() => {
   // getCaptcha()
 })
 </script>
-
-<style scoped>
-.login-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.login-box {
-  width: 400px;
-  padding: 40px;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-}
-
-.title {
-  text-align: center;
-  font-size: 32px;
-  font-weight: bold;
-  color: #1890ff;
-  margin-bottom: 8px;
-}
-
-.subtitle {
-  text-align: center;
-  color: #999;
-  margin-bottom: 32px;
-}
-
-.login-form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.captcha-input {
-  display: flex;
-  gap: 12px;
-}
-
-.captcha-image {
-  width: 120px;
-  height: 40px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f5f5f5;
-}
-
-.captcha-image img {
-  width: 100%;
-  height: 100%;
-  border-radius: 4px;
-}
-</style>

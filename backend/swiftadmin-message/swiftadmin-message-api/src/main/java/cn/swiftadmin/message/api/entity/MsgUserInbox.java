@@ -77,6 +77,6 @@ public class MsgUserInbox {
     private LocalDateTime expireTime;
 
     /** 创建时间 */
-    @Column
+    @Column(onInsertValue = "now()")
     private LocalDateTime createTime;
 }

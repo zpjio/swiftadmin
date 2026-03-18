@@ -97,6 +97,6 @@ public class MsgRecord {
     private Integer costTime;
 
     /** 创建时间 */
-    @Column
+    @Column(onInsertValue = "now()")
     private LocalDateTime createTime;
 }

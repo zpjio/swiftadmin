@@ -1,7 +1,7 @@
 <template>
   <NCard title="用户管理">
-    <div class="toolbar mb-4">
-      <NForm :model="queryForm" inline class="search-form">
+    <div class="flex justify-between items-start flex-wrap gap-4 mb-4">
+      <NForm :model="queryForm" inline class="flex flex-wrap gap-4">
         <NFormItem label="用户名" path="username">
           <NInput v-model:value="queryForm.username" placeholder="请输入用户名" clearable style="width: 180px" />
         </NFormItem>
@@ -43,13 +43,13 @@
         </NFormItem>
       </NForm>
 
-      <div class="actions">
+      <div>
         <NSpace>
           <NButton v-auth="'system:user:add'" type="primary" @click="handleAdd">
             <template #icon><icon-mdi-plus /></template>
             新增用户
           </NButton>
-          <NButton v-auth="'system:user:delete'" type="error" :disabled="selectedRowKeys.length === 0" @click="handleBatchDelete">
+          <NButton v-auth="'system:user:delete'" type="error" :disabled="!hasSelection" @click="handleBatchDelete">
             <template #icon><icon-mdi-delete /></template>
             批量删除
           </NButton>
@@ -63,8 +63,8 @@
       :loading="loading"
       :pagination="paginationProps"
       :row-key="(row) => row.id"
-      :checked-row-keys="selectedRowKeys"
-      @update:checked-row-keys="onChecked"
+      :checked-row-keys="selectedKeys"
+      @update:checked-row-keys="onSelectionChange"
     />
 
     <!-- 新增/编辑弹窗 -->
@@ -171,7 +171,7 @@ import type { UserVO, UserDTO, UserQuery } from '@/api/user'
 import type { DeptVO } from '@/api/dept'
 import type { RoleVO } from '@/api/role'
 
-import { usePermission, usePagination } from '@/composables'
+import { usePermission, usePagination, useTableSelection } from '@/composables'
 import { useUserStore } from '@/store'
 import { formatDateTime } from '@/utils/date'
 import { convertToTreeSelectOptions } from '@/utils/tree'
@@ -186,7 +186,7 @@ const currentUserId = computed(() => userStore.userInfo?.id)
 
 const loading = ref(false)
 const tableData = ref<UserVO[]>([])
-const selectedRowKeys = ref<string[]>([])
+const { selectedKeys, hasSelection, clearSelection, onSelectionChange } = useTableSelection<UserVO>()
 const queryForm = reactive<UserQuery>({})
 
 // 部门选择树数据
@@ -466,26 +466,26 @@ const handleDelete = (row: UserVO) => {
 
 // 批量删除
 const handleBatchDelete = () => {
-  if (selectedRowKeys.value.length === 0) {
+  if (!hasSelection.value) {
     message.warning('请选择要删除的用户')
     return
   }
   // 过滤掉超级管理员用户
-  const adminUsers = tableData.value.filter(u => selectedRowKeys.value.includes(u.id) && u.username === 'admin')
+  const adminUsers = tableData.value.filter(u => selectedKeys.value.includes(u.id) && u.username === 'admin')
   if (adminUsers.length > 0) {
     message.warning('超级管理员用户不可删除')
     return
   }
   dialog.warning({
     title: '确认删除',
-    content: `确定要删除选中的 ${selectedRowKeys.value.length} 个用户吗？`,
+    content: `确定要删除选中的 ${selectedKeys.value.length} 个用户吗？`,
     positiveText: '确定',
     negativeText: '取消',
     onPositiveClick: async () => {
       try {
-        await deleteUserApi(selectedRowKeys.value)
+        await deleteUserApi(selectedKeys.value as string[])
         message.success('删除成功')
-        selectedRowKeys.value = []
+        clearSelection()
         loadData()
       } catch (error: any) {
         message.error(error.message || '删除失败')
@@ -526,32 +526,8 @@ const handleSubmit = async () => {
   }
 }
 
-// 选择
-const onChecked = (rowKeys: (string | number)[]) => {
-  selectedRowKeys.value = rowKeys.map(String)
-}
-
 onMounted(() => {
   loadData()
   loadDeptTree()
   loadRoleList()
 })
-</script>
-
-<style scoped>
-.toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.search-form {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
-.mb-4 {
-  margin-bottom: 16px;
-}
-</style>

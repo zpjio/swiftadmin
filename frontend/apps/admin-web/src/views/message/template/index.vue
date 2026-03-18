@@ -1,5 +1,5 @@
 <template>
-  <div class="template-container">
+  <div class="p-4 h-full">
     <NCard title="消息模板" :bordered="false">
       <!-- 搜索栏 -->
       <NForm :model="queryForm" inline class="mb-4">
@@ -38,7 +38,7 @@
           <template #icon><icon-mdi-plus /></template>
           新增模板
         </NButton>
-        <NButton v-auth="'message:template:delete'" type="error" :disabled="selectedRowKeys.length === 0" @click="handleBatchDelete">
+        <NButton v-auth="'message:template:delete'" type="error" :disabled="!hasSelection" @click="handleBatchDelete">
           <template #icon><icon-mdi-delete /></template>
           批量删除
         </NButton>
@@ -50,9 +50,9 @@
         :data="tableData"
         :loading="loading"
         :row-key="(row) => row.id"
-        :checked-row-keys="selectedRowKeys"
+        :checked-row-keys="selectedKeys"
         :pagination="paginationProps"
-        @update:checked-row-keys="onCheckedRowKeysChange"
+        @update:checked-row-keys="onSelectionChange"
       />
     </NCard>
 
@@ -119,7 +119,7 @@ import {
   type ChannelType,
 } from '@/api/message'
 import { useDict } from '@/composables/useDict'
-import { usePagination } from '@/composables'
+import { usePagination, useTableSelection } from '@/composables'
 import { formatDateTime } from '@/utils/date'
 
 const message = useMessage()
@@ -127,7 +127,7 @@ const dialog = useDialog()
 const formRef = ref<any>(null)
 const loading = ref(false)
 const tableData = ref<MessageTemplate[]>([])
-const selectedRowKeys = ref<DataTableRowKey[]>([])
+const { selectedKeys, hasSelection, onSelectionChange } = useTableSelection<MessageTemplate>()
 const showModal = ref(false)
 const saving = ref(false)
 const isEdit = ref(false)
@@ -231,11 +231,13 @@ function handleReset() {
   loadData()
 }
 
-function onCheckedRowKeysChange(keys: DataTableRowKey[]) {
-  selectedRowKeys.value = keys
+function handleBatchDelete() {
+  if (!hasSelection.value) {
+    message.warning('请选择要删除的记录')
+    return
+  }
+  handleDelete(selectedKeys.value as string[])
 }
-
-function handleAdd() {
   isEdit.value = false
   modalTitle.value = '新增模板'
   Object.assign(form, {
@@ -314,16 +316,11 @@ function handleDelete(ids: string[]) {
 }
 
 function handleBatchDelete() {
-  if (selectedRowKeys.value.length === 0) {
+  if (!hasSelection.value) {
     message.warning('请选择要删除的记录')
     return
   }
-  handleDelete(selectedRowKeys.value as string[])
+  handleDelete(selectedKeys.value as string[])
 }
 </script>
 
-<style scoped>
-.template-container {
-  padding: 16px;
-}
-</style>

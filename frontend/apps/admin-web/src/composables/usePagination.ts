@@ -29,6 +29,7 @@ export interface UsePaginationReturn {
   goToPage: (page: number) => void
   setPageSize: (pageSize: number) => void
   reset: () => void
+  resetPage: () => void
   setTotal: (total: number) => void
   getIndex: (index: number) => number
 }
@@ -111,6 +112,13 @@ export function usePagination(options: {
   }
 
   /**
+   * 只重置页码到第一页（不重置总数）
+   */
+  const resetPage = () => {
+    state.page = 1
+  }
+
+  /**
    * 设置总条数
    */
   const setTotal = (total: number) => {
@@ -144,6 +152,7 @@ export function usePagination(options: {
     goToPage,
     setPageSize,
     reset,
+    resetPage,
     setTotal,
     getIndex,
   }

@@ -1,5 +1,5 @@
 <template>
-  <div class="loginlog-container">
+  <div class="h-full">
     <NCard :bordered="false">
       <!-- 搜索栏 -->
       <NForm :model="queryForm" inline label-width="80" class="mb-4">
@@ -55,7 +55,7 @@
       <NSpace class="mb-4">
         <NButton
           type="error"
-          :disabled="selectedRowKeys.length === 0"
+          :disabled="!hasSelection"
           @click="handleBatchDelete"
         >
           <template #icon><icon-mdi-delete /></template>
@@ -78,9 +78,9 @@
         :data="tableData"
         :loading="loading"
         :row-key="(row) => row.id"
-        :checked-row-keys="selectedRowKeys"
+        :checked-row-keys="selectedKeys"
         :pagination="paginationProps"
-        @update:checked-row-keys="onCheckedRowKeysChange"
+        @update:checked-row-keys="onSelectionChange"
       />
     </NCard>
   </div>
@@ -92,12 +92,12 @@ import { useMessage, type DataTableColumns, type DataTableRowKey } from 'naive-u
 import { getLoginLogPageApi, deleteLoginLogApi, clearLoginLogApi } from '@/api/loginlog'
 import type { LoginLogVO, LoginLogQuery } from '@/api/loginlog'
 import { formatDateTime } from '@/utils/date'
-import { usePagination } from '@/composables'
+import { usePagination, useTableSelection } from '@/composables'
 
 const message = useMessage()
 const loading = ref(false)
 const tableData = ref<LoginLogVO[]>([])
-const selectedRowKeys = ref<DataTableRowKey[]>([])
+const { selectedKeys, hasSelection, clearSelection, onSelectionChange } = useTableSelection<LoginLogVO>()
 
 const queryForm = reactive<LoginLogQuery & { dateRange?: [number, number] }>({
   username: '',
@@ -197,14 +197,14 @@ const handleDelete = async (row: LoginLogVO) => {
 }
 
 const handleBatchDelete = async () => {
-  if (selectedRowKeys.value.length === 0) {
+  if (!hasSelection.value) {
     message.warning('请选择要删除的日志')
     return
   }
   try {
-    await deleteLoginLogApi(selectedRowKeys.value as string[])
+    await deleteLoginLogApi(selectedKeys.value as string[])
     message.success('删除成功')
-    selectedRowKeys.value = []
+    clearSelection()
     loadData()
   } catch (error: any) {
     message.error(error.message || '删除失败')
@@ -221,41 +221,8 @@ const handleClearAll = async () => {
   }
 }
 
-const onCheckedRowKeysChange = (keys: DataTableRowKey[]) => {
-  selectedRowKeys.value = keys
-}
-
 onMounted(() => {
   loadData()
 })
 </script>
 
-<style scoped>
-.loginlog-container {
-  height: 100%;
-}
-
-.mb-4 {
-  margin-bottom: 16px;
-}
-
-.w-48 {
-  width: 12rem;
-}
-
-.w-64 {
-  width: 16rem;
-}
-
-.text-green-600 {
-  color: #059669;
-}
-
-.text-red-600 {
-  color: #dc2626;
-}
-
-.hover\:underline:hover {
-  text-decoration: underline;
-}
-</style>

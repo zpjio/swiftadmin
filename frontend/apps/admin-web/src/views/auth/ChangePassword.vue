@@ -1,10 +1,10 @@
 <template>
-  <div class="change-password-container">
-    <div class="change-password-box">
-      <h1 class="title">修改密码</h1>
-      <p class="subtitle">为了您的账号安全，首次登录需要修改密码</p>
-      
-      <NForm :model="form" :rules="rules" class="change-password-form" ref="formRef">
+  <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#667eea] to-[#764ba2]">
+    <div class="w-[450px] p-10 bg-white rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.3)]">
+      <h1 class="text-center text-3xl font-bold text-blue-500 mb-2">修改密码</h1>
+      <p class="text-center text-gray-400 text-sm mb-8">为了您的账号安全，首次登录需要修改密码</p>
+
+      <NForm :model="form" :rules="rules" class="flex flex-col gap-5" ref="formRef">
         <NFormItem label="新密码" path="newPassword">
           <NInput
             v-model:value="form.newPassword"
@@ -14,7 +14,7 @@
             show-password-on="click"
           />
         </NFormItem>
-        
+
         <NFormItem label="确认密码" path="confirmPassword">
           <NInput
             v-model:value="form.confirmPassword"
@@ -24,11 +24,11 @@
             show-password-on="click"
           />
         </NFormItem>
-        
+
         <NAlert type="info" title="提示">
           管理员已重置您的密码，请直接设置新密码，无需输入旧密码。
         </NAlert>
-        
+
         <NButton type="primary" size="large" block :loading="loading" @click="handleSubmit">
           确认修改
         </NButton>
@@ -120,43 +120,3 @@ const handleSubmit = async () => {
   })
 }
 </script>
-
-<style scoped>
-.change-password-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.change-password-box {
-  width: 450px;
-  padding: 40px;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-}
-
-.title {
-  text-align: center;
-  font-size: 28px;
-  font-weight: bold;
-  color: #1890ff;
-  margin-bottom: 8px;
-}
-
-.subtitle {
-  text-align: center;
-  color: #999;
-  margin-bottom: 32px;
-  font-size: 14px;
-}
-
-.change-password-form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-</style>

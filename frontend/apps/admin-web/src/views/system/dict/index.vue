@@ -2,7 +2,7 @@
   <NCard title="字典管理" class="h-full">
     <div class="flex gap-4 h-full">
       <!-- 左侧：字典类型列表 -->
-      <div class="w-80 flex-shrink-0 border-r pr-4">
+      <div class="w-80 flex-shrink-0 border-r border-gray-300 pr-4">
         <div class="mb-4">
           <NInput v-model:value="typeQueryForm.dictName" placeholder="搜索字典名称" clearable @update:value="handleSearchType">
             <template #prefix>
@@ -24,11 +24,11 @@
         </div>
         <NSpin :show="typeLoading">
           <NScrollbar style="max-height: calc(100vh - 280px)">
-            <div class="type-list">
+            <div class="flex flex-col gap-2">
               <div
                 v-for="item in typeList"
                 :key="item.id"
-                :class="['type-item', selectedType?.id === item.id ? 'active' : '']"
+                :class="['p-3 rounded-lg cursor-pointer transition-all border', selectedType?.id === item.id ? 'bg-blue-50 border-blue-500' : 'border-transparent hover:bg-gray-100']"
                 @click="handleSelectType(item)"
               >
                 <div class="flex items-center justify-between">
@@ -40,7 +40,7 @@
                     {{ item.status === 1 ? '正常' : '禁用' }}
                   </NTag>
                 </div>
-                <div class="type-actions mt-2 flex gap-1">
+                <div class="mt-2 flex gap-2">
                   <NButton v-if="hasPermission('system:dict:edit')" size="tiny" quaternary @click.stop="handleEditType(item)">
                     <template #icon><icon-mdi-pencil /></template>
                   </NButton>
@@ -517,140 +517,3 @@ onMounted(() => {
   loadTypeList()
 })
 </script>
-
-<style scoped>
-.h-full {
-  height: 100%;
-}
-
-.flex {
-  display: flex;
-}
-
-.gap-4 {
-  gap: 16px;
-}
-
-.gap-2 {
-  gap: 8px;
-}
-
-.w-80 {
-  width: 320px;
-}
-
-.flex-shrink-0 {
-  flex-shrink: 0;
-}
-
-.flex-1 {
-  flex: 1;
-}
-
-.min-w-0 {
-  min-width: 0;
-}
-
-.border-r {
-  border-right: 1px solid #e0e0e0;
-}
-
-.pr-4 {
-  padding-right: 16px;
-}
-
-.mb-4 {
-  margin-bottom: 16px;
-}
-
-.mt-2 {
-  margin-top: 8px;
-}
-
-.mt-4 {
-  margin-top: 16px;
-}
-
-.type-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.type-item {
-  padding: 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: 1px solid transparent;
-}
-
-.type-item:hover {
-  background-color: #f5f5f5;
-}
-
-.type-item.active {
-  background-color: #e3f2fd;
-  border-color: #2196f3;
-}
-
-.type-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.font-medium {
-  font-weight: 500;
-}
-
-.text-xs {
-  font-size: 12px;
-}
-
-.text-sm {
-  font-size: 14px;
-}
-
-.text-lg {
-  font-size: 18px;
-}
-
-.text-4xl {
-  font-size: 36px;
-}
-
-.text-gray-400 {
-  color: #9ca3af;
-}
-
-.text-gray-500 {
-  color: #6b7280;
-}
-
-.text-center {
-  text-align: center;
-}
-
-.items-center {
-  align-items: center;
-}
-
-.justify-center {
-  justify-content: center;
-}
-
-.justify-between {
-  justify-content: space-between;
-}
-
-.truncate {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.py-8 {
-  padding-top: 32px;
-  padding-bottom: 32px;
-}
-</style>

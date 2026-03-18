@@ -1,5 +1,6 @@
 export * from './useDict'
 export * from './usePermission'
 export * from './usePagination'
+export * from './useTablePage'
 export * from './useTableSelection'
 export * from './useConfirm'

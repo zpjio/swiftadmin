@@ -1,5 +1,5 @@
 <template>
-  <div class="file-container">
+  <div class="h-full">
     <NCard :bordered="false">
       <!-- 搜索栏 -->
       <NForm :model="queryForm" inline label-width="80" class="mb-4">
@@ -55,7 +55,7 @@
         </NButton>
         <NButton
           type="error"
-          :disabled="selectedRowKeys.length === 0"
+          :disabled="!hasSelection"
           @click="handleBatchDelete"
         >
           <template #icon><icon-mdi-delete /></template>
@@ -69,19 +69,19 @@
         :data="tableData"
         :loading="loading"
         :row-key="(row) => row.id"
-        :checked-row-keys="selectedRowKeys"
+        :checked-row-keys="selectedKeys"
         :pagination="paginationProps"
-        @update:checked-row-keys="onCheckedRowKeysChange"
+        @update:checked-row-keys="onSelectionChange"
       />
 
       <!-- 文件预览弹窗 -->
       <NModal v-model:show="showPreview" preset="dialog" :title="previewTitle" :style="{ width: '800px' }">
-        <div class="preview-content">
-          <img v-if="previewType === 'image'" :src="previewUrl" class="preview-image" />
-          <video v-else-if="previewType === 'video'" :src="previewUrl" controls class="preview-video" />
-          <iframe v-else-if="previewType === 'pdf'" :src="previewUrl" class="preview-pdf" />
-          <div v-else class="preview-unsupported">
-            <icon-mdi-file class="text-6xl text-gray-400" />
+        <div class="min-h-[400px] flex items-center justify-center">
+          <img v-if="previewType === 'image'" :src="previewUrl" class="max-w-full max-h-[600px] object-contain" />
+          <video v-else-if="previewType === 'video'" :src="previewUrl" controls class="max-w-full max-h-[600px]" />
+          <iframe v-else-if="previewType === 'pdf'" :src="previewUrl" class="w-full h-[600px] border-none" />
+          <div v-else class="text-center text-gray-400">
+            <icon-mdi-file class="text-6xl" />
             <p class="mt-4">该文件类型不支持预览</p>
           </div>
         </div>
@@ -98,12 +98,12 @@ import type { FileVO, FileQuery } from '@/api/file'
 import { getIconClass } from '@/utils/icon'
 import { buildAuthHeader } from '@/utils/auth'
 import { formatDateTime } from '@/utils/date'
-import { usePagination } from '@/composables'
+import { usePagination, useTableSelection } from '@/composables'
 
 const message = useMessage()
 const loading = ref(false)
 const tableData = ref<FileVO[]>([])
-const selectedRowKeys = ref<string[]>([])
+const { selectedKeys, hasSelection, clearSelection, onSelectionChange } = useTableSelection<FileVO>()
 
 const queryForm = reactive<FileQuery>({
   fileName: undefined,
@@ -223,14 +223,14 @@ const handleDelete = async (row: FileVO) => {
 }
 
 const handleBatchDelete = async () => {
-  if (selectedRowKeys.value.length === 0) {
+  if (!hasSelection.value) {
     message.warning('请选择要删除的文件')
     return
   }
   try {
-    await deleteFileApi(selectedRowKeys.value)
+    await deleteFileApi(selectedKeys.value)
     message.success('删除成功')
-    selectedRowKeys.value = []
+    clearSelection()
     loadData()
   } catch (error: any) {
     message.error(error.message || '删除失败')
@@ -279,10 +279,6 @@ const handleDownload = async (row: FileVO) => {
   }
 }
 
-const onCheckedRowKeysChange = (keys: (string | number)[]) => {
-  selectedRowKeys.value = keys.map(String)
-}
-
 const formatFileSize = (bytes?: number) => {
   if (!bytes) return '-'
   const kb = bytes / 1024
@@ -312,89 +308,3 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
-.file-container {
-  height: 100%;
-}
-
-.mb-4 {
-  margin-bottom: 16px;
-}
-
-.w-48 {
-  width: 12rem;
-}
-
-.text-blue-600 {
-  color: #2563eb;
-}
-
-.text-green-600 {
-  color: #059669;
-}
-
-.text-red-600 {
-  color: #dc2626;
-}
-
-.text-gray-400 {
-  color: #9ca3af;
-}
-
-.hover\:underline:hover {
-  text-decoration: underline;
-}
-
-.flex {
-  display: flex;
-}
-
-.items-center {
-  align-items: center;
-}
-
-.gap-2 {
-  gap: 8px;
-}
-
-.text-lg {
-  font-size: 1.125rem;
-}
-
-.text-6xl {
-  font-size: 3.75rem;
-}
-
-.mt-4 {
-  margin-top: 16px;
-}
-
-.preview-content {
-  min-height: 400px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.preview-image {
-  max-width: 100%;
-  max-height: 600px;
-  object-fit: contain;
-}
-
-.preview-video {
-  max-width: 100%;
-  max-height: 600px;
-}
-
-.preview-pdf {
-  width: 100%;
-  height: 600px;
-  border: none;
-}
-
-.preview-unsupported {
-  text-align: center;
-  color: #999;
-}
-</style>

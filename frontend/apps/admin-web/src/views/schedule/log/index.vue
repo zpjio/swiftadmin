@@ -1,5 +1,5 @@
 <template>
-  <div class="log-container">
+  <div class="p-4 h-full">
     <NCard title="定时任务执行日志" :bordered="false">
       <!-- 搜索栏 -->
       <NForm :model="queryForm" inline class="mb-4">
@@ -262,16 +262,3 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
-.log-container {
-  padding: 16px;
-}
-
-.mb-4 {
-  margin-bottom: 16px;
-}
-
-.mt-4 {
-  margin-top: 16px;
-}
-</style>

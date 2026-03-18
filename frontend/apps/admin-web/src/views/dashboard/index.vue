@@ -1,41 +1,41 @@
 <template>
-  <div class="dashboard">
+  <div class="flex flex-col gap-4">
     <NGrid :x-gap="16" :y-gap="16" cols="1 s:2 m:3 l:4 xl:4" responsive="screen">
       <NGi>
-        <NCard title="用户总数" class="stat-card">
-          <div class="stat-content">
-            <div class="stat-value">1,234</div>
-            <div class="stat-label">较昨日 +12</div>
+        <NCard title="用户总数" class="rounded-xl">
+          <div class="flex justify-between items-center">
+            <div class="text-3xl font-bold text-blue-500">1,234</div>
+            <div class="text-sm text-green-500">较昨日 +12</div>
           </div>
         </NCard>
       </NGi>
       <NGi>
-        <NCard title="订单总数" class="stat-card">
-          <div class="stat-content">
-            <div class="stat-value">5,678</div>
-            <div class="stat-label">较昨日 +23</div>
+        <NCard title="订单总数" class="rounded-xl">
+          <div class="flex justify-between items-center">
+            <div class="text-3xl font-bold text-blue-500">5,678</div>
+            <div class="text-sm text-green-500">较昨日 +23</div>
           </div>
         </NCard>
       </NGi>
       <NGi>
-        <NCard title="销售额" class="stat-card">
-          <div class="stat-content">
-            <div class="stat-value">¥89,012</div>
-            <div class="stat-label">较昨日 +5.6%</div>
+        <NCard title="销售额" class="rounded-xl">
+          <div class="flex justify-between items-center">
+            <div class="text-3xl font-bold text-blue-500">¥89,012</div>
+            <div class="text-sm text-green-500">较昨日 +5.6%</div>
           </div>
         </NCard>
       </NGi>
       <NGi>
-        <NCard title="访问量" class="stat-card">
-          <div class="stat-content">
-            <div class="stat-value">23,456</div>
-            <div class="stat-label">较昨日 +8.2%</div>
+        <NCard title="访问量" class="rounded-xl">
+          <div class="flex justify-between items-center">
+            <div class="text-3xl font-bold text-blue-500">23,456</div>
+            <div class="text-sm text-green-500">较昨日 +8.2%</div>
           </div>
         </NCard>
       </NGi>
     </NGrid>
-    
-    <NGrid :x-gap="16" :y-gap="16" cols="1 l:2" responsive="screen" class="mt-4">
+
+    <NGrid :x-gap="16" :y-gap="16" cols="1 l:2" responsive="screen">
       <NGi>
         <NCard title="访问趋势" class="h-80">
           <div ref="chartRef" class="h-full"></div>
@@ -95,40 +95,3 @@ onMounted(() => {
   }
 })
 </script>
-
-<style scoped>
-.dashboard {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.stat-card {
-  border-radius: 12px;
-}
-
-.stat-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.stat-value {
-  font-size: 32px;
-  font-weight: bold;
-  color: #1890ff;
-}
-
-.stat-label {
-  font-size: 14px;
-  color: #52c41a;
-}
-
-.h-80 {
-  height: 320px;
-}
-
-.mt-4 {
-  margin-top: 16px;
-}
-</style>
