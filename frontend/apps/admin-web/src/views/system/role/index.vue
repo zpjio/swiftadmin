@@ -545,3 +545,4 @@ const handleSubmit = async () => {
 // 初始化
 loadMenuTree()
 loadDeptTree()
+</script>

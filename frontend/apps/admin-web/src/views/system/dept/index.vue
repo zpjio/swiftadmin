@@ -247,3 +247,4 @@ const handleSubmit = async () => {
 onMounted(() => {
   loadDeptTree()
 })
+</script>

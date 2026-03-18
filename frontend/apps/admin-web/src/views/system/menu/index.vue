@@ -387,3 +387,4 @@ const loadMenuTree = async () => {
 onMounted(() => {
   loadMenuTree()
 })
+</script>

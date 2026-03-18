@@ -269,3 +269,4 @@ const handleRefreshCache = async () => {
     message.error(error.message || '刷新失败')
   }
 }
+</script>

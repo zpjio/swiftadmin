@@ -404,3 +404,4 @@ const formatJson = (json?: string) => {
 onMounted(() => {
   loadData()
 })
+</script>

@@ -238,6 +238,8 @@ function handleBatchDelete() {
   }
   handleDelete(selectedKeys.value as string[])
 }
+
+function handleAdd() {
   isEdit.value = false
   modalTitle.value = '新增模板'
   Object.assign(form, {
@@ -313,14 +315,6 @@ function handleDelete(ids: string[]) {
       }
     },
   })
-}
-
-function handleBatchDelete() {
-  if (!hasSelection.value) {
-    message.warning('请选择要删除的记录')
-    return
-  }
-  handleDelete(selectedKeys.value as string[])
 }
 </script>
 

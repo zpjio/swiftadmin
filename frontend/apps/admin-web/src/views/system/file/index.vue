@@ -290,3 +290,4 @@ const getFileIcon = (type?: string) => {
   if (['mp3', 'wav', 'flac'].includes(t)) return 'music'
   return 'file'
 }
+</script>
