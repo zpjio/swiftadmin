@@ -36,7 +36,6 @@ public class OperLogServiceImpl extends ServiceImpl<SysOperLogMapper, SysOperLog
     public Page<SysOperLog> page(OperLogQueryDTO query) {
         QueryWrapper queryWrapper = QueryWrapper.create()
                 .where(SYS_OPER_LOG.TITLE.like(PageHelper.likeIfPresent(query.getTitle())))
-                .and(SYS_OPER_LOG.MODULE.like(PageHelper.likeIfPresent(query.getModule())))
                 .and(SYS_OPER_LOG.OPER_NAME.like(PageHelper.likeIfPresent(query.getOperName())))
                 .and(SYS_OPER_LOG.BUSINESS_TYPE.eq(query.getBusinessType(), query.getBusinessType() != null))
                 .and(SYS_OPER_LOG.STATUS.eq(query.getStatus(), query.getStatus() != null))

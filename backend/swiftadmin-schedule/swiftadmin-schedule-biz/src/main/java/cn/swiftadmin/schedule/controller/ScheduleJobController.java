@@ -67,7 +67,7 @@ public class ScheduleJobController {
     @Operation(summary = "创建任务", description = "创建新的定时任务")
     @PostMapping
     @RequiresPermission("schedule:job:add")
-    @OperationLog(title = "定时任务", businessType = BusinessType.INSERT, module = "定时任务管理",
+    @OperationLog(title = "定时任务", businessType = BusinessType.INSERT,
             entityClass = ScheduleJob.class)
     public R<Long> create(@Valid @RequestBody JobDTO dto) {
         ScheduleJob job = new ScheduleJob();
@@ -84,7 +84,7 @@ public class ScheduleJobController {
     @Operation(summary = "更新任务", description = "更新定时任务配置")
     @PutMapping
     @RequiresPermission("schedule:job:edit")
-    @OperationLog(title = "定时任务", businessType = BusinessType.UPDATE, module = "定时任务管理",
+    @OperationLog(title = "定时任务", businessType = BusinessType.UPDATE,
             entityClass = ScheduleJob.class)
     public R<Void> update(@Valid @RequestBody JobDTO dto) {
         ScheduleJob job = new ScheduleJob();
@@ -101,7 +101,7 @@ public class ScheduleJobController {
     @Operation(summary = "删除任务", description = "删除定时任务")
     @DeleteMapping("/{ids}")
     @RequiresPermission("schedule:job:delete")
-    @OperationLog(title = "定时任务", businessType = BusinessType.DELETE, module = "定时任务管理",
+    @OperationLog(title = "定时任务", businessType = BusinessType.DELETE,
             entityClass = ScheduleJob.class)
     public R<Void> delete(@PathVariable Long[] ids) {
         jobService.deleteJob(ids);
@@ -116,7 +116,7 @@ public class ScheduleJobController {
     @Operation(summary = "启用任务", description = "启用定时任务，开始按计划执行")
     @PutMapping("/{id}/enable")
     @RequiresPermission("schedule:job:enable")
-    @OperationLog(title = "定时任务", businessType = BusinessType.UPDATE, module = "定时任务管理",
+    @OperationLog(title = "定时任务", businessType = BusinessType.UPDATE,
             entityClass = ScheduleJob.class)
     public R<Void> enable(@PathVariable Long id) {
         jobService.enableJob(id);
@@ -131,7 +131,7 @@ public class ScheduleJobController {
     @Operation(summary = "暂停任务", description = "暂停定时任务，停止执行")
     @PutMapping("/{id}/pause")
     @RequiresPermission("schedule:job:disable")
-    @OperationLog(title = "定时任务", businessType = BusinessType.UPDATE, module = "定时任务管理",
+    @OperationLog(title = "定时任务", businessType = BusinessType.UPDATE,
             entityClass = ScheduleJob.class)
     public R<Void> pause(@PathVariable Long id) {
         jobService.pauseJob(id);
@@ -147,7 +147,7 @@ public class ScheduleJobController {
     @Operation(summary = "手动触发任务", description = "立即执行一次任务")
     @PostMapping("/{id}/trigger")
     @RequiresPermission("schedule:job:trigger")
-    @OperationLog(title = "定时任务", businessType = BusinessType.OTHER, module = "定时任务管理")
+    @OperationLog(title = "定时任务", businessType = BusinessType.OTHER)
     public R<Long> trigger(@PathVariable Long id) {
         Long logId = jobService.triggerJob(id);
         return R.ok(logId);

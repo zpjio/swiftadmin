@@ -34,7 +34,6 @@ public class OperationLogEventListener {
 
             SysOperLog operLog = SysOperLog.builder()
                     .title(getString(logData, "title"))
-                    .module(getString(logData, "module"))
                     .businessType(getInteger(logData, "businessType"))
                     .method(getString(logData, "method"))
                     .requestMethod(getString(logData, "requestMethod"))

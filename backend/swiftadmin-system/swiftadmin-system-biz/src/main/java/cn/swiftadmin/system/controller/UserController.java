@@ -2,6 +2,7 @@ package cn.swiftadmin.system.controller;
 
 import com.mybatisflex.core.paginate.Page;
 import cn.swiftadmin.common.core.result.R;
+import cn.swiftadmin.common.security.annotation.OperationLog;
 import cn.swiftadmin.common.security.annotation.RequiresPermission;
 import cn.swiftadmin.common.security.util.SecurityUtils;
 import cn.swiftadmin.system.api.dto.AssignRoleDTO;
@@ -9,6 +10,7 @@ import cn.swiftadmin.system.api.dto.ResetPasswordDTO;
 import cn.swiftadmin.system.api.dto.UpdateStatusDTO;
 import cn.swiftadmin.system.api.dto.UserDTO;
 import cn.swiftadmin.system.api.dto.UserQueryDTO;
+import cn.swiftadmin.system.api.entity.SysUser;
 import cn.swiftadmin.system.api.service.UserManageService;
 import cn.swiftadmin.system.api.vo.UserVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -69,6 +71,8 @@ public class UserController {
     @Operation(summary = "创建用户", description = "新增系统用户")
     @PostMapping
     @RequiresPermission("system:user:add")
+    @OperationLog(title = "用户管理", businessType = OperationLog.BusinessType.INSERT,
+            entityClass = SysUser.class, isSaveAfterData = true)
     public R<Long> create(@Validated(UserDTO.Create.class) @RequestBody UserDTO dto) {
         return R.ok(userManageService.create(dto));
     }
@@ -79,6 +83,8 @@ public class UserController {
     @Operation(summary = "更新用户", description = "修改用户信息")
     @PutMapping
     @RequiresPermission("system:user:edit")
+    @OperationLog(title = "用户管理", businessType = OperationLog.BusinessType.UPDATE,
+            entityClass = SysUser.class, isSaveBeforeData = true, isSaveAfterData = true)
     public R<Void> update(@Validated(UserDTO.Update.class) @RequestBody UserDTO dto) {
         userManageService.update(dto);
         return R.ok();
@@ -90,6 +96,8 @@ public class UserController {
     @Operation(summary = "批量删除用户", description = "批量删除用户")
     @DeleteMapping("/{ids}")
     @RequiresPermission("system:user:delete")
+    @OperationLog(title = "用户管理", businessType = OperationLog.BusinessType.DELETE,
+            entityClass = SysUser.class, isSaveBeforeData = true)
     public R<Void> delete(@PathVariable List<Long> ids) {
         userManageService.delete(ids);
         return R.ok();
@@ -101,6 +109,7 @@ public class UserController {
     @Operation(summary = "更新用户状态", description = "启用或禁用用户")
     @PutMapping("/status")
     @RequiresPermission("system:user:edit")
+    @OperationLog(title = "用户管理", businessType = OperationLog.BusinessType.UPDATE)
     public R<Void> updateStatus(@Valid @RequestBody UpdateStatusDTO dto) {
         userManageService.updateStatus(dto.getUserId(), dto.getStatus());
         return R.ok();
@@ -112,6 +121,7 @@ public class UserController {
     @Operation(summary = "重置用户密码", description = "重置用户密码")
     @PutMapping("/reset-password")
     @RequiresPermission("system:user:resetPwd")
+    @OperationLog(title = "用户管理", businessType = OperationLog.BusinessType.UPDATE)
     public R<Void> resetPassword(@Valid @RequestBody ResetPasswordDTO dto) {
         userManageService.resetPassword(dto.getUserId(), dto.getPassword());
         return R.ok();
@@ -123,6 +133,7 @@ public class UserController {
     @Operation(summary = "分配角色", description = "为用户分配角色")
     @PutMapping("/role")
     @RequiresPermission("system:user:edit")
+    @OperationLog(title = "用户管理", businessType = OperationLog.BusinessType.GRANT)
     public R<Void> assignRoles(@Valid @RequestBody AssignRoleDTO dto) {
         userManageService.assignRoles(dto.getUserId(), dto.getRoleIds());
         return R.ok();

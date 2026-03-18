@@ -227,7 +227,6 @@ CREATE TABLE sys_oper_log (
     id BIGINT NOT NULL PRIMARY KEY COMMENT '日志ID',
     -- 基础信息
     title VARCHAR(100) COMMENT '操作标题',
-    module VARCHAR(50) COMMENT '模块名称',
     business_type TINYINT DEFAULT 0 COMMENT '业务类型：0=其它，1=新增，2=修改，3=删除，4=授权，5=导出，6=导入，7=强退，8=生成代码，9=清空数据',
     method VARCHAR(200) COMMENT '方法名称',
     request_method VARCHAR(20) COMMENT '请求方式',
@@ -258,7 +257,6 @@ CREATE TABLE sys_oper_log (
     INDEX idx_oper_name (oper_name),
     INDEX idx_oper_time (oper_time),
     INDEX idx_business_type (business_type),
-    INDEX idx_module (module),
     INDEX idx_table_record (table_name, record_id),
     INDEX idx_oper_user_id (oper_user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作日志记录表';

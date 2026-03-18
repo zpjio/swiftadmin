@@ -21,11 +21,6 @@ public @interface OperationLog {
     String title() default "";
 
     /**
-     * 模块名称
-     */
-    String module() default "";
-
-    /**
      * 业务类型
      */
     BusinessType businessType() default BusinessType.OTHER;

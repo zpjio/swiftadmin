@@ -7,7 +7,6 @@ import type { PageResult } from '@/types'
 export interface OperLogVO {
   id: string
   title: string
-  module: string
   businessType: number
   method: string
   requestMethod: string
@@ -40,7 +39,6 @@ export interface OperLogQuery {
   page?: number
   pageSize?: number
   title?: string
-  module?: string
   operName?: string
   businessType?: number
   status?: number

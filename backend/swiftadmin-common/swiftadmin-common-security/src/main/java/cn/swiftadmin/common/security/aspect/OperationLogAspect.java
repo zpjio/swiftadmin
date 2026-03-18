@@ -78,7 +78,6 @@ public class OperationLogAspect {
 
         // 基本信息
         logData.put("title", operationLog.title());
-        logData.put("module", operationLog.module());
         logData.put("businessType", operationLog.businessType().getCode());
         logData.put("operatorType", operationLog.operatorType().getCode());
         logData.put("operTime", LocalDateTime.now());

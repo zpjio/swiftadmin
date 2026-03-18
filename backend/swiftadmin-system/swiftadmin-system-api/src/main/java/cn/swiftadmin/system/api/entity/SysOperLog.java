@@ -33,10 +33,6 @@ public class SysOperLog {
     @Column
     private String title;
 
-    /** 模块名称 */
-    @Column
-    private String module;
-
     /** 业务类型：0=其它，1=新增，2=修改，3=删除，4=授权，5=导出，6=导入，7=强退，8=生成代码，9=清空数据 */
     @Column
     private Integer businessType;

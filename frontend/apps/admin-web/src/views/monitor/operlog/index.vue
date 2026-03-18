@@ -11,14 +11,6 @@
             class="w-48"
           />
         </NFormItem>
-        <NFormItem label="模块名称" path="module">
-          <NInput
-            v-model:value="queryForm.module"
-            placeholder="请输入模块名称"
-            clearable
-            class="w-48"
-          />
-        </NFormItem>
         <NFormItem label="操作人员" path="operName">
           <NInput
             v-model:value="queryForm.operName"
@@ -114,7 +106,6 @@
       <NDescriptions :column="2" bordered>
         <NDescriptionsItem label="日志 ID">{{ currentDetail?.id }}</NDescriptionsItem>
         <NDescriptionsItem label="操作标题">{{ currentDetail?.title }}</NDescriptionsItem>
-        <NDescriptionsItem label="模块名称">{{ currentDetail?.module || '-' }}</NDescriptionsItem>
         <NDescriptionsItem label="业务类型">
           {{ getBusinessTypeLabel(currentDetail?.businessType) }}
         </NDescriptionsItem>
@@ -185,7 +176,6 @@ const currentDetail = ref<OperLogVO | null>(null)
 
 const queryForm = reactive<OperLogQuery & { dateRange?: [number, number] }>({
   title: '',
-  module: '',
   operName: '',
   businessType: undefined,
   status: undefined,
@@ -335,7 +325,6 @@ const handleSearch = () => {
 // 重置
 const handleReset = () => {
   queryForm.title = ''
-  queryForm.module = ''
   queryForm.operName = ''
   queryForm.businessType = undefined
   queryForm.status = undefined
