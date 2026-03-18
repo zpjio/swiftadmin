@@ -41,14 +41,13 @@ public class ScheduleManager {
     private final ScheduleJobService jobService;
     private final ScheduleJobLogService logService;
     private final List<JobExecutor> executors;
+    private final ObjectMapper objectMapper;
 
     /** 执行器映射 */
     private Map<JobType, JobExecutor> executorMap;
 
     /** 正在执行的任务ID集合（防止重复执行） */
     private final Set<Long> runningJobs = ConcurrentHashMap.newKeySet();
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * 初始化执行器映射
@@ -142,8 +141,7 @@ public class ScheduleManager {
             JobType jobType = job.toJobType();
             JobExecutor executor = executorMap.get(jobType);
             if (executor == null) {
-                throw new BusinessException(ErrorCode.JOB_EXECUTOR_NOT_FOUND.getCode(),
-                        "未找到任务执行器: " + jobType);
+                throw new BusinessException(ErrorCode.JOB_EXECUTOR_NOT_FOUND, "未找到任务执行器: " + jobType);
             }
 
             // 执行任务

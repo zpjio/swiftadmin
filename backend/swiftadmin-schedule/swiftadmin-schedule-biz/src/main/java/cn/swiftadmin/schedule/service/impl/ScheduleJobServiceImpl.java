@@ -1,6 +1,7 @@
 package cn.swiftadmin.schedule.service.impl;
 
 import cn.swiftadmin.common.core.exception.BusinessException;
+import cn.swiftadmin.common.core.result.ErrorCode;
 import cn.swiftadmin.common.core.util.BeanCopyUtils;
 import cn.swiftadmin.common.mybatis.util.PageHelper;
 import cn.swiftadmin.schedule.api.dto.JobDTO;
@@ -82,7 +83,7 @@ public class ScheduleJobServiceImpl extends ServiceImpl<ScheduleJobMapper, Sched
     public JobVO getJobDetail(Long jobId) {
         ScheduleJob job = getById(jobId);
         if (job == null) {
-            throw BusinessException.of(400, "任务不存在");
+            throw new BusinessException(ErrorCode.JOB_NOT_FOUND);
         }
         return convertToVO(job);
     }
@@ -134,7 +135,7 @@ public class ScheduleJobServiceImpl extends ServiceImpl<ScheduleJobMapper, Sched
     public void updateJob(ScheduleJob job) {
         ScheduleJob existingJob = getById(job.getId());
         if (existingJob == null) {
-            throw BusinessException.of(400, "任务不存在");
+            throw new BusinessException(ErrorCode.JOB_NOT_FOUND);
         }
 
         // 检查任务名称是否已存在

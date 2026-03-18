@@ -342,9 +342,8 @@ const loadDeptTree = async () => {
     // 使用静默模式，权限不足时不显示错误提示
     const res = await getDeptTreeApi(undefined, true)
     deptSelectTreeData.value = convertToTreeSelectOptions(res as DeptVO[])
-  } catch (error) {
+  } catch {
     // 权限不足时静默处理
-    console.debug('加载部门树失败，可能缺少权限')
   }
 }
 
@@ -354,9 +353,8 @@ const loadRoleList = async () => {
     // 使用静默模式，权限不足时不显示错误提示
     const res = await getRoleListApi(true)
     roleOptions.value = (res as RoleVO[]).map((item) => ({ label: item.name, value: item.id }))
-  } catch (error) {
+  } catch {
     // 权限不足时静默处理
-    console.debug('加载角色列表失败，可能缺少权限')
   }
 }
 
