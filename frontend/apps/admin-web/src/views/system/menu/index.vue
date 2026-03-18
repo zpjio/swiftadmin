@@ -269,20 +269,21 @@ const isAllExpanded = computed(() => {
   return parentMenuIds.value.every(id => expandedKeys.value.includes(id))
 })
 
-// 转换为 NTree 数据格式
-const treeData = computed<TreeOption[]>(() => {
-  return convertToTreeOptions(rawTreeData.value)
-})
-
-const convertToTreeOptions = (menus: MenuVO[]): TreeOption[] => {
+// 转换为 NTree 数据格式（带图标和类型标签）
+const convertMenuToTreeOptions = (menus: MenuVO[]): TreeOption[] => {
   return menus.map(menu => ({
     key: menu.id,
     label: menu.name,
     icon: normalizeIconName(menu.icon) || undefined,
     type: menu.type,
-    children: menu.children && menu.children.length > 0 ? convertToTreeOptions(menu.children) : undefined
+    children: menu.children && menu.children.length > 0 ? convertMenuToTreeOptions(menu.children) : undefined
   }))
 }
+
+// 树形数据（计算属性）
+const treeData = computed<TreeOption[]>(() => {
+  return convertMenuToTreeOptions(rawTreeData.value)
+})
 
 
 // 渲染树节点标签

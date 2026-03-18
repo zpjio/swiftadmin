@@ -44,6 +44,59 @@ export function getStatusLabel(status: number): string {
 }
 
 /**
+ * 状态选项（用于下拉选择）
+ */
+export const StatusOptions = [
+  { label: '全部', value: undefined },
+  { label: '正常', value: Status.ENABLED },
+  { label: '禁用', value: Status.DISABLED },
+] as const
+
+/**
+ * 状态选项（不带"全部"选项，用于表单）
+ */
+export const StatusFormOptions = [
+  { label: '正常', value: Status.ENABLED },
+  { label: '禁用', value: Status.DISABLED },
+] as const
+
+/**
+ * 性别常量
+ */
+export const Sex = {
+  UNKNOWN: 0,
+  MALE: 1,
+  FEMALE: 2,
+} as const
+
+export type SexType = typeof Sex[keyof typeof Sex]
+
+/**
+ * 性别标签
+ */
+export const SexLabels: Record<number, string> = {
+  [Sex.UNKNOWN]: '未知',
+  [Sex.MALE]: '男',
+  [Sex.FEMALE]: '女',
+}
+
+/**
+ * 获取性别标签
+ */
+export function getSexLabel(sex: number): string {
+  return SexLabels[sex] || '未知'
+}
+
+/**
+ * 性别选项（用于下拉选择）
+ */
+export const SexOptions = [
+  { label: '未知', value: Sex.UNKNOWN },
+  { label: '男', value: Sex.MALE },
+  { label: '女', value: Sex.FEMALE },
+] as const
+
+/**
  * 文件类型
  */
 export const FileType = {

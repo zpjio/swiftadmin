@@ -90,6 +90,36 @@ export function convertToTreeSelectOptions<T extends TreeNodeBase>(
 }
 
 /**
+ * 获取树中所有节点 ID（包括父节点和子节点）
+ * @param items 树形数据数组
+ * @param options 配置选项
+ * @returns 所有节点 ID 数组
+ */
+export function getAllIds<T extends TreeNodeBase>(
+  items: T[],
+  options: {
+    keyField?: keyof T
+    childrenField?: keyof T
+  } = {}
+): (string | number)[] {
+  const { keyField = 'id' as keyof T, childrenField = 'children' as keyof T } = options
+  const ids: (string | number)[] = []
+
+  const traverse = (nodes: T[]) => {
+    for (const node of nodes) {
+      ids.push(node[keyField] as string | number)
+      const children = node[childrenField] as T[] | undefined
+      if (children && children.length > 0) {
+        traverse(children)
+      }
+    }
+  }
+
+  traverse(items)
+  return ids
+}
+
+/**
  * 获取树中所有父节点 ID
  * @param items 树形数据数组
  * @param options 配置选项

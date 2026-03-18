@@ -11,11 +11,7 @@
         <NFormItem label="状态" path="status">
           <NSelect
             v-model:value="queryForm.status"
-            :options="[
-              { label: '全部', value: undefined },
-              { label: '正常', value: 1 },
-              { label: '禁用', value: 0 },
-            ]"
+            :options="StatusOptions"
             clearable
             style="width: 120px"
           />
@@ -107,9 +103,7 @@
         </NFormItem>
         <NFormItem label="性别" path="sex">
           <NRadioGroup v-model:value="formData.sex">
-            <NRadio :value="0">未知</NRadio>
-            <NRadio :value="1">男</NRadio>
-            <NRadio :value="2">女</NRadio>
+            <NRadio v-for="item in SexOptions" :key="item.value" :value="item.value">{{ item.label }}</NRadio>
           </NRadioGroup>
         </NFormItem>
         <NFormItem label="状态" path="status">
@@ -162,43 +156,63 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, h, computed, onMounted } from 'vue'
-import { useMessage, useDialog, type DataTableColumns, type FormInst, type FormRules, type TreeSelectOption } from 'naive-ui'
+import { reactive, ref, h, computed } from 'vue'
+import { useMessage, type DataTableColumns, type FormInst, type FormRules, type TreeSelectOption } from 'naive-ui'
 import { getUserPageApi, getUserDetailApi, createUserApi, updateUserApi, deleteUserApi, resetPasswordApi } from '@/api/user'
 import { getDeptTreeApi } from '@/api/dept'
 import { getRoleListApi } from '@/api/role'
-import type { UserVO, UserDTO, UserQuery } from '@/api/user'
+import type { UserVO, UserQuery } from '@/api/user'
 import type { DeptVO } from '@/api/dept'
 import type { RoleVO } from '@/api/role'
 
-import { usePermission, usePagination, useTableSelection } from '@/composables'
+import { usePermission, useTablePage, useConfirm, useTableActions, useFormReset } from '@/composables'
 import { useUserStore } from '@/store'
 import { formatDateTime } from '@/utils/date'
 import { convertToTreeSelectOptions } from '@/utils/tree'
+import { StatusOptions, StatusLabels, SexOptions, SexLabels } from '@/utils/constants'
 
 const message = useMessage()
-const dialog = useDialog()
+const { confirmDelete, confirmBatchDelete } = useConfirm()
 const { hasPermission } = usePermission()
+const { renderActions, edit, del } = useTableActions()
 const userStore = useUserStore()
 
 // 当前登录用户ID
 const currentUserId = computed(() => userStore.userInfo?.id)
-
-const loading = ref(false)
-const tableData = ref<UserVO[]>([])
-const { selectedKeys, hasSelection, clearSelection, onSelectionChange } = useTableSelection<UserVO>()
-const queryForm = reactive<UserQuery>({})
 
 // 部门选择树数据
 const deptSelectTreeData = ref<TreeSelectOption[]>([])
 // 角色选项
 const roleOptions = ref<{ label: string; value: string }[]>([])
 
-// 分页
-const { paginationProps, setTotal, getIndex } = usePagination({
-  onChange: () => loadData(),
-  onPageSizeChange: () => loadData(),
+// 表格分页
+const {
+  loading,
+  tableData,
+  queryForm,
+  paginationProps,
+  getIndex,
+  loadData,
+  handleSearch,
+  handleReset,
+  selection,
+} = useTablePage<UserVO, UserQuery>({
+  fetchFn: getUserPageApi,
+  defaultQuery: {
+    username: undefined,
+    phone: undefined,
+    status: undefined,
+    deptId: undefined,
+  },
+  enableSelection: true,
+  immediate: true,
 })
+
+// 选择相关的便捷访问
+const selectedKeys = selection!.selectedKeys
+const hasSelection = selection!.hasSelection
+const clearSelection = selection!.clearSelection
+const onSelectionChange = selection!.onSelectionChange
 
 // 表格列定义
 const columns: DataTableColumns<UserVO> = [
@@ -230,13 +244,13 @@ const columns: DataTableColumns<UserVO> = [
     title: '性别',
     key: 'sex',
     width: 80,
-    render: (row) => ({ 0: '未知', 1: '男', 2: '女' }[row.sex] || '未知'),
+    render: (row) => SexLabels[row.sex] || '未知',
   },
   {
     title: '状态',
     key: 'status',
     width: 80,
-    render: (row) => h('span', { style: { color: row.status === 1 ? '#52c41a' : '#ff4d4f' } }, row.status === 1 ? '正常' : '禁用'),
+    render: (row) => h('span', { style: { color: row.status === 1 ? '#52c41a' : '#ff4d4f' } }, StatusLabels[row.status] || '未知'),
   },
   { title: '部门', key: 'deptName', width: 120 },
   { title: '创建时间', key: 'createTime', width: 180, render: (row) => formatDateTime(row.createTime) },
@@ -248,20 +262,11 @@ const columns: DataTableColumns<UserVO> = [
     render: (row) => {
       const isSuperAdmin = row.username === 'admin'
       const isSelf = row.id === currentUserId.value
-      const buttons: any[] = []
-      // 超级管理员可以编辑自己（基本信息的），其他用户不能编辑超级管理员
-      if (hasPermission('system:user:edit') && (!isSuperAdmin || isSelf)) {
-        buttons.push(h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#1890ff', cursor: 'pointer' }, onClick: () => handleEdit(row) }, '编辑'))
-      }
-      // 重置密码：超级管理员不能被重置（包括自己），其他人正常
-      if (hasPermission('system:user:resetPwd') && !isSuperAdmin) {
-        buttons.push(h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#faad14', cursor: 'pointer' }, onClick: () => handleResetPassword(row) }, '重置密码'))
-      }
-      // 删除：超级管理员不能被删除
-      if (hasPermission('system:user:delete') && !isSuperAdmin) {
-        buttons.push(h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer' }, onClick: () => handleDelete(row) }, '删除'))
-      }
-      return h('div', { style: { display: 'flex', gap: '8px' } }, buttons)
+      return renderActions([
+        edit(() => handleEdit(row), hasPermission('system:user:edit') && (!isSuperAdmin || isSelf)),
+        { label: '重置密码', color: '#d97706', onClick: () => handleResetPassword(row), show: hasPermission('system:user:resetPwd') && !isSuperAdmin },
+        del(() => handleDelete(row), hasPermission('system:user:delete') && !isSuperAdmin),
+      ])
     },
   },
 ]
@@ -273,7 +278,9 @@ const isEdit = ref(false)
 const submitLoading = ref(false)
 const formRef = ref<FormInst | null>(null)
 
-const formData = reactive<UserDTO>({
+// 使用 useFormReset 管理表单
+const { formData, resetForm, setForm } = useFormReset({
+  id: undefined as string | undefined,
   username: '',
   nickname: '',
   password: '',
@@ -281,8 +288,8 @@ const formData = reactive<UserDTO>({
   email: '',
   sex: 0,
   status: 1,
-  deptId: undefined,
-  roleIds: [],
+  deptId: undefined as string | undefined,
+  roleIds: [] as string[],
   remark: '',
 })
 
@@ -350,51 +357,11 @@ const loadRoleList = async () => {
   }
 }
 
-// 加载数据
-const loadData = async () => {
-  loading.value = true
-  try {
-    const res = await getUserPageApi(queryForm)
-    tableData.value = res.records
-    setTotal(res.totalRow)
-  } catch (error) {
-    console.error('加载数据失败:', error)
-  } finally {
-    loading.value = false
-  }
-}
-
-// 搜索
-const handleSearch = () => {
-  loadData()
-}
-
-// 重置
-const handleReset = () => {
-  queryForm.username = undefined
-  queryForm.phone = undefined
-  queryForm.status = undefined
-  queryForm.deptId = undefined
-  loadData()
-}
-
 // 新增
 const handleAdd = () => {
   modalTitle.value = '新增用户'
   isEdit.value = false
-  Object.assign(formData, {
-    id: undefined,
-    username: '',
-    nickname: '',
-    password: '',
-    phone: '',
-    email: '',
-    sex: 0,
-    status: 1,
-    deptId: undefined,
-    roleIds: [],
-    remark: '',
-  })
+  resetForm()
   showModal.value = true
 }
 
@@ -404,7 +371,7 @@ const handleEdit = async (row: UserVO) => {
   isEdit.value = true
   try {
     const detail = await getUserDetailApi(row.id)
-    Object.assign(formData, {
+    setForm({
       id: detail.id,
       username: detail.username,
       nickname: detail.nickname,
@@ -447,20 +414,10 @@ const handleConfirmResetPassword = async () => {
 
 // 删除
 const handleDelete = (row: UserVO) => {
-  dialog.warning({
-    title: '确认删除',
-    content: `确定要删除用户 "${row.username}" 吗？`,
-    positiveText: '确定',
-    negativeText: '取消',
-    onPositiveClick: async () => {
-      try {
-        await deleteUserApi([row.id])
-        message.success('删除成功')
-        loadData()
-      } catch (error: any) {
-        message.error(error.message || '删除失败')
-      }
-    },
+  confirmDelete(`确定要删除用户 "${row.username}" 吗？`, async () => {
+    await deleteUserApi([row.id])
+    message.success('删除成功')
+    loadData()
   })
 }
 
@@ -476,21 +433,11 @@ const handleBatchDelete = () => {
     message.warning('超级管理员用户不可删除')
     return
   }
-  dialog.warning({
-    title: '确认删除',
-    content: `确定要删除选中的 ${selectedKeys.value.length} 个用户吗？`,
-    positiveText: '确定',
-    negativeText: '取消',
-    onPositiveClick: async () => {
-      try {
-        await deleteUserApi(selectedKeys.value as string[])
-        message.success('删除成功')
-        clearSelection()
-        loadData()
-      } catch (error: any) {
-        message.error(error.message || '删除失败')
-      }
-    },
+  confirmBatchDelete(selectedKeys.value.length, async () => {
+    await deleteUserApi(selectedKeys.value as string[])
+    message.success('删除成功')
+    clearSelection()
+    loadData()
   })
 }
 
@@ -526,8 +473,6 @@ const handleSubmit = async () => {
   }
 }
 
-onMounted(() => {
-  loadData()
-  loadDeptTree()
-  loadRoleList()
-})
+// 初始化
+loadDeptTree()
+loadRoleList()

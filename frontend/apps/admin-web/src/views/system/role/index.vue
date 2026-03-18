@@ -11,11 +11,7 @@
         <NFormItem label="状态" path="status">
           <NSelect
             v-model:value="queryForm.status"
-            :options="[
-              { label: '全部', value: undefined },
-              { label: '正常', value: 1 },
-              { label: '禁用', value: 0 },
-            ]"
+            :options="StatusOptions"
             clearable
             style="width: 120px"
           />
@@ -172,27 +168,24 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, h, onMounted, computed, watch } from 'vue'
-import { useMessage, useDialog, type DataTableColumns, type FormInst, type FormRules, type TreeOption } from 'naive-ui'
+import { reactive, ref, h, computed, watch } from 'vue'
+import { useMessage, type DataTableColumns, type FormInst, type FormRules, type TreeOption } from 'naive-ui'
 import { getRolePageApi, getRoleDetailApi, createRoleApi, updateRoleApi, deleteRoleApi, assignMenusApi } from '@/api/role'
 import { getMenuTreeApi } from '@/api/menu'
 import { getDeptTreeApi } from '@/api/dept'
-import type { RoleVO, RoleDTO, RoleQuery } from '@/api/role'
+import type { RoleVO, RoleQuery } from '@/api/role'
 import type { MenuVO } from '@/api/menu'
 import type { DeptVO } from '@/api/dept'
 import { generateRoleCode } from '@/utils/codeGenerator'
-import { usePermission, usePagination, useTableSelection } from '@/composables'
+import { usePermission, useTablePage, useConfirm, useTableActions, useFormReset } from '@/composables'
 import { formatDateTime } from '@/utils/date'
-import { convertToTreeOptions, getParentIds } from '@/utils/tree'
+import { convertToTreeOptions, getAllIds, getParentIds } from '@/utils/tree'
+import { StatusOptions, StatusLabels } from '@/utils/constants'
 
 const message = useMessage()
-const dialog = useDialog()
+const { confirmDelete, confirmBatchDelete } = useConfirm()
 const { hasPermission } = usePermission()
-
-const loading = ref(false)
-const tableData = ref<RoleVO[]>([])
-const { selectedKeys, hasSelection, clearSelection, onSelectionChange } = useTableSelection<RoleVO>()
-const queryForm = reactive<RoleQuery>({})
+const { renderActions, edit, del } = useTableActions()
 
 // 数据范围选项
 const dataScopeOptions = [
@@ -203,11 +196,33 @@ const dataScopeOptions = [
   { label: '仅本人', value: 5 },
 ]
 
-// 分页
-const { paginationProps, setTotal, getIndex } = usePagination({
-  onChange: () => loadData(),
-  onPageSizeChange: () => loadData(),
+// 表格分页
+const {
+  loading,
+  tableData,
+  queryForm,
+  paginationProps,
+  getIndex,
+  loadData,
+  handleSearch,
+  handleReset,
+  selection,
+} = useTablePage<RoleVO, RoleQuery>({
+  fetchFn: getRolePageApi,
+  defaultQuery: {
+    name: undefined,
+    code: undefined,
+    status: undefined,
+  },
+  enableSelection: true,
+  immediate: true,
 })
+
+// 选择相关的便捷访问
+const selectedKeys = selection!.selectedKeys
+const hasSelection = selection!.hasSelection
+const clearSelection = selection!.clearSelection
+const onSelectionChange = selection!.onSelectionChange
 
 // 表格列定义
 const columns: DataTableColumns<RoleVO> = [
@@ -244,7 +259,7 @@ const columns: DataTableColumns<RoleVO> = [
     title: '状态',
     key: 'status',
     width: 80,
-    render: (row) => h('span', { style: { color: row.status === 1 ? '#52c41a' : '#ff4d4f' } }, row.status === 1 ? '正常' : '禁用'),
+    render: (row) => h('span', { style: { color: row.status === 1 ? '#52c41a' : '#ff4d4f' } }, StatusLabels[row.status] || '未知'),
   },
   { title: '创建时间', key: 'createTime', width: 160, render: (row) => formatDateTime(row.createTime) },
   {
@@ -253,17 +268,12 @@ const columns: DataTableColumns<RoleVO> = [
     width: 200,
     fixed: 'right',
     render: (row) => {
-      const buttons: any[] = []
       const isAdmin = row.code === 'admin'
-      // 超级管理员角色不能编辑、分配权限、删除
-      if (hasPermission('system:role:edit') && !isAdmin) {
-        buttons.push(h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#1890ff', cursor: 'pointer' }, onClick: () => handleEdit(row) }, '编辑'))
-        buttons.push(h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#52c41a', cursor: 'pointer' }, onClick: () => handlePermission(row) }, '分配权限'))
-      }
-      if (hasPermission('system:role:delete') && !isAdmin) {
-        buttons.push(h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer' }, onClick: () => handleDelete(row) }, '删除'))
-      }
-      return h('div', { style: { display: 'flex', gap: '8px' } }, buttons)
+      return renderActions([
+        edit(() => handleEdit(row), hasPermission('system:role:edit') && !isAdmin),
+        { label: '分配权限', color: '#059669', onClick: () => handlePermission(row), show: hasPermission('system:role:edit') && !isAdmin },
+        del(() => handleDelete(row), hasPermission('system:role:delete') && !isAdmin),
+      ])
     },
   },
 ]
@@ -276,13 +286,15 @@ const submitLoading = ref(false)
 const formRef = ref<FormInst | null>(null)
 const autoGenerateCode = ref(true)
 
-const formData = reactive<RoleDTO>({
+// 使用 useFormReset 管理表单
+const { formData, resetForm, setForm } = useFormReset({
+  id: undefined as string | undefined,
   name: '',
   code: '',
   description: '',
   status: 1,
   dataScope: 5,
-  deptIds: [],
+  deptIds: [] as string[],
 })
 
 // 计算生成的编码预览
@@ -343,23 +355,10 @@ const loadDeptTree = async () => {
     const res = await getDeptTreeApi()
     const deptData = res as DeptVO[]
     deptTreeData.value = convertToTreeOptions(deptData)
-    allDeptIds.value = getAllDeptIds(deptData)
+    allDeptIds.value = getAllIds(deptData).map(String)
   } catch (error) {
     console.error('加载部门树失败:', error)
   }
-}
-
-// 获取所有部门ID
-const getAllDeptIds = (depts: DeptVO[]): string[] => {
-  const ids: string[] = []
-  const traverse = (items: DeptVO[]) => {
-    items.forEach((item) => {
-      ids.push(item.id)
-      if (item.children) traverse(item.children)
-    })
-  }
-  traverse(depts)
-  return ids
 }
 
 // 部门选中变化
@@ -383,23 +382,10 @@ const loadMenuTree = async () => {
     const res = await getMenuTreeApi()
     const menuData = res as MenuVO[]
     menuTreeData.value = convertToTreeOptions(menuData)
-    allMenuIds.value = getAllMenuIds(menuData)
+    allMenuIds.value = getAllIds(menuData).map(String)
   } catch (error) {
     console.error('加载菜单树失败:', error)
   }
-}
-
-// 获取所有菜单ID
-const getAllMenuIds = (menus: MenuVO[]): string[] => {
-  const ids: string[] = []
-  const traverse = (items: MenuVO[]) => {
-    items.forEach((item) => {
-      ids.push(item.id)
-      if (item.children) traverse(item.children)
-    })
-  }
-  traverse(menus)
-  return ids
 }
 
 // 菜单选中变化
@@ -425,7 +411,7 @@ const handleUnselectAllMenu = () => {
 // 展开全部菜单
 const handleExpandAllMenu = () => {
   getMenuTreeApi().then((data) => {
-    expandedMenuKeys.value = getParentIds(data as MenuVO[])
+    expandedMenuKeys.value = getParentIds(data as MenuVO[]).map(String)
   })
 }
 
@@ -434,47 +420,12 @@ const handleCollapseAllMenu = () => {
   expandedMenuKeys.value = []
 }
 
-// 加载数据
-const loadData = async () => {
-  loading.value = true
-  try {
-    const res = await getRolePageApi(queryForm)
-    tableData.value = res.records
-    setTotal(res.totalRow)
-  } catch (error) {
-    console.error('加载数据失败:', error)
-  } finally {
-    loading.value = false
-  }
-}
-
-// 搜索
-const handleSearch = () => {
-  loadData()
-}
-
-// 重置
-const handleReset = () => {
-  queryForm.name = undefined
-  queryForm.code = undefined
-  queryForm.status = undefined
-  loadData()
-}
-
 // 新增
 const handleAdd = () => {
   modalTitle.value = '新增角色'
   isEdit.value = false
   autoGenerateCode.value = true
-  Object.assign(formData, {
-    id: undefined,
-    name: '',
-    code: '',
-    description: '',
-    status: 1,
-    dataScope: 5,
-    deptIds: [],
-  })
+  resetForm()
   showModal.value = true
 }
 
@@ -484,7 +435,7 @@ const handleEdit = async (row: RoleVO) => {
   isEdit.value = true
   try {
     const detail = await getRoleDetailApi(row.id)
-    Object.assign(formData, {
+    setForm({
       id: detail.id,
       name: detail.name,
       code: detail.code,
@@ -506,7 +457,7 @@ const handlePermission = async (row: RoleVO) => {
     const detail = await getRoleDetailApi(row.id)
     permissionForm.roleId = detail.id
     permissionForm.menuIds = detail.menuIds || []
-    expandedMenuKeys.value = getParentIds(await getMenuTreeApi() as MenuVO[])
+    expandedMenuKeys.value = getParentIds(await getMenuTreeApi() as MenuVO[]).map(String)
     showPermissionModal.value = true
   } catch (error: any) {
     message.error(error.message || '获取角色详情失败')
@@ -530,20 +481,10 @@ const handleSavePermission = async () => {
 
 // 删除
 const handleDelete = (row: RoleVO) => {
-  dialog.warning({
-    title: '确认删除',
-    content: `确定要删除角色 "${row.name}" 吗？`,
-    positiveText: '确定',
-    negativeText: '取消',
-    onPositiveClick: async () => {
-      try {
-        await deleteRoleApi([row.id])
-        message.success('删除成功')
-        loadData()
-      } catch (error: any) {
-        message.error(error.message || '删除失败')
-      }
-    },
+  confirmDelete(`确定要删除角色 "${row.name}" 吗？`, async () => {
+    await deleteRoleApi([row.id])
+    message.success('删除成功')
+    loadData()
   })
 }
 
@@ -559,21 +500,11 @@ const handleBatchDelete = () => {
     message.warning('超级管理员角色不可删除')
     return
   }
-  dialog.warning({
-    title: '确认删除',
-    content: `确定要删除选中的 ${selectedKeys.value.length} 个角色吗？`,
-    positiveText: '确定',
-    negativeText: '取消',
-    onPositiveClick: async () => {
-      try {
-        await deleteRoleApi(selectedKeys.value as string[])
-        message.success('删除成功')
-        clearSelection()
-        loadData()
-      } catch (error: any) {
-        message.error(error.message || '删除失败')
-      }
-    },
+  confirmBatchDelete(selectedKeys.value.length, async () => {
+    await deleteRoleApi(selectedKeys.value as string[])
+    message.success('删除成功')
+    clearSelection()
+    loadData()
   })
 }
 
@@ -608,8 +539,6 @@ const handleSubmit = async () => {
   }
 }
 
-onMounted(() => {
-  loadData()
-  loadMenuTree()
-  loadDeptTree()
-})
+// 初始化
+loadMenuTree()
+loadDeptTree()
