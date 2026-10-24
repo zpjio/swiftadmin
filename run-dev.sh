@@ -108,11 +108,12 @@ else
     echo -e "${YELLOW}   可复制 .env.local.example 创建自己的配置${NC}"
 fi
 
-# 编译后端
+# 编译后端（install 而非 compile：兄弟模块的 SNAPSHOT 需要装入本地仓库，
+# 后续 spring-boot:run -pl swiftadmin-boot 才能解析到）
 if [ "$SKIP_COMPILE" = false ]; then
     echo -e "${BLUE}🔧 编译后端...${NC}"
     cd "$BACKEND_DIR"
-    mvn compile -q -DskipTests
+    mvn install -q -DskipTests
     echo -e "${GREEN}✓ 后端编译完成${NC}"
 fi
 

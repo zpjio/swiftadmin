@@ -102,9 +102,9 @@ swiftadmin/
 
 - JDK 21+
 - Maven 3.9+
-- Node.js 18+、pnpm 9+（`swiftadmin-web` 也可直接使用 npm）
+- Node.js 20+、pnpm 10（版本已通过 `frontend/package.json` 的 `packageManager` 钉死；corepack 直接可用：`corepack prepare pnpm@10 --activate`；`swiftadmin-web` 也可直接使用 npm）
 - MySQL 8.0+、Redis 7+（或使用 Docker 启动）
-- Docker / Docker Compose（可选）
+- Docker / Docker Compose V2（`docker compose` 子命令）
 
 ### 1. 启动依赖服务
 
@@ -163,6 +163,13 @@ npm run dev
 | `admin` | `admin123` |
 
 > 首次部署后请立即修改默认密码。
+
+## 跑测试
+
+```bash
+cd deploy/docker && docker compose up -d mysql redis   # compose 默认 root/root，与测试默认配置一致
+make test        # = mvn test + 前端 type-check
+```
 
 ## 配置说明
 

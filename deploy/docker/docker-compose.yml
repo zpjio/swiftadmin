@@ -4,7 +4,9 @@ services:
     image: mysql:8.0
     container_name: swiftadmin-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
+      # 默认值与应用 dev 默认账号(${DB_USERNAME:root}/${DB_PASSWORD:root})及 CI 保持一致,
+      # docker compose up 后可直接跑 mvn test 而无需注入环境变量
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
       MYSQL_DATABASE: ${DB_NAME:-swiftadmin}
       MYSQL_USER: ${DB_USERNAME:-swiftadmin}
       MYSQL_PASSWORD: ${DB_PASSWORD:-swiftadmin123}
@@ -16,6 +18,12 @@ services:
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
     networks:
       - swiftadmin-network
     restart: unless-stopped
@@ -28,6 +36,11 @@ services:
       - "6379:6379"
     volumes:
       - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
     networks:
       - swiftadmin-network
     restart: unless-stopped
@@ -39,8 +52,10 @@ services:
       dockerfile: ../deploy/docker/backend/Dockerfile
     container_name: swiftadmin-backend
     depends_on:
-      - mysql
-      - redis
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: prod
       DB_HOST: mysql
@@ -67,7 +82,8 @@ services:
       dockerfile: ../deploy/docker/frontend/Dockerfile
     container_name: swiftadmin-frontend
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     ports:
       - "80:80"
       - "443:443"

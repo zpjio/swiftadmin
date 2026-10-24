@@ -12,6 +12,13 @@ updates:
       interval: weekly
     open-pull-requests-limit: 5
 
+  # 独立前端（npm 管理），不在 /frontend 的 pnpm workspace 内
+  - package-ecosystem: npm
+    directory: /swiftadmin-web
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
   - package-ecosystem: github-actions
     directory: /
     schedule:

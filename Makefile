@@ -1,4 +1,4 @@
-.PHONY: help dev-backend dev-frontend build-all clean docker-up docker-down logs
+.PHONY: help dev-backend dev-frontend build-all clean docker-up docker-down docker-rebuild logs logs-backend logs-frontend db-reset install backend-install test
 
 # 默认目标
 help:
@@ -11,10 +11,15 @@ help:
 	@echo "  docker-up       启动 Docker 服务"
 	@echo "  docker-down     停止 Docker 服务"
 	@echo "  logs            查看 Docker 日志"
+	@echo "  test            运行后端测试与前端类型检查（需先 docker up mysql/redis）"
 	@echo ""
 
+# 后端依赖安装（兄弟模块 SNAPSHOT 需装入本地仓库，spring-boot:run -pl 才能解析）
+backend-install:
+	cd backend && mvn -q install -DskipTests
+
 # 后端开发
-dev-backend:
+dev-backend: backend-install
 	cd backend && mvn spring-boot:run -pl swiftadmin-boot
 
 # 前端开发
@@ -37,37 +42,40 @@ clean:
 	cd frontend && pnpm clean
 	@echo "清理完成！"
 
-# Docker 相关
+# Docker 相关（Docker Compose V2 子命令语法）
 docker-up:
-	cd deploy/docker && docker-compose up -d
+	cd deploy/docker && docker compose up -d mysql redis
 
 docker-down:
-	cd deploy/docker && docker-compose down
+	cd deploy/docker && docker compose down
 
 docker-rebuild:
-	cd deploy/docker && docker-compose up -d --build
+	cd deploy/docker && docker compose up -d --build
 
 logs:
-	cd deploy/docker && docker-compose logs -f
+	cd deploy/docker && docker compose logs -f
 
 logs-backend:
-	cd deploy/docker && docker-compose logs -f backend
+	cd deploy/docker && docker compose logs -f backend
 
 logs-frontend:
-	cd deploy/docker && docker-compose logs -f frontend
+	cd deploy/docker && docker compose logs -f frontend
 
 # 数据库相关
 db-reset:
 	@echo "重置数据库（删除所有数据）..."
-	cd deploy/docker && docker-compose down -v
-	cd deploy/docker && docker-compose up -d mysql
-	@echo "数据库已重置！"
+	cd deploy/docker && docker compose down -v
+	@echo "数据库已重置！重新构建后请再次 docker compose up -d mysql"
 
 # 安装依赖
 install:
 	cd frontend && pnpm install
 
 # 运行测试
+# 前置条件：docker compose -d mysql redis 已启动
+# （compose 默认 root/root，与应用 dev 默认账号及 CI 一致，无需额外环境变量）
 test:
-	cd backend && mvn test
-	cd frontend && pnpm --filter admin-web test
+	@echo "运行后端测试..."
+	cd backend && mvn -B -ntp test
+	@echo "前端类型检查..."
+	cd frontend && pnpm type-check
