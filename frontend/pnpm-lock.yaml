@@ -29,8 +29,8 @@ importers:
         specifier: ^3.0.4
         version: 3.0.4(typescript@5.9.3)(vue@3.5.30(typescript@5.9.3))
       pinyin-pro:
-        specifier: ^3.28.0
-        version: 3.28.0
+        specifier: ^3.29.5
+        version: 3.29.5
       vue:
         specifier: ^3.5.25
         version: 3.5.30(typescript@5.9.3)
@@ -1825,8 +1825,8 @@ packages:
       typescript:
         optional: true
 
-  pinyin-pro@3.28.0:
-    resolution: {integrity: sha512-mMRty6RisoyYNphJrTo3pnvp3w8OMZBrXm9YSWkxhAfxKj1KZk2y8T2PDIZlDDRsvZ0No+Hz6FI4sZpA6Ey25g==}
+  pinyin-pro@3.29.5:
+    resolution: {integrity: sha512-Fk5YoRmtdHqJWqAuzYVG/NzvzeCbaG+ZEwbY6Nbps3QAIrvQQEtcm49frcyCM8i2b5najnzPDtYqrHRYTTiuwQ==}
 
   pirates@4.0.7:
     resolution: {integrity: sha512-TfySrs/5nm8fQJDcBDuUng3VOUKsd7S+zqvbOTiGXHfxX4wK31ard+hoNuvkicM/2YFzlpDgABOevKSsB4G/FA==}
@@ -4225,7 +4225,7 @@ snapshots:
     optionalDependencies:
       typescript: 5.9.3
 
-  pinyin-pro@3.28.0: {}
+  pinyin-pro@3.29.5: {}
 
   pirates@4.0.7: {}
 
