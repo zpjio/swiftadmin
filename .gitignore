@@ -31,9 +31,16 @@ node_modules/
 .env
 .env.local
 .env.*.local
+*.local
 
 # 上传文件（开发环境）
 uploads/
+
+# AI 工具本地配置
+.claude/
+.cursor/
+.aider*
+
 
 # Maven
 .mvn/
