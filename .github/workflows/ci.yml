@@ -61,14 +61,6 @@ jobs:
           SOCIAL_TOKEN_SECRET: ci-test-social-secret-key-at-least-32bytes
         run: mvn -B --no-transfer-progress verify
 
-      - name: Upload test reports on failure
-        if: failure()
-        uses: actions/upload-artifact@v7
-        with:
-          name: surefire-reports
-          path: backend/**/target/surefire-reports/**
-          if-no-files-found: ignore
-
   frontend:
     name: Frontend (Node 22)
     runs-on: ubuntu-latest
@@ -77,7 +69,8 @@ jobs:
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v6
-        # 版本由 frontend/package.json 的 packageManager 字段钉死（pnpm10），此处不再重复指定
+        with:
+          version: 10
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
