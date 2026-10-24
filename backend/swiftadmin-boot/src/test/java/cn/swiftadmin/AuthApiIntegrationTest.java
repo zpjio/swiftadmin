@@ -2,14 +2,20 @@ package cn.swiftadmin;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+
+import javax.sql.DataSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -20,6 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * 认证接口集成测试
  * <p>覆盖：登录成功、登录失败、未认证访问、登出后 Token 失效</p>
+ * <p>使用独立的测试用户，避免依赖或修改默认管理员密码（默认密码首次登录会被要求强制修改）</p>
  *
  * @author zhangpengju
  */
@@ -27,11 +34,50 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class AuthApiIntegrationTest {
 
+    /** 测试用户 ID，避免与初始化数据冲突 */
+    private static final long TEST_USER_ID = 900_000_001L;
+    private static final String TEST_USERNAME = "it_auth_user";
+    private static final String TEST_PASSWORD = "ItAuth@12345";
+    /** 初始化 SQL 中的系统管理员角色，拥有 system:user:list 权限 */
+    private static final long TEST_ROLE_ID = 2L;
+
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private DataSource dataSource;
+
+    private JdbcTemplate jdbcTemplate;
+
+    @BeforeEach
+    void setUpTestUser() {
+        jdbcTemplate = new JdbcTemplate(dataSource);
+        cleanUpTestUser();
+        jdbcTemplate.update("""
+                INSERT INTO sys_user (id, username, password, nickname, status, dept_id, is_super,
+                                      password_update_time, force_change_password, login_fail_count, deleted)
+                VALUES (?, ?, ?, ?, 1, 1, 0, NOW(), 0, 0, 0)
+                """,
+                TEST_USER_ID, TEST_USERNAME, passwordEncoder.encode(TEST_PASSWORD), "集成测试用户");
+        jdbcTemplate.update("INSERT INTO sys_user_role (user_id, role_id) VALUES (?, ?)",
+                TEST_USER_ID, TEST_ROLE_ID);
+    }
+
+    @AfterEach
+    void cleanUpTestUser() {
+        jdbcTemplate.update("""
+                DELETE FROM sys_user_role WHERE user_id IN
+                (SELECT id FROM sys_user WHERE id = ? OR username = ?)
+                """, TEST_USER_ID, TEST_USERNAME);
+        jdbcTemplate.update("DELETE FROM sys_user WHERE id = ? OR username = ?",
+                TEST_USER_ID, TEST_USERNAME);
+    }
 
     /**
      * 登录成功并返回可用 Token
@@ -41,9 +87,7 @@ class AuthApiIntegrationTest {
     void loginWithPasswordShouldSucceed() throws Exception {
         MvcResult result = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"type":"password","username":"admin","password":"admin123"}
-                                """))
+                        .content(loginBody(TEST_USERNAME, TEST_PASSWORD)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
@@ -68,9 +112,7 @@ class AuthApiIntegrationTest {
     void loginWithUnknownUserShouldFail() throws Exception {
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"type":"password","username":"no_such_user_4_test","password":"wrong-password"}
-                                """))
+                        .content(loginBody("no_such_user_4_test", "wrong-password")))
                 .andExpect(jsonPath("$.code").value(org.hamcrest.Matchers.not(0)))
                 .andExpect(jsonPath("$.data").doesNotExist());
     }
@@ -105,9 +147,7 @@ class AuthApiIntegrationTest {
     void logoutShouldInvalidateToken() throws Exception {
         MvcResult result = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"type":"password","username":"admin","password":"admin123"}
-                                """))
+                        .content(loginBody(TEST_USERNAME, TEST_PASSWORD)))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -122,6 +162,12 @@ class AuthApiIntegrationTest {
         mockMvc.perform(get("/api/system/user/page")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isUnauthorized());
+    }
+
+    private String loginBody(String username, String password) {
+        return """
+                {"type":"password","username":"%s","password":"%s"}
+                """.formatted(username, password);
     }
 
     private String readToken(MvcResult result) throws Exception {
