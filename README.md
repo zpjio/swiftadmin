@@ -22,7 +22,7 @@
 
 | 层次 | 技术 |
 | --- | --- |
-| 后端 | Java 17、Spring Boot 3.5、Spring Security、MyBatis-Flex、Flyway、JJWT |
+| 后端 | Java 21、Spring Boot 3.5、Spring Security、MyBatis-Flex、Flyway、JJWT |
 | 数据库 | MySQL 8、Redis 7 |
 | 前端 | Vue 3、TypeScript、Vite、Naive UI、Pinia、Vue Router、ECharts、Tailwind CSS |
 | 构建/部署 | Maven、pnpm、Docker Compose、Nginx |
@@ -50,7 +50,7 @@ swiftadmin/
 
 ### 环境要求
 
-- JDK 17+
+- JDK 21+
 - Maven 3.9+
 - Node.js 18+、pnpm 9+（`swiftadmin-web` 也可直接使用 npm）
 - MySQL 8.0+、Redis 7+（或使用 Docker 启动）

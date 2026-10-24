@@ -1,9 +1,11 @@
 package cn.swiftadmin.common.security.config;
 
+import cn.swiftadmin.common.core.util.ErrorResponseWriter;
 import cn.swiftadmin.common.security.filter.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -38,10 +40,12 @@ public class SecurityConfig {
      *
      * @param http HttpSecurity
      * @param jwtFilter JWT 认证过滤器
+     * @param errorResponseWriter 统一错误响应写入器
      * @return 安全过滤链
      */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter,
+                                           ErrorResponseWriter errorResponseWriter) throws Exception {
         http
             .cors(cors -> cors.configure(http)) // 启用 CORS
             .csrf(csrf -> csrf.disable())
@@ -70,6 +74,13 @@ public class SecurityConfig {
 
                 // ---------- 其余接口（含登出、改密、权限、业务接口）需认证 ----------
                 .anyRequest().authenticated()
+            )
+            // 统一未认证 / 无权限的 JSON 响应
+            .exceptionHandling(exception -> exception
+                .authenticationEntryPoint((request, response, authException) ->
+                        errorResponseWriter.writeError(response, HttpStatus.UNAUTHORIZED.value(), "未登录或登录已过期"))
+                .accessDeniedHandler((request, response, accessDeniedException) ->
+                        errorResponseWriter.writeError(response, HttpStatus.FORBIDDEN.value(), "没有访问权限"))
             )
             // 添加 JWT 过滤器
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
