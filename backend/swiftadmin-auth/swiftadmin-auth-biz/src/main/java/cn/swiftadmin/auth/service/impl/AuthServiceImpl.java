@@ -5,6 +5,8 @@ import cn.swiftadmin.auth.api.service.AuthService;
 import cn.swiftadmin.auth.api.service.SmsService;
 import cn.swiftadmin.auth.api.vo.LoginVO;
 import cn.swiftadmin.auth.config.AuthSecurityProperties;
+import cn.swiftadmin.auth.context.LoginContext;
+import cn.swiftadmin.auth.service.LoginSessionService;
 import cn.swiftadmin.auth.util.TokenManager;
 import cn.swiftadmin.common.core.constants.RedisKeyConstants;
 import cn.swiftadmin.common.core.exception.BusinessException;
@@ -49,6 +51,7 @@ public class AuthServiceImpl implements AuthService {
     private final StringRedisTemplate redisTemplate;
     private final AuthSecurityProperties securityProperties;
     private final UserSessionService userSessionService;
+    private final LoginSessionService loginSessionService;
 
     @Override
     public void logout() {
@@ -150,8 +153,10 @@ public class AuthServiceImpl implements AuthService {
         // 7. 将旧的 Refresh Token 加入黑名单
         tokenManager.addToBlacklist(refreshToken);
 
-        // 8. 生成新的 Token
-        LoginVO loginVO = buildLoginVO(user);
+        // 8. 生成新的 Token 并建立会话（否则新 Access Token 无法通过会话校验）
+        LoginContext context = LoginContext.ofPassword(
+                ServletUtils.getClientIp(), ServletUtils.getUserAgent());
+        LoginVO loginVO = loginSessionService.createSession(username, context);
 
         // 9. 为新 Refresh Token 建立上下文
         String newRefreshJti = tokenManager.getJtiFromToken(loginVO.getRefreshToken());
@@ -357,10 +362,6 @@ public class AuthServiceImpl implements AuthService {
     public void sendSms(String phone, String scene) {
         // 保持兼容性，但使用空参数调用（IP 和图形验证码由 Controller 直接处理）
         smsService.sendCode(phone, scene, null, null, null);
-    }
-
-    private LoginVO buildLoginVO(SysUser user) {
-        return tokenManager.generateLoginTokens(user.getUsername());
     }
 
 }

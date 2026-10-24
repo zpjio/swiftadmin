@@ -133,3 +133,7 @@ management:
     export:
       prometheus:
         enabled: true
+# 跨域配置（生产环境必须配置为实际前端域名，留空表示不启用跨域）
+swiftadmin:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:}

@@ -50,7 +50,7 @@ export const StatusOptions = [
   { label: '全部', value: undefined },
   { label: '正常', value: Status.ENABLED },
   { label: '禁用', value: Status.DISABLED },
-] as const
+]
 
 /**
  * 状态选项（不带"全部"选项，用于表单）
@@ -58,7 +58,7 @@ export const StatusOptions = [
 export const StatusFormOptions = [
   { label: '正常', value: Status.ENABLED },
   { label: '禁用', value: Status.DISABLED },
-] as const
+]
 
 /**
  * 性别常量
@@ -197,7 +197,7 @@ export const StatusColors: Record<number, string> = {
  * @param status 状态值
  * @returns 带颜色的状态文本
  */
-export function renderStatus(status: StatusType): { text: string; color: string } {
+export function renderStatus(status: number): { text: string; color: string } {
   return {
     text: getStatusLabel(status),
     color: StatusColors[status] || ACTION_COLORS.info,

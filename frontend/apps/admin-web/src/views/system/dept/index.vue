@@ -2,7 +2,7 @@
   <NCard title="部门管理">
     <div class="flex justify-between items-center mb-4">
       <NSpace>
-        <NButton v-auth="'system:dept:add'" type="primary" @click="handleAdd">
+        <NButton v-auth="'system:dept:add'" type="primary" @click="handleAdd()">
           <template #icon><icon-mdi-plus /></template>
           新增部门
         </NButton>

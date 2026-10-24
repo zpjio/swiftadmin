@@ -1,5 +1,5 @@
 <template>
-  <NForm :model="modelValue" :rules="rules" :ref="formRef" label-placement="left" label-width="100">
+  <NForm :model="modelValue" :rules="rules" ref="formRef" label-placement="left" label-width="100">
     <NFormItem label="菜单类型" path="type">
       <NRadioGroup v-model:value="modelValue.type">
         <NRadio :value="1">目录</NRadio>

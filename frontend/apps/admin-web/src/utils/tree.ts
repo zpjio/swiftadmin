@@ -5,7 +5,7 @@ import type { TreeOption, TreeSelectOption } from 'naive-ui'
  */
 export interface TreeNodeBase {
   id: string | number
-  name: string
+  name?: string
   children?: TreeNodeBase[]
 }
 

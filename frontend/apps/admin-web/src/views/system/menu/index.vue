@@ -206,7 +206,7 @@ const toggleExpandAll = () => {
   if (isAllExpanded.value) {
     expandedKeys.value = []
   } else {
-    expandedKeys.value = [...parentMenuIds.value]
+    expandedKeys.value = parentMenuIds.value.map(String)
   }
 }
 
@@ -375,8 +375,8 @@ const loadMenuTree = async () => {
       rootLabel: '顶级菜单',
       rootKey: '0',
     })
-    parentMenuIds.value = getParentIds(treeData)
-    expandedKeys.value = [...parentMenuIds.value]
+    parentMenuIds.value = getParentIds(treeData).map(String)
+    expandedKeys.value = parentMenuIds.value.map(String)
   } catch (error) {
     console.error('加载菜单树失败:', error)
   } finally {

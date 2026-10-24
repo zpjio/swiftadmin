@@ -1,5 +1,8 @@
 # SwiftAdmin
 
+[![CI](https://github.com/zpjio/swiftadmin/actions/workflows/ci.yml/badge.svg)](https://github.com/zpjio/swiftadmin/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 一个基于 **Spring Boot 3 + Vue 3** 的轻量级后台管理系统脚手架，包含认证授权、RBAC 权限、系统管理、消息通知、定时任务、文件存储等常用能力，开箱即用，适合作为中后台项目的起点。
 
 > 前后端分离，后端多模块分层，前端采用 Naive UI，配置全部通过环境变量注入，无硬编码密钥。
@@ -123,6 +126,7 @@ npm run dev
 | `JWT_SECRET` | JWT 签名密钥（≥ 32 字节） | 生产必填 |
 | `SMS_ALIYUN_*` / `SMS_TENCENT_*` | 短信服务配置 | 使用短信时必填 |
 | `OSS_*` | 对象存储配置 | 使用 OSS 时必填 |
+| `CORS_ALLOWED_ORIGINS` | 允许跨域的前端源，逗号分隔；生产环境必须显式配置 | 生产必填 |
 | `WECOM_*` / `DINGTALK_*` / `FEISHU_*` | 社交登录配置 | 可选 |
 | `SOCIAL_TOKEN_SECRET` | 社交 Token 加密密钥（≥ 32 字节） | 生产必填 |
 
@@ -162,6 +166,7 @@ DB_USERNAME=swiftadmin
 DB_PASSWORD=change-me
 JWT_SECRET=<32 字节以上随机字符串>
 SOCIAL_TOKEN_SECRET=<32 字节以上随机字符串>
+CORS_ALLOWED_ORIGINS=https://admin.example.com
 ```
 
 生产环境请务必：

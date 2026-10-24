@@ -5,7 +5,7 @@ import { ref, computed, shallowRef } from 'vue'
  * @param keyField 主键字段名，默认 'id'
  * @returns 选择状态和操作方法
  */
-export function useTableSelection<T extends Record<string, unknown>>(
+export function useTableSelection<T>(
   keyField: keyof T = 'id' as keyof T
 ) {
   const selectedKeys = ref<Array<string | number>>([])
@@ -121,3 +121,7 @@ export function useTableSelection<T extends Record<string, unknown>>(
     getRowKey,
   }
 }
+/**
+ * useTableSelection 返回值类型
+ */
+export type UseTableSelectionReturn<T> = ReturnType<typeof useTableSelection<T>>
