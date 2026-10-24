@@ -152,7 +152,17 @@ docker compose up -d --build
 
 - 前端：Nginx 静态站点（80 / 443）
 - 后端：Spring Boot 容器（8080）
-- 数据库初始化脚本挂载于 `deploy/docker/init.sql`（如不存在可忽略，由 Flyway 负责迁移）
+- 数据库表结构由 Flyway 在应用启动时自动迁移
+
+可在 `deploy/docker` 下创建 `.env` 覆盖默认配置（无需修改 compose 文件）：
+
+```dotenv
+MYSQL_ROOT_PASSWORD=change-me
+DB_USERNAME=swiftadmin
+DB_PASSWORD=change-me
+JWT_SECRET=<32 字节以上随机字符串>
+SOCIAL_TOKEN_SECRET=<32 字节以上随机字符串>
+```
 
 生产环境请务必：
 

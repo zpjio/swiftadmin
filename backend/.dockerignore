@@ -1,0 +1,8 @@
+# 构建产物
+target/
+logs/
+uploads/
+# IDE / 系统文件
+.idea/
+.vscode/
+.DS_Store

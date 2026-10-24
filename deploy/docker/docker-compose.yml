@@ -1,21 +1,18 @@
-version: '3.8'
-
 services:
   # MySQL 数据库
   mysql:
     image: mysql:8.0
     container_name: swiftadmin-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: root123
-      MYSQL_DATABASE: swiftadmin
-      MYSQL_USER: swiftadmin
-      MYSQL_PASSWORD: swiftadmin123
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
+      MYSQL_DATABASE: ${DB_NAME:-swiftadmin}
+      MYSQL_USER: ${DB_USERNAME:-swiftadmin}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-swiftadmin123}
       TZ: Asia/Shanghai
     ports:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
@@ -23,7 +20,7 @@ services:
       - swiftadmin-network
     restart: unless-stopped
 
-  # Redis 缓存（可选）
+  # Redis 缓存
   redis:
     image: redis:7-alpine
     container_name: swiftadmin-redis
@@ -48,12 +45,14 @@ services:
       SPRING_PROFILES_ACTIVE: prod
       DB_HOST: mysql
       DB_PORT: 3306
-      DB_NAME: swiftadmin
-      DB_USER: swiftadmin
-      DB_PASSWORD: swiftadmin123
+      DB_NAME: ${DB_NAME:-swiftadmin}
+      DB_USERNAME: ${DB_USERNAME:-swiftadmin}
+      DB_PASSWORD: ${DB_PASSWORD:-swiftadmin123}
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      JWT_SECRET: your-production-secret-key-change-me
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      JWT_SECRET: ${JWT_SECRET:-please-change-this-jwt-secret-at-least-32-bytes}
+      SOCIAL_TOKEN_SECRET: ${SOCIAL_TOKEN_SECRET:-please-change-this-social-secret-32bytes}
     ports:
       - "8080:8080"
     networks:
@@ -63,8 +62,8 @@ services:
   # 前端服务（Nginx）
   frontend:
     build:
-      context: ../../frontend/apps/admin-web
-      dockerfile: ../../../deploy/docker/frontend/Dockerfile
+      context: ../../frontend
+      dockerfile: ../deploy/docker/frontend/Dockerfile
     container_name: swiftadmin-frontend
     depends_on:
       - backend

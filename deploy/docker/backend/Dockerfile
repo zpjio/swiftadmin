@@ -3,24 +3,31 @@ FROM maven:3.9-eclipse-temurin-17 AS builder
 
 WORKDIR /app
 
-# 复制 pom.xml 文件
+# 先复制所有 pom.xml，便于复用依赖下载缓存
 COPY pom.xml .
 COPY swiftadmin-common/pom.xml swiftadmin-common/
-COPY swiftadmin-auth/pom.xml swiftadmin-auth/
+COPY swiftadmin-common/swiftadmin-common-core/pom.xml swiftadmin-common/swiftadmin-common-core/
+COPY swiftadmin-common/swiftadmin-common-mybatis/pom.xml swiftadmin-common/swiftadmin-common-mybatis/
+COPY swiftadmin-common/swiftadmin-common-security/pom.xml swiftadmin-common/swiftadmin-common-security/
 COPY swiftadmin-system/pom.xml swiftadmin-system/
+COPY swiftadmin-system/swiftadmin-system-api/pom.xml swiftadmin-system/swiftadmin-system-api/
+COPY swiftadmin-system/swiftadmin-system-biz/pom.xml swiftadmin-system/swiftadmin-system-biz/
+COPY swiftadmin-auth/pom.xml swiftadmin-auth/
+COPY swiftadmin-auth/swiftadmin-auth-api/pom.xml swiftadmin-auth/swiftadmin-auth-api/
+COPY swiftadmin-auth/swiftadmin-auth-biz/pom.xml swiftadmin-auth/swiftadmin-auth-biz/
+COPY swiftadmin-message/pom.xml swiftadmin-message/
+COPY swiftadmin-message/swiftadmin-message-api/pom.xml swiftadmin-message/swiftadmin-message-api/
+COPY swiftadmin-message/swiftadmin-message-biz/pom.xml swiftadmin-message/swiftadmin-message-biz/
+COPY swiftadmin-schedule/pom.xml swiftadmin-schedule/
+COPY swiftadmin-schedule/swiftadmin-schedule-api/pom.xml swiftadmin-schedule/swiftadmin-schedule-api/
+COPY swiftadmin-schedule/swiftadmin-schedule-biz/pom.xml swiftadmin-schedule/swiftadmin-schedule-biz/
 COPY swiftadmin-boot/pom.xml swiftadmin-boot/
 
-# 下载依赖（利用 Docker 缓存）
-RUN mvn dependency:go-offline -B
+RUN mvn -B -q dependency:go-offline || true
 
-# 复制源代码
-COPY swiftadmin-common swiftadmin-common
-COPY swiftadmin-auth swiftadmin-auth
-COPY swiftadmin-system swiftadmin-system
-COPY swiftadmin-boot swiftadmin-boot
-
-# 构建项目
-RUN mvn clean package -DskipTests -B
+# 复制源代码并构建
+COPY . .
+RUN mvn -B clean package -DskipTests
 
 # 运行阶段
 FROM eclipse-temurin:17-jre-alpine
@@ -32,19 +39,15 @@ RUN addgroup -g 1001 appgroup && \
     adduser -u 1001 -G appgroup -D appuser
 
 # 复制构建产物
-COPY --from=builder /app/swiftadmin-boot/target/*.jar app.jar
+COPY --from=builder /app/swiftadmin-boot/target/swiftadmin-boot-*.jar app.jar
 
-# 设置权限
 RUN chown -R appuser:appgroup /app
 
 USER appuser
 
-# 暴露端口
 EXPOSE 8080
 
-# 健康检查
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
     CMD wget -qO- http://localhost:8080/actuator/health || exit 1
 
-# 启动应用
 ENTRYPOINT ["java", "-jar", "app.jar"]
