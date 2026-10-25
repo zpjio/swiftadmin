@@ -211,7 +211,7 @@ const statusOptions = [
 ]
 
 // 表格列定义
-const columns: DataTableColumns = [
+const columns: DataTableColumns<OperLogVO> = [
   { type: 'selection', fixed: 'left' },
   {
     title: '日志 ID',
@@ -401,8 +401,8 @@ const formatJson = (json?: string) => {
 }
 
 // 选中行变化
-const onCheckedRowKeysChange = (keys: number[]) => {
-  selectedRowKeys.value = keys
+const onCheckedRowKeysChange = (keys: Array<string | number>) => {
+  selectedRowKeys.value = keys.map(Number)
 }
 
 // 分页变化

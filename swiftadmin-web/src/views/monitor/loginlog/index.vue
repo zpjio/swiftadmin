@@ -134,7 +134,7 @@ const statusOptions = [
   { label: '失败', value: 0 },
 ]
 
-const columns: DataTableColumns = [
+const columns: DataTableColumns<LoginLogVO> = [
   { type: 'selection', fixed: 'left' },
   { title: 'ID', key: 'id', width: 80 },
   { title: '用户名', key: 'username', width: 120, ellipsis: { tooltip: true } },
@@ -233,8 +233,8 @@ const handleClearAll = async () => {
   }
 }
 
-const onCheckedRowKeysChange = (keys: number[]) => {
-  selectedRowKeys.value = keys
+const onCheckedRowKeysChange = (keys: Array<string | number>) => {
+  selectedRowKeys.value = keys.map(Number)
 }
 
 const onPageChange = (page: number) => {

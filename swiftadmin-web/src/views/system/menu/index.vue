@@ -87,7 +87,7 @@
                 {{ selectedMenu.status === 1 ? '正常' : '禁用' }}
               </NTag>
             </NDescriptionsItem>
-            <NDescriptionsItem label="创建时间">{{ selectedMenu.createdAt || '-' }}</NDescriptionsItem>
+            <NDescriptionsItem label="创建时间">{{ selectedMenu.createTime || '-' }}</NDescriptionsItem>
             <NDescriptionsItem label="操作" :span="2">
               <NSpace>
                 <NButton type="primary" size="small" @click="handleAdd(selectedMenu.id)">
@@ -297,7 +297,7 @@ const getParentMenuIds = (menus: MenuVO[]): number[] => {
 // 渲染树节点标签
 const renderTreeLabel = ({ option }: { option: TreeOption }) => {
   return h('div', { class: 'flex items-center gap-2 w-full py-1' }, [
-    option.icon ? h(Icon, { icon: option.icon, style: { fontSize: '16px' } }) : null,
+    typeof option.icon === 'string' ? h(Icon, { icon: option.icon, style: { fontSize: '16px' } }) : null,
     h('span', null, option.label),
     option.type ? h(NTag, { type: getTypeTagType(option.type as number), size: 'small', round: true }, () => getTypeLabel(option.type as number)) : null
   ])

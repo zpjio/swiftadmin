@@ -144,7 +144,7 @@ const uploadHeaders = computed(() => ({
   Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
 }))
 
-const columns: DataTableColumns = [
+const columns: DataTableColumns<FileVO> = [
   { type: 'selection', fixed: 'left' },
   { title: 'ID', key: 'id', width: 80 },
   {
@@ -296,8 +296,8 @@ const handleDownload = async (row: FileVO) => {
   }
 }
 
-const onCheckedRowKeysChange = (keys: number[]) => {
-  selectedRowKeys.value = keys
+const onCheckedRowKeysChange = (keys: Array<string | number>) => {
+  selectedRowKeys.value = keys.map(Number)
 }
 
 const onPageChange = (page: number) => {

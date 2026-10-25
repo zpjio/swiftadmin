@@ -111,24 +111,25 @@ const dropdownOptions = computed<DropdownOption[]>(() => {
 
 // 处理右键菜单选择
 const handleDropdownSelect = (key: string) => {
-  if (!currentTag.value) return
+  const tag = currentTag.value
+  if (!tag) return
 
   switch (key) {
     case 'close':
-      tagsStore.closeView(currentTag.value)
+      tagsStore.closeView(tag)
       break
     case 'close-others':
-      tagsStore.closeOthers(currentTag.value)
-      router.push(currentTag.value.path)
+      tagsStore.closeOthers(tag)
+      router.push(tag.path)
       break
     case 'close-all':
       tagsStore.closeAll()
-      if (visitedViews.value.length > 0) {
+      if (visitedViews.value.length > 0 && visitedViews.value[0]) {
         router.push(visitedViews.value[0].path)
       }
       break
     case 'refresh':
-      handleRefresh(currentTag.value)
+      handleRefresh(tag)
       break
   }
 
