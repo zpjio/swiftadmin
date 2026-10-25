@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author zhangpengju
  */
 @SpringBootTest
-class DataScopeIntegrationTest {
+class DataScopeIntegrationTest extends IntegrationTestBase {
 
     /** 数据范围：全部 */
     private static final int SCOPE_ALL = 1;

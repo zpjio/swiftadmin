@@ -11,7 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
  * @since 2026-03-09
  */
 @SpringBootTest
-class SwiftAdminApplicationTests {
+class SwiftAdminApplicationTests extends IntegrationTestBase {
 
     /**
      * 上下文加载测试

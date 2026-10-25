@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author zhangpengju
  */
 @SpringBootTest
-class PermissionIntegrationTest {
+class PermissionIntegrationTest extends IntegrationTestBase {
 
     /** 初始化 SQL 中的超级管理员用户 ID */
     private static final long ADMIN_USER_ID = 1L;

@@ -171,6 +171,14 @@ cd deploy/docker && docker compose up -d mysql redis   # compose 默认 root/roo
 make test        # = mvn test + 前端 type-check
 ```
 
+没有外部 MySQL/Redis 也不用先起容器：`make test-backend`（或 `cd backend && mvn test`）时，
+`IntegrationTestBase` 会检测到未设置 `DB_HOST`，自动用 Testcontainers 拉起临时 `mysql:8.0` +
+`redis:7-alpine`，测试结束自动回收。需要 Docker（与 CI 无关，CI 用的是 services 环境变量模式）。
+
+```bash
+cd backend && mvn test   # Testcontainers 模式，本机有 Docker 即可零配置运行
+```
+
 ## 配置说明
 
 所有敏感配置均通过环境变量注入，参考 `backend/.env.local.example`。
