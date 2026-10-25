@@ -15,6 +15,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.instanceOf;
+
 import javax.sql.DataSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -97,11 +100,16 @@ class AuthApiIntegrationTest extends IntegrationTestBase {
         String token = readToken(result);
         assertThat(token).isNotBlank();
 
-        // 使用登录返回的 Token 访问受保护接口应成功
+        // 使用登录返回的 Token 访问受保护接口应成功；
+        // 同时锁定 Long → String 序列化回归线（Boot 4 双轨 Jackson 下
+        // Jackson 3 转换器未定制时 id 会长回 number，前端 JS 精度安全依赖此断言）
         mockMvc.perform(get("/api/system/user/page")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(0));
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.data.records").isNotEmpty())
+                .andExpect(jsonPath("$.data.records[0].id", is(instanceOf(String.class))))
+                .andExpect(jsonPath("$.data.records[0].deptId", is(instanceOf(String.class))));
     }
 
     /**
