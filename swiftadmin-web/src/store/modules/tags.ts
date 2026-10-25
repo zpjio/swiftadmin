@@ -3,6 +3,8 @@ import { defineStore } from 'pinia'
 import type { RouteLocationNormalized } from 'vue-router'
 
 export interface TagView extends Partial<RouteLocationNormalized> {
+  /** 标签页路由路径；仓库内所有 push/激活逻辑的前提字段，故声明为必填 */
+  path: string
   title?: string
   icon?: string
   closable?: boolean
@@ -74,7 +76,8 @@ export const useTagsStore = defineStore('tags', () => {
     // 如果关闭的是当前标签页，激活前一个标签页
     if (isCurrentActive && visitedViews.value.length > 0) {
       const newIndex = Math.min(index, visitedViews.value.length - 1)
-      setActiveView(visitedViews.value[newIndex])
+      const next = visitedViews.value[newIndex]
+      if (next) setActiveView(next)
     }
   }
 
@@ -102,7 +105,8 @@ export const useTagsStore = defineStore('tags', () => {
     
     // 激活第一个标签页（通常是首页）
     if (visitedViews.value.length > 0) {
-      setActiveView(visitedViews.value[0])
+      const first = visitedViews.value[0]
+      if (first) setActiveView(first)
     }
   }
 

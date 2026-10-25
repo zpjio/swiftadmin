@@ -15,10 +15,8 @@ initTheme()
 
 app.use(pinia)
 app.use(router)
-app.use(naive, {
-  theme: theme.value,
-  themeOverrides: themeOverrides.value,
-})
+// 全局主题在 App.vue 的 <NConfigProvider> 里统一接管（naive-ui 新版 install 不再接收 options）
+app.use(naive)
 setupPermissionDirective(app)
 
 app.mount('#app')

@@ -60,7 +60,7 @@
             </div>
           </NScrollbar>
         </NSpin>
-        <div class="mt-4 flex justify-center" v-if="typePagination.itemCount > typeQueryForm.size">
+        <div class="mt-4 flex justify-center" v-if="typePagination.itemCount > (typeQueryForm.size ?? 0)">
           <NPagination
             v-model:page="typeQueryForm.page"
             :page-size="typeQueryForm.size"
@@ -490,7 +490,7 @@ const handleSaveData = async () => {
 const handleDeleteData = (row: DictDataVO) => {
   dialog.warning({
     title: '确认删除',
-    content: `确定要删除数据 "${row.dictLabel}" 吗？`,
+    content: `确定要删除数据 "${row.label}" 吗？`,
     positiveText: '确定',
     negativeText: '取消',
     onPositiveClick: async () => {

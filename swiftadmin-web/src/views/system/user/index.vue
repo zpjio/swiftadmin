@@ -478,7 +478,7 @@ const handleSubmit = async () => {
       const errorMsg = error.message || error.response?.data?.message || '操作失败'
       // 将分号分隔的错误信息转换为换行显示
       if (errorMsg.includes(';')) {
-        const errors = errorMsg.split(';').filter(Boolean).map(e => e.trim()).join('\n')
+        const errors = errorMsg.split(';').filter(Boolean).map((e: string) => e.trim()).join('\n')
         message.error(errors, { duration: 5000 })
       } else {
         message.error(errorMsg)
