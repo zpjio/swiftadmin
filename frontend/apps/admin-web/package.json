@@ -13,7 +13,7 @@
     "@iconify/vue": "^5.0.0",
     "@vueuse/core": "^14.2.1",
     "axios": "^1.13.6",
-    "echarts": "^6.0.0",
+    "echarts": "^6.1.0",
     "naive-ui": "^2.44.1",
     "pinia": "^3.0.4",
     "pinyin-pro": "^3.29.5",
