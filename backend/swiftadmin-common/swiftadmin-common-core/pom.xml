@@ -54,9 +54,9 @@
             <artifactId>spring-security-crypto</artifactId>
         </dependency>
 
-        <!-- Jackson (JSON 处理) -->
+        <!-- Jackson (JSON 处理):Jackson 3(tools.jackson,Boot 4 主栈) -->
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
+            <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <optional>true</optional>
         </dependency>

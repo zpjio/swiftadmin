@@ -10,7 +10,7 @@ import cn.swiftadmin.schedule.api.enums.JobType;
 import cn.swiftadmin.schedule.api.service.ScheduleJobLogService;
 import cn.swiftadmin.schedule.api.service.ScheduleJobService;
 import cn.swiftadmin.schedule.executor.JobExecutor;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

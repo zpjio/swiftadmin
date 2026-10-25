@@ -8,7 +8,7 @@ import cn.swiftadmin.system.api.entity.SysUser;
 import cn.swiftadmin.system.api.service.DeptService;
 import cn.swiftadmin.system.api.service.PermissionService;
 import cn.swiftadmin.system.api.service.UserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;

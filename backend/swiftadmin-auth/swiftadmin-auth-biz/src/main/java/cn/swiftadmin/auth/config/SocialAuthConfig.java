@@ -6,7 +6,7 @@ import cn.swiftadmin.auth.service.LoginSessionService;
 import cn.swiftadmin.auth.strategy.SocialAuthStrategy;
 import cn.swiftadmin.auth.strategy.social.SocialAuthHandler;
 import cn.swiftadmin.system.api.service.UserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

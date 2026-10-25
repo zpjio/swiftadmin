@@ -3,8 +3,8 @@ package cn.swiftadmin.common.security.service.impl;
 import cn.swiftadmin.common.core.constants.RedisKeyConstants;
 import cn.swiftadmin.common.security.domain.LoginUser;
 import cn.swiftadmin.common.security.service.UserSessionService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -48,7 +48,7 @@ public class UserSessionServiceImpl implements UserSessionService {
         try {
             String loginUserJson = objectMapper.writeValueAsString(loginUser);
             stringRedisTemplate.opsForValue().set(tokenKey, loginUserJson, expireSeconds, TimeUnit.SECONDS);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("序列化 LoginUser 失败", e);
             throw new RuntimeException("序列化 LoginUser 失败", e);
         }
@@ -75,7 +75,7 @@ public class UserSessionServiceImpl implements UserSessionService {
         }
         try {
             return objectMapper.readValue(json, LoginUser.class);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("反序列化 LoginUser 失败: {}", json, e);
             return null;
         }
@@ -127,7 +127,7 @@ public class UserSessionServiceImpl implements UserSessionService {
                 }
                 log.info("删除用户会话成功: sessionId={}, userId={}", sessionId, loginUser != null ? loginUser.getUserId() : null);
                 return true;
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 log.error("反序列化 LoginUser 失败", e);
             }
         }
