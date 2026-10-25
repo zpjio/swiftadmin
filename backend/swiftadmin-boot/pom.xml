@@ -98,11 +98,8 @@
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
         </dependency>
-        <!-- Boot 4 起模型化拆分:Jackson 2 集成挪进 spring-boot-jackson2(计划后续迁 Jackson 3) -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-jackson2</artifactId>
-        </dependency>
+        <!-- Jackson 2 集成(spring-boot-jackson2)已随全量迁移 tools.jackson 移除;
+             jjwt-jackson 的 Jackson 2 databind 由其自身传递依赖满足 -->
 
         <!-- AWS SDK for S3 (兼容阿里云/腾讯云 OSS) -->
         <dependency>
@@ -140,6 +137,13 @@
             <artifactId>testcontainers-mysql</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- Jackson (JSON 处理):Jackson 3(tools.jackson,Boot 4 主栈) -->
+        <dependency>
+            <groupId>tools.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>

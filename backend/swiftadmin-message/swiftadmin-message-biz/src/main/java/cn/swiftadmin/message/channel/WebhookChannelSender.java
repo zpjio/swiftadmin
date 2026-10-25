@@ -3,8 +3,8 @@ package cn.swiftadmin.message.channel;
 import cn.swiftadmin.message.api.channel.MessageContext;
 import cn.swiftadmin.message.api.channel.SendResult;
 import cn.swiftadmin.message.api.enums.ChannelType;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
@@ -49,7 +49,7 @@ public class WebhookChannelSender extends AbstractChannelSender {
             // 添加自定义请求头
             if (config.has("headers")) {
                 JsonNode headersNode = config.get("headers");
-                headersNode.fields().forEachRemaining(entry -> {
+                headersNode.properties().forEach(entry -> {
                     headers.set(entry.getKey(), entry.getValue().asText());
                 });
             }

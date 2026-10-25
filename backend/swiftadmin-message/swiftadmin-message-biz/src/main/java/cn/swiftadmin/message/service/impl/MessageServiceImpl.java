@@ -20,8 +20,8 @@ import cn.swiftadmin.message.api.vo.RecordVO;
 import cn.swiftadmin.message.api.vo.SendResultVO;
 import cn.swiftadmin.message.channel.ChannelSenderFactory;
 import cn.swiftadmin.message.mapper.MsgRecordMapper;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
@@ -374,7 +374,7 @@ public class MessageServiceImpl extends ServiceImpl<MsgRecordMapper, MsgRecord> 
         }
         try {
             return objectMapper.writeValueAsString(variables);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.warn("序列化变量失败", e);
             return null;
         }

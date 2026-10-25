@@ -6,7 +6,7 @@ import cn.swiftadmin.common.security.domain.LoginUser;
 import cn.swiftadmin.common.security.event.OperationLogEvent;
 import cn.swiftadmin.common.core.util.ServletUtils;
 import cn.swiftadmin.common.security.util.SecurityUtils;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.mybatisflex.annotation.Table;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

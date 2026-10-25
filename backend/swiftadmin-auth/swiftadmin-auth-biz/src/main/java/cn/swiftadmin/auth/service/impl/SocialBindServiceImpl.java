@@ -7,8 +7,8 @@ import cn.swiftadmin.auth.api.exception.SocialAuthException;
 import cn.swiftadmin.auth.api.service.SocialBindService;
 import cn.swiftadmin.auth.mapper.SysSocialBindMapper;
 import cn.swiftadmin.common.core.util.AesUtils;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.update.UpdateChain;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
@@ -224,7 +224,7 @@ public class SocialBindServiceImpl extends ServiceImpl<SysSocialBindMapper, SysS
             extraInfo.remove("expiresIn");
             extraInfo.remove("source");
             return objectMapper.writeValueAsString(extraInfo);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.warn("序列化额外信息失败", e);
             return null;
         }
