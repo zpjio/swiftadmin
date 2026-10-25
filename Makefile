@@ -74,8 +74,9 @@ install:
 # 运行测试
 # 前置条件：docker compose -d mysql redis 已启动
 # （compose 默认 root/root，与应用 dev 默认账号及 CI 一致，无需额外环境变量）
-test:
-	@echo "运行后端测试..."
+test-backend:
 	cd backend && mvn -B -ntp test
+
+test: test-backend
 	@echo "前端类型检查..."
 	cd frontend && pnpm type-check

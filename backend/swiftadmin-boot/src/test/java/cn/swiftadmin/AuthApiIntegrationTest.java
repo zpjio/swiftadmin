@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
-class AuthApiIntegrationTest {
+class AuthApiIntegrationTest extends IntegrationTestBase {
 
     /** 测试用户 ID，避免与初始化数据冲突 */
     private static final long TEST_USER_ID = 900_000_001L;
