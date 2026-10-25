@@ -2,6 +2,7 @@
   "name": "swiftadmin-frontend",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "pnpm@10.34.8",
   "description": "SwiftAdmin Frontend Monorepo",
   "type": "module",
   "scripts": {

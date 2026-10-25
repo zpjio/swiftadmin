@@ -4,13 +4,16 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-RUN npm install -g pnpm
+# 与 frontend/package.json 的 packageManager 钉死版本保持一致，避免升降级导致锁文件解析差异
+RUN npm install -g pnpm@10.34.8
 
 # 先复制依赖清单，复用安装缓存
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/admin-web/package.json apps/admin-web/
 
-RUN pnpm install --frozen-lockfile
+# pnpm store 走 BuildKit 缓存挂载
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
 
 # 复制源代码并构建
 COPY apps/admin-web apps/admin-web
