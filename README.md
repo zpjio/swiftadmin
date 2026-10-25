@@ -3,7 +3,7 @@
 [![CI](https://github.com/zpjio/swiftadmin/actions/workflows/ci.yml/badge.svg)](https://github.com/zpjio/swiftadmin/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-一个基于 **Spring Boot 3 + Vue 3** 的轻量级后台管理系统脚手架，包含认证授权、RBAC 权限、系统管理、消息通知、定时任务、文件存储等常用能力，开箱即用，适合作为中后台项目的起点。
+一个基于 **Spring Boot 4 + Vue 3** 的轻量级后台管理系统脚手架，包含认证授权、RBAC 权限、系统管理、消息通知、定时任务、文件存储等常用能力，开箱即用，适合作为中后台项目的起点。
 
 > 前后端分离，后端多模块分层，前端采用 Naive UI，配置全部通过环境变量注入，无硬编码密钥。
 
@@ -60,7 +60,7 @@ SwiftAdmin 的定位是 **模块化单体 + 少依赖 + 默认安全**，适合�
 - **模块化**：认证、系统、消息、任务、公共能力按 Maven 模块拆分，边界清晰。
 - **数据库版本化**：Flyway 管理表结构与种子数据，环境之间可重复部署。
 - **质量保障**：CI 覆盖后端集成测试（认证、权限、数据权限）和前端类型检查、构建。
-- **现代技术栈**：Java 21、Spring Boot 3.5、Vue 3、Vite、TypeScript、Naive UI。
+- **现代技术栈**：Java 21、Spring Boot 4、Vue 3、Vite、TypeScript、Naive UI。
 - **部署友好**：Docker Compose、健康检查、环境变量配置，支持 GraalVM Native 构建。
 
 ### 适用场景
@@ -72,7 +72,7 @@ SwiftAdmin 的定位是 **模块化单体 + 少依赖 + 默认安全**，适合�
 
 | 层次 | 技术 |
 | --- | --- |
-| 后端 | Java 21、Spring Boot 3.5、Spring Security、MyBatis-Flex、Flyway、JJWT |
+| 后端 | Java 21、Spring Boot 4、Spring Security、MyBatis-Flex、Flyway、JJWT |
 | 数据库 | MySQL 8、Redis 7 |
 | 前端 | Vue 3、TypeScript、Vite、Naive UI、Pinia、Vue Router、ECharts、Tailwind CSS |
 | 构建/部署 | Maven、pnpm、Docker Compose、Nginx |

@@ -1,6 +1,5 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import naive from 'naive-ui'
 import router from './router'
 import App from './App.vue'
 import './styles/index.css'
@@ -15,8 +14,8 @@ initTheme()
 
 app.use(pinia)
 app.use(router)
-// 全局主题在 App.vue 的 <NConfigProvider> 里统一接管（naive-ui 新版 install 不再接收 options）
-app.use(naive)
+// naive-ui 组件按需注册(由 unplugin-vue-components 的 NaiveUiResolver 驱动),
+// 若这里再全局注册 naives 会把整个组件库拉进 vendor 包(约 1.3MB)
 setupPermissionDirective(app)
 
 app.mount('#app')
