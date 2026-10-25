@@ -40,7 +40,7 @@
         <tencentcloud-sdk.version>3.2.18</tencentcloud-sdk.version>
 
         <!-- GraalVM Native Build Tools -->
-        <graalvm-native.version>0.10.2</graalvm-native.version>
+        <graalvm-native.version>1.1.16</graalvm-native.version>
 
         <!-- Testcontainers -->
         <testcontainers.version>2.0.5</testcontainers.version>
