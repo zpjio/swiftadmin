@@ -23,7 +23,7 @@
         <!-- Spring AOP (for permission aspects) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-aop</artifactId>
+            <artifactId>spring-boot-starter-aspectj</artifactId>
         </dependency>
 
         <!-- Spring Data Redis (for Token blacklist) -->

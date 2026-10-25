@@ -58,9 +58,15 @@
         </dependency>
 
         <!-- Flyway (数据库迁移) -->
+        <!-- Boot 4 起模块化拆分:JDBC 数据源自动配置拎出 spring-boot-jdbc,
+             Flyway 自动配置拎出 spring-boot-flyway(经 starter 引入) -->
         <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
@@ -92,6 +98,11 @@
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
         </dependency>
+        <!-- Boot 4 起模型化拆分:Jackson 2 集成挪进 spring-boot-jackson2(计划后续迁 Jackson 3) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-jackson2</artifactId>
+        </dependency>
 
         <!-- AWS SDK for S3 (兼容阿里云/腾讯云 OSS) -->
         <dependency>
@@ -110,6 +121,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Boot 4 起测试切片模块化:MockMvc 相关拧进 spring-boot-webmvc-test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-webmvc-test</artifactId>
             <scope>test</scope>
         </dependency>
         <!-- 无外部 MySQL/Redis 时由测试基类自动拉起临时容器(详见 IntegrationTestBase) -->

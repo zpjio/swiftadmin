@@ -24,7 +24,7 @@
         <!-- Spring AOP -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-aop</artifactId>
+            <artifactId>spring-boot-starter-aspectj</artifactId>
             <optional>true</optional>
         </dependency>
 
@@ -92,7 +92,7 @@
         <!-- MyBatis-Flex Annotation (for @EnumValue) -->
         <dependency>
             <groupId>com.mybatis-flex</groupId>
-            <artifactId>mybatis-flex-spring-boot3-starter</artifactId>
+            <artifactId>mybatis-flex-spring-boot4-starter</artifactId>
             <scope>provided</scope>
         </dependency>
 
