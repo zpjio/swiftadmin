@@ -27,9 +27,9 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- 核心版本 -->
-        <spring-boot.version>3.5.11</spring-boot.version>
-        <mybatis-flex.version>1.11.6</mybatis-flex.version>
-        <springdoc.version>2.8.16</springdoc.version>
+        <spring-boot.version>4.1.2</spring-boot.version>
+        <mybatis-flex.version>1.11.8</mybatis-flex.version>
+        <springdoc.version>3.2.0</springdoc.version>
         <lombok.version>1.18.48</lombok.version>
         <jjwt.version>0.13.0</jjwt.version>
         <swagger-annotations.version>2.2.43</swagger-annotations.version>
@@ -81,7 +81,7 @@
             <!-- MyBatis-Flex -->
             <dependency>
                 <groupId>com.mybatis-flex</groupId>
-                <artifactId>mybatis-flex-spring-boot3-starter</artifactId>
+                <artifactId>mybatis-flex-spring-boot4-starter</artifactId>
                 <version>${mybatis-flex.version}</version>
             </dependency>
             <dependency>
