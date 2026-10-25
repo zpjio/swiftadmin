@@ -57,7 +57,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import * as echarts from 'echarts'
+// echarts 按需引入:只注册用到的图表/组件,vendor 体积从 1.1MB 判到约 1/3
+import * as echarts from 'echarts/core'
+import { LineChart } from 'echarts/charts'
+import { GridComponent, TooltipComponent } from 'echarts/components'
+import { CanvasRenderer } from 'echarts/renderers'
+
+echarts.use([LineChart, GridComponent, TooltipComponent, CanvasRenderer])
 
 const chartRef = ref<HTMLElement | null>(null)
 
