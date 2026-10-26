@@ -43,7 +43,7 @@
 import { ref, computed } from 'vue'
 import { Icon } from '@iconify/vue'
 
-const props = defineProps<{
+defineProps<{
   modelValue?: string
 }>()
 
@@ -61,45 +61,116 @@ const getIconLabel = (icon: string) => {
 // 常用图标列表（存储格式：mdi:xxx，与 @iconify 格式一致）
 const commonIcons = [
   // 系统管理
-  'mdi:account', 'mdi:account-group', 'mdi:account-cog', 'mdi:shield-account',
-  'mdi:cog', 'mdi:cogs', 'mdi:menu', 'mdi:file-tree', 'mdi:folder',
-  'mdi:database', 'mdi:cloud-upload', 'mdi:cloud-download',
+  'mdi:account',
+  'mdi:account-group',
+  'mdi:account-cog',
+  'mdi:shield-account',
+  'mdi:cog',
+  'mdi:cogs',
+  'mdi:menu',
+  'mdi:file-tree',
+  'mdi:folder',
+  'mdi:database',
+  'mdi:cloud-upload',
+  'mdi:cloud-download',
   // 监控
-  'mdi:monitor', 'mdi:chart-line', 'mdi:chart-bar', 'mdi:pulse',
-  'mdi:history', 'mdi:login', 'mdi:logout',
+  'mdi:monitor',
+  'mdi:chart-line',
+  'mdi:chart-bar',
+  'mdi:pulse',
+  'mdi:history',
+  'mdi:login',
+  'mdi:logout',
   // 操作
-  'mdi:plus', 'mdi:pencil', 'mdi:delete', 'mdi:magnify', 'mdi:refresh',
-  'mdi:check', 'mdi:close', 'mdi:download', 'mdi:upload',
+  'mdi:plus',
+  'mdi:pencil',
+  'mdi:delete',
+  'mdi:magnify',
+  'mdi:refresh',
+  'mdi:check',
+  'mdi:close',
+  'mdi:download',
+  'mdi:upload',
   // 状态
-  'mdi:check-circle', 'mdi:close-circle', 'mdi:alert', 'mdi:information',
-  'mdi:warning', 'mdi:error',
+  'mdi:check-circle',
+  'mdi:close-circle',
+  'mdi:alert',
+  'mdi:information',
+  'mdi:warning',
+  'mdi:error',
   // 文件
-  'mdi:file', 'mdi:file-document', 'mdi:file-pdf-box', 'mdi:file-excel',
-  'mdi:file-word', 'mdi:file-image', 'mdi:file-video', 'mdi:file-music',
+  'mdi:file',
+  'mdi:file-document',
+  'mdi:file-pdf-box',
+  'mdi:file-excel',
+  'mdi:file-word',
+  'mdi:file-image',
+  'mdi:file-video',
+  'mdi:file-music',
   // 导航
-  'mdi:home', 'mdi:dashboard', 'mdi:view-dashboard', 'mdi:apps',
-  'mdi:view-list', 'mdi:view-grid', 'mdi:table',
+  'mdi:home',
+  'mdi:dashboard',
+  'mdi:view-dashboard',
+  'mdi:apps',
+  'mdi:view-list',
+  'mdi:view-grid',
+  'mdi:table',
   // 用户相关
-  'mdi:user', 'mdi:user-circle', 'mdi:account-circle', 'mdi:face',
-  'mdi:lock', 'mdi:key', 'mdi:key-variant',
+  'mdi:user',
+  'mdi:user-circle',
+  'mdi:account-circle',
+  'mdi:face',
+  'mdi:lock',
+  'mdi:key',
+  'mdi:key-variant',
   // 设置
-  'mdi:wrench', 'mdi:tools', 'mdi:toggle-switch', 'mdi:tune',
+  'mdi:wrench',
+  'mdi:tools',
+  'mdi:toggle-switch',
+  'mdi:tune',
   // 其他常用
-  'mdi:star', 'mdi:heart', 'mdi:bell', 'mdi:email', 'mdi:phone',
-  'mdi:calendar', 'mdi:clock', 'mdi:map-marker', 'mdi:link',
-  'mdi:code-tags', 'mdi:palette', 'mdi:brush', 'mdi:image',
-  'mdi:camera', 'mdi:video', 'mdi:music', 'mdi:microphone',
-  'mdi:gift', 'mdi:shopping', 'mdi:cart', 'mdi:credit-card',
-  'mdi:weather-sunny', 'mdi:weather-cloudy', 'mdi:weather-rainy',
-  'mdi:car', 'mdi:bike', 'mdi:walk', 'mdi:airplane',
-  'mdi:rocket', 'mdi:leaf', 'mdi:fire', 'mdi:water',
-  'mdi:bug', 'mdi:robot', 'mdi:android', 'mdi:apple',
+  'mdi:star',
+  'mdi:heart',
+  'mdi:bell',
+  'mdi:email',
+  'mdi:phone',
+  'mdi:calendar',
+  'mdi:clock',
+  'mdi:map-marker',
+  'mdi:link',
+  'mdi:code-tags',
+  'mdi:palette',
+  'mdi:brush',
+  'mdi:image',
+  'mdi:camera',
+  'mdi:video',
+  'mdi:music',
+  'mdi:microphone',
+  'mdi:gift',
+  'mdi:shopping',
+  'mdi:cart',
+  'mdi:credit-card',
+  'mdi:weather-sunny',
+  'mdi:weather-cloudy',
+  'mdi:weather-rainy',
+  'mdi:car',
+  'mdi:bike',
+  'mdi:walk',
+  'mdi:airplane',
+  'mdi:rocket',
+  'mdi:leaf',
+  'mdi:fire',
+  'mdi:water',
+  'mdi:bug',
+  'mdi:robot',
+  'mdi:android',
+  'mdi:apple'
 ]
 
 const filteredIcons = computed(() => {
   if (!searchKey.value) return commonIcons
   const key = searchKey.value.toLowerCase()
-  return commonIcons.filter(icon => icon.toLowerCase().includes(key))
+  return commonIcons.filter((icon) => icon.toLowerCase().includes(key))
 })
 
 const handleSelect = (icon: string) => {

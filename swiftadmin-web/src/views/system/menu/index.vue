@@ -60,7 +60,9 @@
               </NButton>
               <template v-else>
                 <NButton @click="cancelEdit">取消</NButton>
-                <NButton type="primary" :loading="submitLoading" @click="handleSubmit">保存</NButton>
+                <NButton type="primary" :loading="submitLoading" @click="handleSubmit"
+                  >保存</NButton
+                >
               </template>
             </NSpace>
           </div>
@@ -79,15 +81,21 @@
               </NTag>
             </NDescriptionsItem>
             <NDescriptionsItem label="路由地址">{{ selectedMenu.path || '-' }}</NDescriptionsItem>
-            <NDescriptionsItem label="组件路径">{{ selectedMenu.component || '-' }}</NDescriptionsItem>
-            <NDescriptionsItem label="权限标识">{{ selectedMenu.permission || '-' }}</NDescriptionsItem>
+            <NDescriptionsItem label="组件路径">{{
+              selectedMenu.component || '-'
+            }}</NDescriptionsItem>
+            <NDescriptionsItem label="权限标识">{{
+              selectedMenu.permission || '-'
+            }}</NDescriptionsItem>
             <NDescriptionsItem label="排序">{{ selectedMenu.sortOrder }}</NDescriptionsItem>
             <NDescriptionsItem label="状态">
               <NTag :type="selectedMenu.status === 1 ? 'success' : 'error'" size="small">
                 {{ selectedMenu.status === 1 ? '正常' : '禁用' }}
               </NTag>
             </NDescriptionsItem>
-            <NDescriptionsItem label="创建时间">{{ selectedMenu.createTime || '-' }}</NDescriptionsItem>
+            <NDescriptionsItem label="创建时间">{{
+              selectedMenu.createTime || '-'
+            }}</NDescriptionsItem>
             <NDescriptionsItem label="操作" :span="2">
               <NSpace>
                 <NButton type="primary" size="small" @click="handleAdd(selectedMenu.id)">
@@ -104,7 +112,14 @@
           </NDescriptions>
 
           <!-- 编辑表单 -->
-          <NForm v-else :model="formData" :rules="formRules" ref="editFormRef" label-placement="left" label-width="100">
+          <NForm
+            v-else
+            ref="editFormRef"
+            :model="formData"
+            :rules="formRules"
+            label-placement="left"
+            label-width="100"
+          >
             <NFormItem label="菜单类型" path="type">
               <NRadioGroup v-model:value="formData.type">
                 <NRadio :value="1">目录</NRadio>
@@ -124,19 +139,32 @@
             <NFormItem label="菜单名称" path="name">
               <NInput v-model:value="formData.name" placeholder="请输入菜单名称" />
             </NFormItem>
-            <NFormItem label="路由地址" path="path" v-if="formData.type !== 3">
-              <NInput v-model:value="formData.path" placeholder="请输入路由地址，如：/system/user" />
+            <NFormItem v-if="formData.type !== 3" label="路由地址" path="path">
+              <NInput
+                v-model:value="formData.path"
+                placeholder="请输入路由地址，如：/system/user"
+              />
             </NFormItem>
-            <NFormItem label="组件路径" path="component" v-if="formData.type === 2">
-              <NInput v-model:value="formData.component" placeholder="请输入组件路径，如：system/user/index" />
+            <NFormItem v-if="formData.type === 2" label="组件路径" path="component">
+              <NInput
+                v-model:value="formData.component"
+                placeholder="请输入组件路径，如：system/user/index"
+              />
             </NFormItem>
-            <NFormItem label="权限标识" path="permission" v-if="formData.type === 3">
-              <NInput v-model:value="formData.permission" placeholder="请输入权限标识，如：system:user:add" />
+            <NFormItem v-if="formData.type === 3" label="权限标识" path="permission">
+              <NInput
+                v-model:value="formData.permission"
+                placeholder="请输入权限标识，如：system:user:add"
+              />
             </NFormItem>
-            <NFormItem label="菜单图标" path="icon" v-if="formData.type !== 3">
+            <NFormItem v-if="formData.type !== 3" label="菜单图标" path="icon">
               <div class="flex items-center gap-2">
                 <IconSelect v-model="formData.icon" />
-                <NInput v-model:value="formData.icon" placeholder="或手动输入，如：mdi-account" style="width: 200px" />
+                <NInput
+                  v-model:value="formData.icon"
+                  placeholder="或手动输入，如：mdi-account"
+                  style="width: 200px"
+                />
               </div>
             </NFormItem>
             <NFormItem label="排序" path="sortOrder">
@@ -148,13 +176,13 @@
                 <NRadio :value="0">禁用</NRadio>
               </NRadioGroup>
             </NFormItem>
-            <NFormItem label="是否外链" path="isExternal" v-if="formData.type !== 3">
+            <NFormItem v-if="formData.type !== 3" label="是否外链" path="isExternal">
               <NSwitch v-model:value="formData.isExternal" />
             </NFormItem>
-            <NFormItem label="是否缓存" path="isCache" v-if="formData.type === 2">
+            <NFormItem v-if="formData.type === 2" label="是否缓存" path="isCache">
               <NSwitch v-model:value="formData.isCache" />
             </NFormItem>
-            <NFormItem label="是否显示" path="isVisible" v-if="formData.type !== 3">
+            <NFormItem v-if="formData.type !== 3" label="是否显示" path="isVisible">
               <NSwitch v-model:value="formData.isVisible" />
             </NFormItem>
           </NForm>
@@ -163,8 +191,14 @@
     </div>
 
     <!-- 新增弹窗 -->
-    <NModal v-model:show="showAddModal" title="新增菜单" preset="card" style="width: 600px;">
-      <NForm :model="formData" :rules="formRules" ref="addFormRef" label-placement="left" label-width="100">
+    <NModal v-model:show="showAddModal" title="新增菜单" preset="card" style="width: 600px">
+      <NForm
+        ref="addFormRef"
+        :model="formData"
+        :rules="formRules"
+        label-placement="left"
+        label-width="100"
+      >
         <NFormItem label="菜单类型" path="type">
           <NRadioGroup v-model:value="formData.type">
             <NRadio :value="1">目录</NRadio>
@@ -184,16 +218,22 @@
         <NFormItem label="菜单名称" path="name">
           <NInput v-model:value="formData.name" placeholder="请输入菜单名称" />
         </NFormItem>
-        <NFormItem label="路由地址" path="path" v-if="formData.type !== 3">
+        <NFormItem v-if="formData.type !== 3" label="路由地址" path="path">
           <NInput v-model:value="formData.path" placeholder="请输入路由地址，如：/system/user" />
         </NFormItem>
-        <NFormItem label="组件路径" path="component" v-if="formData.type === 2">
-          <NInput v-model:value="formData.component" placeholder="请输入组件路径，如：system/user/index" />
+        <NFormItem v-if="formData.type === 2" label="组件路径" path="component">
+          <NInput
+            v-model:value="formData.component"
+            placeholder="请输入组件路径，如：system/user/index"
+          />
         </NFormItem>
-        <NFormItem label="权限标识" path="permission" v-if="formData.type === 3">
-          <NInput v-model:value="formData.permission" placeholder="请输入权限标识，如：system:user:add" />
+        <NFormItem v-if="formData.type === 3" label="权限标识" path="permission">
+          <NInput
+            v-model:value="formData.permission"
+            placeholder="请输入权限标识，如：system:user:add"
+          />
         </NFormItem>
-        <NFormItem label="菜单图标" path="icon" v-if="formData.type !== 3">
+        <NFormItem v-if="formData.type !== 3" label="菜单图标" path="icon">
           <NInput v-model:value="formData.icon" placeholder="请输入图标名称，如：mdi-account" />
         </NFormItem>
         <NFormItem label="排序" path="sortOrder">
@@ -205,13 +245,13 @@
             <NRadio :value="0">禁用</NRadio>
           </NRadioGroup>
         </NFormItem>
-        <NFormItem label="是否外链" path="isExternal" v-if="formData.type !== 3">
+        <NFormItem v-if="formData.type !== 3" label="是否外链" path="isExternal">
           <NSwitch v-model:value="formData.isExternal" />
         </NFormItem>
-        <NFormItem label="是否缓存" path="isCache" v-if="formData.type === 2">
+        <NFormItem v-if="formData.type === 2" label="是否缓存" path="isCache">
           <NSwitch v-model:value="formData.isCache" />
         </NFormItem>
-        <NFormItem label="是否显示" path="isVisible" v-if="formData.type !== 3">
+        <NFormItem v-if="formData.type !== 3" label="是否显示" path="isVisible">
           <NSwitch v-model:value="formData.isVisible" />
         </NFormItem>
       </NForm>
@@ -227,8 +267,22 @@
 
 <script setup lang="ts">
 import { reactive, ref, h, computed, onMounted, nextTick } from 'vue'
-import { useMessage, NTag, type FormInst, type FormRules, type TreeSelectOption, type TreeOption } from 'naive-ui'
-import { getMenuTreeApi, getMenuSelectTreeApi, getMenuDetailApi, createMenuApi, updateMenuApi, deleteMenuApi } from '@/api/menu'
+import {
+  useMessage,
+  NTag,
+  type FormInst,
+  type FormRules,
+  type TreeSelectOption,
+  type TreeOption
+} from 'naive-ui'
+import {
+  getMenuTreeApi,
+  getMenuSelectTreeApi,
+  getMenuDetailApi,
+  createMenuApi,
+  updateMenuApi,
+  deleteMenuApi
+} from '@/api/menu'
 import type { MenuVO, MenuDTO, MenuTreeVO } from '@/api/menu'
 import IconSelect from '@/components/IconSelect.vue'
 import { Icon } from '@iconify/vue'
@@ -255,13 +309,13 @@ const parentMenuIds = ref<number[]>([])
 
 // 新增弹窗
 const showAddModal = ref(false)
-const editFormRef = ref<FormInst | null>(null)  // 编辑表单 ref
-const addFormRef = ref<FormInst | null>(null)   // 新增表单 ref
+const editFormRef = ref<FormInst | null>(null) // 编辑表单 ref
+const addFormRef = ref<FormInst | null>(null) // 新增表单 ref
 
 // 是否全部展开
 const isAllExpanded = computed(() => {
   if (parentMenuIds.value.length === 0) return false
-  return parentMenuIds.value.every(id => expandedKeys.value.includes(id))
+  return parentMenuIds.value.every((id) => expandedKeys.value.includes(id))
 })
 
 // 转换为 NTree 数据格式
@@ -270,12 +324,13 @@ const treeData = computed<TreeOption[]>(() => {
 })
 
 const convertToTreeOptions = (menus: MenuVO[]): TreeOption[] => {
-  return menus.map(menu => ({
+  return menus.map((menu) => ({
     key: menu.id,
     label: menu.name,
     icon: normalizeIconName(menu.icon) || undefined,
     type: menu.type,
-    children: menu.children && menu.children.length > 0 ? convertToTreeOptions(menu.children) : undefined
+    children:
+      menu.children && menu.children.length > 0 ? convertToTreeOptions(menu.children) : undefined
   }))
 }
 
@@ -283,7 +338,7 @@ const convertToTreeOptions = (menus: MenuVO[]): TreeOption[] => {
 const getParentMenuIds = (menus: MenuVO[]): number[] => {
   const ids: number[] = []
   const traverse = (items: MenuVO[]) => {
-    items.forEach(item => {
+    items.forEach((item) => {
       if (item.children && item.children.length > 0) {
         ids.push(item.id)
         traverse(item.children)
@@ -297,9 +352,15 @@ const getParentMenuIds = (menus: MenuVO[]): number[] => {
 // 渲染树节点标签
 const renderTreeLabel = ({ option }: { option: TreeOption }) => {
   return h('div', { class: 'flex items-center gap-2 w-full py-1' }, [
-    typeof option.icon === 'string' ? h(Icon, { icon: option.icon, style: { fontSize: '16px' } }) : null,
+    typeof option.icon === 'string'
+      ? h(Icon, { icon: option.icon, style: { fontSize: '16px' } })
+      : null,
     h('span', null, option.label),
-    option.type ? h(NTag, { type: getTypeTagType(option.type as number), size: 'small', round: true }, () => getTypeLabel(option.type as number)) : null
+    option.type
+      ? h(NTag, { type: getTypeTagType(option.type as number), size: 'small', round: true }, () =>
+          getTypeLabel(option.type as number)
+        )
+      : null
   ])
 }
 
@@ -335,7 +396,9 @@ const onSelect = async (keys: (string | number)[]) => {
 }
 
 // 表单数据
-const formData = reactive<MenuDTO & { isExternal?: boolean; isCache?: boolean; isVisible?: boolean }>({
+const formData = reactive<
+  MenuDTO & { isExternal?: boolean; isCache?: boolean; isVisible?: boolean }
+>({
   parentId: 0,
   name: '',
   type: 1,
@@ -347,7 +410,7 @@ const formData = reactive<MenuDTO & { isExternal?: boolean; isCache?: boolean; i
   status: 1,
   isExternal: false,
   isCache: false,
-  isVisible: true,
+  isVisible: true
 })
 
 const formRules: FormRules = {
@@ -361,9 +424,9 @@ const formRules: FormRules = {
         }
         return true
       },
-      trigger: 'change',
-    },
-  ],
+      trigger: 'change'
+    }
+  ]
 }
 
 // 类型相关
@@ -396,7 +459,7 @@ const handleAdd = (parentId?: number) => {
     status: 1,
     isExternal: false,
     isCache: false,
-    isVisible: true,
+    isVisible: true
   })
   showAddModal.value = true
 }
@@ -410,16 +473,21 @@ const startEdit = () => {
     id: selectedMenu.value.id,
     parentId: selectedMenu.value.parentId ?? 0,
     name: selectedMenu.value.name || '',
-    type: typeof selectedMenu.value.type === 'number' ? selectedMenu.value.type : Number(selectedMenu.value.type) || 1,
+    type:
+      typeof selectedMenu.value.type === 'number'
+        ? selectedMenu.value.type
+        : Number(selectedMenu.value.type) || 1,
     path: selectedMenu.value.path || '',
     component: selectedMenu.value.component || '',
     icon: selectedMenu.value.icon || '',
     sortOrder: selectedMenu.value.sortOrder ?? 0,
     permission: selectedMenu.value.permission || '',
-    status: typeof selectedMenu.value.status === 'number' ? selectedMenu.value.status : Number(selectedMenu.value.status) ?? 1,
+    status: Number.isFinite(Number(selectedMenu.value.status))
+      ? Number(selectedMenu.value.status)
+      : 1,
     isExternal: false,
     isCache: false,
-    isVisible: true,
+    isVisible: true
   })
 
   isEditing.value = true
@@ -475,7 +543,7 @@ const handleSubmit = async () => {
     } finally {
       submitLoading.value = false
     }
-  } catch (errors: any) {
+  } catch {
     // 验证失败
   }
 }
@@ -484,10 +552,10 @@ const handleSubmit = async () => {
 const convertSelectTree = (items: MenuTreeVO[]): TreeSelectOption[] => {
   const result: TreeSelectOption[] = [{ key: 0, label: '顶级菜单', children: [] }]
   const convert = (items: MenuTreeVO[]): TreeSelectOption[] => {
-    return items.map(item => ({
+    return items.map((item) => ({
       key: item.id,
       label: item.label,
-      children: item.children ? convert(item.children) : undefined,
+      children: item.children ? convert(item.children) : undefined
     }))
   }
   if (result[0]) {

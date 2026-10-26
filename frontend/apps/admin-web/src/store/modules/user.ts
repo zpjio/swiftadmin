@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-import type { MenuVO } from '@/types'
 import { refreshPermissionApi, checkPermissionRefreshApi } from '@/api/auth'
 import { resetRouter } from '@/router'
 
@@ -113,10 +112,12 @@ export const useUserStore = defineStore('user', () => {
     setToken,
     setUserInfo,
     setPermissions,
-    setRoles: (newRoles: string[]) => { roles.value = newRoles },
+    setRoles: (newRoles: string[]) => {
+      roles.value = newRoles
+    },
     logout,
     initToken,
     checkAndRefreshPermissions,
-    refreshUserPermissions,
+    refreshUserPermissions
   }
 })

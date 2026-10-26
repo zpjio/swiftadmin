@@ -61,6 +61,6 @@ export function useFormReset<T extends Record<string, any>>(defaultValues: T) {
     formData: formData as UnwrapNestedRefs<T>,
     resetForm,
     setForm,
-    updateDefaults,
+    updateDefaults
   }
 }

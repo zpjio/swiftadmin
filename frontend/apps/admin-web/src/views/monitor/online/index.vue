@@ -3,10 +3,20 @@
     <div class="flex justify-between items-start flex-wrap gap-4 mb-4">
       <NForm :model="queryForm" inline class="search-form">
         <NFormItem label="用户名" path="username">
-          <NInput v-model:value="queryForm.username" placeholder="请输入用户名" clearable style="width: 180px" />
+          <NInput
+            v-model:value="queryForm.username"
+            placeholder="请输入用户名"
+            clearable
+            style="width: 180px"
+          />
         </NFormItem>
         <NFormItem label="IP 地址" path="ip">
-          <NInput v-model:value="queryForm.ip" placeholder="请输入 IP 地址" clearable style="width: 180px" />
+          <NInput
+            v-model:value="queryForm.ip"
+            placeholder="请输入 IP 地址"
+            clearable
+            style="width: 180px"
+          />
         </NFormItem>
         <NFormItem>
           <NSpace>
@@ -21,7 +31,7 @@
           </NSpace>
         </NFormItem>
       </NForm>
-      
+
       <div class="actions">
         <NButton type="error" :disabled="checkedRowKeys.length === 0" @click="handleBatchKickout">
           <template #icon><icon-mdi-logout /></template>
@@ -29,7 +39,7 @@
         </NButton>
       </div>
     </div>
-    
+
     <NDataTable
       :columns="columns"
       :data="tableData"
@@ -60,7 +70,7 @@ const queryForm = reactive<OnlineUserQuery>({})
 // 分页
 const { paginationProps, setTotal } = usePagination({
   onChange: () => loadData(),
-  onPageSizeChange: () => loadData(),
+  onPageSizeChange: () => loadData()
 })
 
 const checkedRowKeys = ref<string[]>([])
@@ -71,49 +81,49 @@ const columns: DataTableColumns<OnlineUserVO> = [
   {
     title: '用户 ID',
     key: 'userId',
-    width: 80,
+    width: 80
   },
   {
     title: '用户名',
     key: 'username',
-    width: 120,
+    width: 120
   },
   {
     title: '昵称',
     key: 'nickname',
-    width: 120,
+    width: 120
   },
   {
     title: '部门',
     key: 'deptName',
-    width: 150,
+    width: 150
   },
   {
     title: 'IP 地址',
     key: 'ip',
-    width: 140,
+    width: 140
   },
   {
     title: '登录地点',
     key: 'location',
     width: 180,
-    ellipsis: { tooltip: true },
+    ellipsis: { tooltip: true }
   },
   {
     title: '浏览器',
     key: 'browser',
-    width: 150,
+    width: 150
   },
   {
     title: '操作系统',
     key: 'os',
-    width: 120,
+    width: 120
   },
   {
     title: '登录时间',
     key: 'loginTime',
     width: 180,
-    render: (row) => formatDateTime(row.loginTime) || '-',
+    render: (row) => formatDateTime(row.loginTime) || '-'
   },
   {
     title: '剩余时间',
@@ -122,7 +132,7 @@ const columns: DataTableColumns<OnlineUserVO> = [
     render: (row) => {
       const minutes = Math.floor(row.ttl / 60)
       return `${minutes}分钟`
-    },
+    }
   },
   {
     title: '操作',
@@ -134,13 +144,19 @@ const columns: DataTableColumns<OnlineUserVO> = [
         'button',
         {
           class: 'n-button n-button--default-type n-button--medium-type',
-          style: { padding: '0 8px', background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer' },
-          onClick: () => handleKickout(row),
+          style: {
+            padding: '0 8px',
+            background: 'none',
+            border: 'none',
+            color: '#ff4d4f',
+            cursor: 'pointer'
+          },
+          onClick: () => handleKickout(row)
         },
         '强退'
       )
-    },
-  },
+    }
+  }
 ]
 
 // 加载数据
@@ -184,7 +200,7 @@ const handleKickout = (row: OnlineUserVO) => {
       } catch (error) {
         console.error('强退失败:', error)
       }
-    },
+    }
   })
 }
 
@@ -204,7 +220,7 @@ const handleBatchKickout = () => {
       } catch (error) {
         console.error('批量强退失败:', error)
       }
-    },
+    }
   })
 }
 
@@ -217,4 +233,3 @@ onMounted(() => {
   loadData()
 })
 </script>
-

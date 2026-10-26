@@ -53,11 +53,7 @@
 
       <!-- 操作按钮 -->
       <NSpace class="mb-4">
-        <NButton
-          type="error"
-          :disabled="!hasSelection"
-          @click="handleBatchDelete"
-        >
+        <NButton type="error" :disabled="!hasSelection" @click="handleBatchDelete">
           <template #icon><icon-mdi-delete /></template>
           批量删除
         </NButton>
@@ -88,7 +84,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, h, onMounted } from 'vue'
-import { useMessage, type DataTableColumns, type DataTableRowKey } from 'naive-ui'
+import { useMessage, type DataTableColumns } from 'naive-ui'
 import { getLoginLogPageApi, deleteLoginLogApi, clearLoginLogApi } from '@/api/loginlog'
 import type { LoginLogVO, LoginLogQuery } from '@/api/loginlog'
 import { formatDateTime } from '@/utils/date'
@@ -97,7 +93,8 @@ import { usePagination, useTableSelection } from '@/composables'
 const message = useMessage()
 const loading = ref(false)
 const tableData = ref<LoginLogVO[]>([])
-const { selectedKeys, hasSelection, clearSelection, onSelectionChange } = useTableSelection<LoginLogVO>()
+const { selectedKeys, hasSelection, clearSelection, onSelectionChange } =
+  useTableSelection<LoginLogVO>()
 
 const queryForm = reactive<LoginLogQuery & { dateRange?: [number, number] }>({
   username: '',
@@ -105,18 +102,18 @@ const queryForm = reactive<LoginLogQuery & { dateRange?: [number, number] }>({
   status: undefined,
   beginTime: '',
   endTime: '',
-  dateRange: undefined,
+  dateRange: undefined
 })
 
 // 分页
 const { paginationProps, setTotal, getIndex } = usePagination({
   onChange: () => loadData(),
-  onPageSizeChange: () => loadData(),
+  onPageSizeChange: () => loadData()
 })
 
 const statusOptions = [
   { label: '成功', value: 1 },
-  { label: '失败', value: 0 },
+  { label: '失败', value: 0 }
 ]
 
 const columns: DataTableColumns<LoginLogVO> = [
@@ -125,7 +122,7 @@ const columns: DataTableColumns<LoginLogVO> = [
     title: '序号',
     key: 'index',
     width: 60,
-    render: (_row, index) => getIndex(index),
+    render: (_row, index) => getIndex(index)
   },
   { title: '用户名', key: 'username', width: 120, ellipsis: { tooltip: true } },
   {
@@ -133,20 +130,33 @@ const columns: DataTableColumns<LoginLogVO> = [
     key: 'status',
     width: 80,
     render: (row) =>
-      h('span', { class: row.status === 1 ? 'text-green-600' : 'text-red-600' }, row.status === 1 ? '✓ 成功' : '✗ 失败'),
+      h(
+        'span',
+        { class: row.status === 1 ? 'text-green-600' : 'text-red-600' },
+        row.status === 1 ? '✓ 成功' : '✗ 失败'
+      )
   },
   { title: '登录 IP', key: 'ipAddress', width: 140 },
   { title: '浏览器/操作系统', key: 'userAgent', width: 200, ellipsis: { tooltip: true } },
   { title: '提示信息', key: 'message', width: 160, ellipsis: { tooltip: true } },
-  { title: '登录时间', key: 'loginTime', width: 160, render: (row) => formatDateTime(row.loginTime) || '-' },
+  {
+    title: '登录时间',
+    key: 'loginTime',
+    width: 160,
+    render: (row) => formatDateTime(row.loginTime) || '-'
+  },
   {
     title: '操作',
     key: 'actions',
     width: 100,
     fixed: 'right',
     render: (row) =>
-      h('button', { class: 'text-red-600 hover:underline', onClick: () => handleDelete(row) }, '删除'),
-  },
+      h(
+        'button',
+        { class: 'text-red-600 hover:underline', onClick: () => handleDelete(row) },
+        '删除'
+      )
+  }
 ]
 
 const loadData = async () => {
@@ -225,4 +235,3 @@ onMounted(() => {
   loadData()
 })
 </script>
-

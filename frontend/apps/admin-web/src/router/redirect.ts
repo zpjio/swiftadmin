@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import type { RouteRecordRaw } from 'vue-router'
 
 // 重定向路由（用于刷新页面）
 export const redirectRoute: RouteRecordRaw = {
@@ -7,7 +7,7 @@ export const redirectRoute: RouteRecordRaw = {
   children: [
     {
       path: '/redirect/:pathMatch(.*)*',
-      component: () => import('@/views/error/redirect.vue'),
-    },
-  ],
+      component: () => import('@/views/error/redirect.vue')
+    }
+  ]
 }

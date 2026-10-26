@@ -58,7 +58,7 @@ export function useDict(dictType: string, immediate = true) {
       const data = await getDictDataByTypeApi(dictType)
       const dictOptions = (data || []).map((item: any) => ({
         label: item.label,
-        value: item.value,
+        value: item.value
       }))
 
       // 存入缓存
@@ -75,13 +75,13 @@ export function useDict(dictType: string, immediate = true) {
 
   // 根据 value 获取 label
   const getLabel = (value: string | number): string => {
-    const option = options.value.find(item => item.value === String(value))
+    const option = options.value.find((item) => item.value === String(value))
     return option?.label || String(value)
   }
 
   // 根据 label 获取 value
   const getValue = (label: string): string | undefined => {
-    const option = options.value.find(item => item.label === label)
+    const option = options.value.find((item) => item.label === label)
     return option?.value
   }
 
@@ -95,7 +95,7 @@ export function useDict(dictType: string, immediate = true) {
     loading,
     loadDict,
     getLabel,
-    getValue,
+    getValue
   }
 }
 
@@ -124,7 +124,7 @@ export function useDicts(dictTypes: string[]) {
 
   const getLabel = (dictType: string, value: string | number): string => {
     const options = optionsMap.value[dictType] || []
-    const option = options.find(item => item.value === String(value))
+    const option = options.find((item) => item.value === String(value))
     return option?.label || String(value)
   }
 
@@ -132,7 +132,7 @@ export function useDicts(dictTypes: string[]) {
     optionsMap,
     loading,
     loadAll,
-    getLabel,
+    getLabel
   }
 }
 

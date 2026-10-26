@@ -6,7 +6,7 @@ import { MenuType } from '@/types'
 export const MenuTypeLabels: Record<number, string> = {
   [MenuType.DIRECTORY]: '目录',
   [MenuType.MENU]: '菜单',
-  [MenuType.BUTTON]: '按钮',
+  [MenuType.BUTTON]: '按钮'
 }
 
 /**
@@ -23,17 +23,17 @@ export const Status = {
   /** 禁用 */
   DISABLED: 0,
   /** 正常 */
-  ENABLED: 1,
+  ENABLED: 1
 } as const
 
-export type StatusType = typeof Status[keyof typeof Status]
+export type StatusType = (typeof Status)[keyof typeof Status]
 
 /**
  * 状态标签
  */
 export const StatusLabels: Record<number, string> = {
   [Status.DISABLED]: '禁用',
-  [Status.ENABLED]: '正常',
+  [Status.ENABLED]: '正常'
 }
 
 /**
@@ -49,7 +49,7 @@ export function getStatusLabel(status: number): string {
 export const StatusOptions = [
   { label: '全部', value: undefined },
   { label: '正常', value: Status.ENABLED },
-  { label: '禁用', value: Status.DISABLED },
+  { label: '禁用', value: Status.DISABLED }
 ]
 
 /**
@@ -57,7 +57,7 @@ export const StatusOptions = [
  */
 export const StatusFormOptions = [
   { label: '正常', value: Status.ENABLED },
-  { label: '禁用', value: Status.DISABLED },
+  { label: '禁用', value: Status.DISABLED }
 ]
 
 /**
@@ -66,10 +66,10 @@ export const StatusFormOptions = [
 export const Sex = {
   UNKNOWN: 0,
   MALE: 1,
-  FEMALE: 2,
+  FEMALE: 2
 } as const
 
-export type SexType = typeof Sex[keyof typeof Sex]
+export type SexType = (typeof Sex)[keyof typeof Sex]
 
 /**
  * 性别标签
@@ -77,7 +77,7 @@ export type SexType = typeof Sex[keyof typeof Sex]
 export const SexLabels: Record<number, string> = {
   [Sex.UNKNOWN]: '未知',
   [Sex.MALE]: '男',
-  [Sex.FEMALE]: '女',
+  [Sex.FEMALE]: '女'
 }
 
 /**
@@ -93,7 +93,7 @@ export function getSexLabel(sex: number): string {
 export const SexOptions = [
   { label: '未知', value: Sex.UNKNOWN },
   { label: '男', value: Sex.MALE },
-  { label: '女', value: Sex.FEMALE },
+  { label: '女', value: Sex.FEMALE }
 ] as const
 
 /**
@@ -104,10 +104,10 @@ export const FileType = {
   VIDEO: 'video',
   AUDIO: 'audio',
   DOCUMENT: 'doc',
-  OTHER: 'other',
+  OTHER: 'other'
 } as const
 
-export type FileTypeValue = typeof FileType[keyof typeof FileType]
+export type FileTypeValue = (typeof FileType)[keyof typeof FileType]
 
 /**
  * 文件扩展名图标映射
@@ -144,7 +144,7 @@ export const FileTypeIcons: Record<string, string> = {
   // 音频
   mp3: 'music',
   wav: 'music',
-  flac: 'music',
+  flac: 'music'
 }
 
 /**
@@ -165,12 +165,12 @@ export const TABLE_ACTION_STYLE = {
     padding: '0 8px',
     background: 'none',
     border: 'none',
-    cursor: 'pointer',
+    cursor: 'pointer'
   },
   container: {
     display: 'flex',
-    gap: '8px',
-  },
+    gap: '8px'
+  }
 } as const
 
 /**
@@ -181,7 +181,7 @@ export const ACTION_COLORS = {
   success: '#059669',
   warning: '#d97706',
   danger: '#dc2626',
-  info: '#0891b2',
+  info: '#0891b2'
 } as const
 
 /**
@@ -189,7 +189,7 @@ export const ACTION_COLORS = {
  */
 export const StatusColors: Record<number, string> = {
   [Status.DISABLED]: ACTION_COLORS.danger,
-  [Status.ENABLED]: ACTION_COLORS.success,
+  [Status.ENABLED]: ACTION_COLORS.success
 }
 
 /**
@@ -200,6 +200,6 @@ export const StatusColors: Record<number, string> = {
 export function renderStatus(status: number): { text: string; color: string } {
   return {
     text: getStatusLabel(status),
-    color: StatusColors[status] || ACTION_COLORS.info,
+    color: StatusColors[status] || ACTION_COLORS.info
   }
 }

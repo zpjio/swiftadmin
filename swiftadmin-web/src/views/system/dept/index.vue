@@ -18,13 +18,19 @@
       :loading="loading"
       :row-key="(row) => row.id"
       :expanded-row-keys="expandedRowKeys"
-      @update:expanded-row-keys="onExpandedRowKeysChange"
       :scroll-x="1000"
+      @update:expanded-row-keys="onExpandedRowKeysChange"
     />
 
     <!-- 新增/编辑弹窗 -->
-    <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 600px;">
-      <NForm :model="formData" :rules="formRules" ref="formRef" label-placement="left" label-width="100">
+    <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 600px">
+      <NForm
+        ref="formRef"
+        :model="formData"
+        :rules="formRules"
+        label-placement="left"
+        label-width="100"
+      >
         <NFormItem label="上级部门" path="parentId">
           <NTreeSelect
             v-model:value="formData.parentId"
@@ -69,8 +75,21 @@
 
 <script setup lang="ts">
 import { reactive, ref, h, computed, onMounted } from 'vue'
-import { useMessage, useDialog, type DataTableColumns, type FormInst, type FormRules, type TreeSelectOption } from 'naive-ui'
-import { getDeptTreeApi, getDeptDetailApi, createDeptApi, updateDeptApi, deleteDeptApi } from '@/api/dept'
+import {
+  useMessage,
+  useDialog,
+  type DataTableColumns,
+  type FormInst,
+  type FormRules,
+  type TreeSelectOption
+} from 'naive-ui'
+import {
+  getDeptTreeApi,
+  getDeptDetailApi,
+  createDeptApi,
+  updateDeptApi,
+  deleteDeptApi
+} from '@/api/dept'
 import type { DeptVO, DeptDTO } from '@/api/dept'
 
 const message = useMessage()
@@ -109,19 +128,64 @@ const columns: DataTableColumns<DeptVO> = [
     title: '状态',
     key: 'status',
     width: 80,
-    render: (row) => h('span', { style: { color: row.status === 1 ? '#52c41a' : '#ff4d4f' } }, row.status === 1 ? '正常' : '禁用'),
+    render: (row) =>
+      h(
+        'span',
+        { style: { color: row.status === 1 ? '#52c41a' : '#ff4d4f' } },
+        row.status === 1 ? '正常' : '禁用'
+      )
   },
   {
     title: '操作',
     key: 'actions',
     width: 180,
     fixed: 'right',
-    render: (row) => h('div', { style: { display: 'flex', gap: '8px' } }, [
-      h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#1890ff', cursor: 'pointer' }, onClick: (_e: MouseEvent) => handleAdd(_e, row.id) }, '新增'),
-      h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#faad14', cursor: 'pointer' }, onClick: () => handleEdit(row) }, '编辑'),
-      h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer' }, onClick: () => handleDelete(row) }, '删除'),
-    ]),
-  },
+    render: (row) =>
+      h('div', { style: { display: 'flex', gap: '8px' } }, [
+        h(
+          'button',
+          {
+            style: {
+              padding: '0 8px',
+              background: 'none',
+              border: 'none',
+              color: '#1890ff',
+              cursor: 'pointer'
+            },
+            onClick: (_e: MouseEvent) => handleAdd(_e, row.id)
+          },
+          '新增'
+        ),
+        h(
+          'button',
+          {
+            style: {
+              padding: '0 8px',
+              background: 'none',
+              border: 'none',
+              color: '#faad14',
+              cursor: 'pointer'
+            },
+            onClick: () => handleEdit(row)
+          },
+          '编辑'
+        ),
+        h(
+          'button',
+          {
+            style: {
+              padding: '0 8px',
+              background: 'none',
+              border: 'none',
+              color: '#ff4d4f',
+              cursor: 'pointer'
+            },
+            onClick: () => handleDelete(row)
+          },
+          '删除'
+        )
+      ])
+  }
 ]
 
 // 弹窗相关
@@ -138,11 +202,11 @@ const formData = reactive<DeptDTO>({
   leader: '',
   phone: '',
   email: '',
-  status: 1,
+  status: 1
 })
 
 const formRules: FormRules = {
-  name: { required: true, message: '请输入部门名称', trigger: 'blur' },
+  name: { required: true, message: '请输入部门名称', trigger: 'blur' }
 }
 
 // 获取所有部门ID（用于展开全部）
@@ -186,7 +250,7 @@ const convertSelectTree = (items: DeptVO[]): TreeSelectOption[] => {
     return items.map((item) => ({
       key: item.id,
       label: item.name,
-      children: item.children ? convert(item.children) : undefined,
+      children: item.children ? convert(item.children) : undefined
     }))
   }
 
@@ -207,7 +271,7 @@ const handleAdd = (_e: MouseEvent, parentId?: number) => {
     leader: '',
     phone: '',
     email: '',
-    status: 1,
+    status: 1
   })
   showModal.value = true
 }
@@ -225,7 +289,7 @@ const handleEdit = async (row: DeptVO) => {
       leader: detail.leader,
       phone: detail.phone,
       email: detail.email,
-      status: detail.status,
+      status: detail.status
     })
     showModal.value = true
   } catch (error: any) {
@@ -248,7 +312,7 @@ const handleDelete = (row: DeptVO) => {
       } catch (error: any) {
         message.error(error.message || '删除失败')
       }
-    },
+    }
   })
 }
 
@@ -273,7 +337,7 @@ const handleSubmit = async () => {
     } finally {
       submitLoading.value = false
     }
-  } catch (errors: any) {
+  } catch {
     // 验证失败
   }
 }

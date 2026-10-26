@@ -1,4 +1,4 @@
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { RouteLocationNormalized } from 'vue-router'
 
@@ -31,7 +31,7 @@ export const useTagsStore = defineStore('tags', () => {
       ...view,
       title: view.meta?.title as string,
       icon: view.meta?.icon as string,
-      closable: view.name !== 'Dashboard', // 首页不可关闭
+      closable: view.name !== 'Dashboard' // 首页不可关闭
     })
 
     // 添加到缓存
@@ -48,7 +48,7 @@ export const useTagsStore = defineStore('tags', () => {
         ...visitedViews.value[index],
         ...view,
         title: view.meta?.title as string,
-        icon: view.meta?.icon as string,
+        icon: view.meta?.icon as string
       }
     }
   }
@@ -132,6 +132,6 @@ export const useTagsStore = defineStore('tags', () => {
     closeOthers,
     closeAll,
     setActiveView,
-    resetViews,
+    resetViews
   }
 })

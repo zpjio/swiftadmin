@@ -24,29 +24,29 @@ export default defineConfig(({ mode }) => {
       ],
       dts: 'src/auto-imports.d.ts',
       eslintrc: {
-        enabled: true,
-      },
+        enabled: true
+      }
     }),
     Components({
       resolvers: [
         NaiveUiResolver(),
         IconsResolver({
-          prefix: 'icon',
-        }),
+          prefix: 'icon'
+        })
       ],
-      dts: 'src/components.d.ts',
+      dts: 'src/components.d.ts'
     }),
     Icons({
-      autoInstall: true,
-    }),
+      autoInstall: true
+    })
   ]
 
   return {
     plugins,
     resolve: {
       alias: {
-        '@': resolve(__dirname, 'src'),
-      },
+        '@': resolve(__dirname, 'src')
+      }
     },
     server: {
       port: 5173,
@@ -60,9 +60,9 @@ export default defineConfig(({ mode }) => {
               return path.replace(/^\/api/, '')
             }
             return path
-          },
-        },
-      },
+          }
+        }
+      }
     },
     build: {
       outDir: 'dist',
@@ -92,9 +92,9 @@ export default defineConfig(({ mode }) => {
             if (id.includes('@vueuse/core')) {
               return 'vueuse'
             }
-          },
-        },
-      },
-    },
+          }
+        }
+      }
+    }
   }
 })

@@ -4,10 +4,20 @@
       <!-- 搜索栏 -->
       <NForm :model="queryForm" inline class="mb-4">
         <NFormItem label="配置名称" path="configName">
-          <NInput v-model:value="queryForm.configName" placeholder="请输入配置名称" clearable style="width: 180px" />
+          <NInput
+            v-model:value="queryForm.configName"
+            placeholder="请输入配置名称"
+            clearable
+            style="width: 180px"
+          />
         </NFormItem>
         <NFormItem label="配置键" path="configKey">
-          <NInput v-model:value="queryForm.configKey" placeholder="请输入配置键" clearable style="width: 180px" />
+          <NInput
+            v-model:value="queryForm.configKey"
+            placeholder="请输入配置键"
+            clearable
+            style="width: 180px"
+          />
         </NFormItem>
         <NFormItem label="配置类型" path="configType">
           <NSelect
@@ -61,13 +71,17 @@
     </NCard>
 
     <!-- 新增/编辑弹窗 -->
-    <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 500px;">
+    <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 500px">
       <NForm ref="formRef" :model="form" :rules="rules" label-width="100">
         <NFormItem label="配置名称" path="configName">
           <NInput v-model:value="form.configName" placeholder="请输入配置名称" />
         </NFormItem>
         <NFormItem label="配置键" path="configKey">
-          <NInput v-model:value="form.configKey" placeholder="请输入配置键（如：system.name）" :disabled="isEdit" />
+          <NInput
+            v-model:value="form.configKey"
+            placeholder="请输入配置键（如：system.name）"
+            :disabled="isEdit"
+          />
         </NFormItem>
         <NFormItem label="配置值" path="configValue">
           <NInput v-model:value="form.configValue" placeholder="请输入配置值" />
@@ -80,7 +94,12 @@
           />
         </NFormItem>
         <NFormItem label="描述" path="description">
-          <NInput v-model:value="form.description" type="textarea" placeholder="请输入配置描述" :rows="3" />
+          <NInput
+            v-model:value="form.description"
+            type="textarea"
+            placeholder="请输入配置描述"
+            :rows="3"
+          />
         </NFormItem>
       </NForm>
 
@@ -105,7 +124,7 @@ import {
   deleteConfigApi,
   refreshConfigCacheApi,
   type ConfigVO,
-  type ConfigDTO,
+  type ConfigDTO
 } from '@/api/config'
 import { useDict } from '@/composables/useDict'
 
@@ -128,7 +147,7 @@ const queryForm = reactive({
   size: 10,
   configName: undefined as string | undefined,
   configKey: undefined as string | undefined,
-  configType: undefined as string | undefined,
+  configType: undefined as string | undefined
 })
 
 const pagination = reactive({
@@ -148,7 +167,7 @@ const pagination = reactive({
     pagination.page = 1
     queryForm.page = 1
     loadData()
-  },
+  }
 })
 
 const form = reactive<ConfigDTO>({
@@ -156,14 +175,14 @@ const form = reactive<ConfigDTO>({
   configKey: '',
   configValue: '',
   configType: '',
-  description: '',
+  description: ''
 })
 
 const rules = {
   configName: [{ required: true, message: '请输入配置名称', trigger: 'blur' }],
   configKey: [{ required: true, message: '请输入配置键', trigger: 'blur' }],
   configValue: [{ required: true, message: '请输入配置值', trigger: 'blur' }],
-  configType: [{ required: true, message: '请选择配置类型', trigger: 'change' }],
+  configType: [{ required: true, message: '请选择配置类型', trigger: 'change' }]
 }
 
 const columns: DataTableColumns<ConfigVO> = [
@@ -176,7 +195,7 @@ const columns: DataTableColumns<ConfigVO> = [
     title: '配置类型',
     key: 'configType',
     width: 120,
-    render: (row) => getConfigTypeLabel(row.configType),
+    render: (row) => getConfigTypeLabel(row.configType)
   },
   { title: '描述', key: 'description', width: 200, ellipsis: { tooltip: true } },
   {
@@ -186,10 +205,36 @@ const columns: DataTableColumns<ConfigVO> = [
     fixed: 'right',
     render: (row) =>
       h('div', { style: { display: 'flex', gap: '8px' } }, [
-        h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer' }, onClick: () => handleEdit(row) }, '编辑'),
-        h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer' }, onClick: () => handleDelete(row) }, '删除'),
-      ]),
-  },
+        h(
+          'button',
+          {
+            style: {
+              padding: '0 8px',
+              background: 'none',
+              border: 'none',
+              color: '#2563eb',
+              cursor: 'pointer'
+            },
+            onClick: () => handleEdit(row)
+          },
+          '编辑'
+        ),
+        h(
+          'button',
+          {
+            style: {
+              padding: '0 8px',
+              background: 'none',
+              border: 'none',
+              color: '#dc2626',
+              cursor: 'pointer'
+            },
+            onClick: () => handleDelete(row)
+          },
+          '删除'
+        )
+      ])
+  }
 ]
 
 const loadData = async () => {
@@ -226,7 +271,7 @@ const handleAdd = () => {
     configKey: '',
     configValue: '',
     configType: '',
-    description: '',
+    description: ''
   })
   showModal.value = true
 }
@@ -278,7 +323,7 @@ const handleDelete = (row: ConfigVO) => {
       } catch (error: any) {
         message.error(error.message || '删除失败')
       }
-    },
+    }
   })
 }
 
@@ -301,7 +346,7 @@ const handleBatchDelete = () => {
       } catch (error: any) {
         message.error(error.message || '删除失败')
       }
-    },
+    }
   })
 }
 

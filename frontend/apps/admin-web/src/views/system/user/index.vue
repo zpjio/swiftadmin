@@ -3,10 +3,20 @@
     <div class="flex justify-between items-start flex-wrap gap-4 mb-4">
       <NForm :model="queryForm" inline class="flex flex-wrap gap-4">
         <NFormItem label="用户名" path="username">
-          <NInput v-model:value="queryForm.username" placeholder="请输入用户名" clearable style="width: 180px" />
+          <NInput
+            v-model:value="queryForm.username"
+            placeholder="请输入用户名"
+            clearable
+            style="width: 180px"
+          />
         </NFormItem>
         <NFormItem label="手机号" path="phone">
-          <NInput v-model:value="queryForm.phone" placeholder="请输入手机号" clearable style="width: 180px" />
+          <NInput
+            v-model:value="queryForm.phone"
+            placeholder="请输入手机号"
+            clearable
+            style="width: 180px"
+          />
         </NFormItem>
         <NFormItem label="状态" path="status">
           <NSelect
@@ -45,7 +55,12 @@
             <template #icon><icon-mdi-plus /></template>
             新增用户
           </NButton>
-          <NButton v-auth="'system:user:delete'" type="error" :disabled="!hasSelection" @click="handleBatchDelete">
+          <NButton
+            v-auth="'system:user:delete'"
+            type="error"
+            :disabled="!hasSelection"
+            @click="handleBatchDelete"
+          >
             <template #icon><icon-mdi-delete /></template>
             批量删除
           </NButton>
@@ -64,11 +79,17 @@
     />
 
     <!-- 新增/编辑弹窗 -->
-    <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 700px;">
-      <NAlert v-if="isSuperAdminEditingSelf" type="info" style="margin-bottom: 16px;">
+    <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 700px">
+      <NAlert v-if="isSuperAdminEditingSelf" type="info" style="margin-bottom: 16px">
         您正在编辑自己的基本信息，用户名、角色、状态不可修改
       </NAlert>
-      <NForm :model="formData" :rules="computedFormRules" ref="formRef" label-placement="left" label-width="80">
+      <NForm
+        ref="formRef"
+        :model="formData"
+        :rules="computedFormRules"
+        label-placement="left"
+        label-width="80"
+      >
         <NFormItem label="用户名" path="username">
           <NInput v-model:value="formData.username" placeholder="请输入用户名" :disabled="isEdit" />
         </NFormItem>
@@ -103,15 +124,27 @@
         </NFormItem>
         <NFormItem label="性别" path="sex">
           <NRadioGroup v-model:value="formData.sex">
-            <NRadio v-for="item in SexOptions" :key="item.value" :value="item.value">{{ item.label }}</NRadio>
+            <NRadio v-for="item in SexOptions" :key="item.value" :value="item.value">{{
+              item.label
+            }}</NRadio>
           </NRadioGroup>
         </NFormItem>
         <NFormItem label="状态" path="status">
-          <NSwitch v-model:value="formData.status" :checked-value="1" :unchecked-value="0" :disabled="isSuperAdmin" />
-          <NText v-if="isSuperAdmin" depth="3" style="margin-left: 8px;">超级管理员不可禁用</NText>
+          <NSwitch
+            v-model:value="formData.status"
+            :checked-value="1"
+            :unchecked-value="0"
+            :disabled="isSuperAdmin"
+          />
+          <NText v-if="isSuperAdmin" depth="3" style="margin-left: 8px">超级管理员不可禁用</NText>
         </NFormItem>
         <NFormItem v-if="!isEdit" label="密码" path="password">
-          <NInput v-model:value="formData.password" type="password" placeholder="请输入密码" show-password-on="click" />
+          <NInput
+            v-model:value="formData.password"
+            type="password"
+            placeholder="请输入密码"
+            show-password-on="click"
+          />
         </NFormItem>
         <NFormItem label="备注" path="remark">
           <NInput v-model:value="formData.remark" type="textarea" placeholder="请输入备注" />
@@ -126,8 +159,13 @@
     </NModal>
 
     <!-- 重置密码弹窗 -->
-    <NModal v-model:show="showResetPasswordModal" preset="dialog" title="重置密码" style="width: 400px;">
-      <NForm :model="resetPasswordForm" :rules="resetPasswordRules" ref="resetPasswordFormRef">
+    <NModal
+      v-model:show="showResetPasswordModal"
+      preset="dialog"
+      title="重置密码"
+      style="width: 400px"
+    >
+      <NForm ref="resetPasswordFormRef" :model="resetPasswordForm" :rules="resetPasswordRules">
         <NFormItem label="新密码" path="password">
           <NInput
             v-model:value="resetPasswordForm.password"
@@ -148,7 +186,12 @@
       <template #action>
         <NSpace justify="end">
           <NButton @click="showResetPasswordModal = false">取消</NButton>
-          <NButton type="primary" :loading="resetPasswordLoading" @click="handleConfirmResetPassword">确定</NButton>
+          <NButton
+            type="primary"
+            :loading="resetPasswordLoading"
+            @click="handleConfirmResetPassword"
+            >确定</NButton
+          >
         </NSpace>
       </template>
     </NModal>
@@ -157,15 +200,34 @@
 
 <script setup lang="ts">
 import { reactive, ref, h, computed } from 'vue'
-import { useMessage, type DataTableColumns, type FormInst, type FormRules, type TreeSelectOption } from 'naive-ui'
-import { getUserPageApi, getUserDetailApi, createUserApi, updateUserApi, deleteUserApi, resetPasswordApi } from '@/api/user'
+import {
+  useMessage,
+  type DataTableColumns,
+  type FormInst,
+  type FormRules,
+  type TreeSelectOption
+} from 'naive-ui'
+import {
+  getUserPageApi,
+  getUserDetailApi,
+  createUserApi,
+  updateUserApi,
+  deleteUserApi,
+  resetPasswordApi
+} from '@/api/user'
 import { getDeptTreeApi } from '@/api/dept'
 import { getRoleListApi } from '@/api/role'
 import type { UserVO, UserQuery } from '@/api/user'
 import type { DeptVO } from '@/api/dept'
 import type { RoleVO } from '@/api/role'
 
-import { usePermission, useTablePage, useConfirm, useTableActions, useFormReset } from '@/composables'
+import {
+  usePermission,
+  useTablePage,
+  useConfirm,
+  useTableActions,
+  useFormReset
+} from '@/composables'
 import { useUserStore } from '@/store'
 import { formatDateTime } from '@/utils/date'
 import { convertToTreeSelectOptions } from '@/utils/tree'
@@ -195,17 +257,17 @@ const {
   loadData,
   handleSearch,
   handleReset,
-  selection,
+  selection
 } = useTablePage<UserVO, UserQuery>({
   fetchFn: getUserPageApi,
   defaultQuery: {
     username: undefined,
     phone: undefined,
     status: undefined,
-    deptId: undefined,
+    deptId: undefined
   },
   enableSelection: true,
-  immediate: true,
+  immediate: true
 })
 
 // 选择相关的便捷访问
@@ -221,7 +283,7 @@ const columns: DataTableColumns<UserVO> = [
     title: '序号',
     key: 'index',
     width: 60,
-    render: (_row, index) => getIndex(index),
+    render: (_row, index) => getIndex(index)
   },
   {
     title: '用户名',
@@ -231,7 +293,19 @@ const columns: DataTableColumns<UserVO> = [
       if (row.username === 'admin') {
         return h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } }, [
           h('span', row.username),
-          h('span', { style: { background: '#ff9800', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontSize: '12px' } }, '超管')
+          h(
+            'span',
+            {
+              style: {
+                background: '#ff9800',
+                color: '#fff',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                fontSize: '12px'
+              }
+            },
+            '超管'
+          )
         ])
       }
       return row.username
@@ -244,7 +318,7 @@ const columns: DataTableColumns<UserVO> = [
     title: '性别',
     key: 'sex',
     width: 80,
-    render: (row) => SexLabels[row.sex] || '未知',
+    render: (row) => SexLabels[row.sex] || '未知'
   },
   {
     title: '状态',
@@ -253,10 +327,15 @@ const columns: DataTableColumns<UserVO> = [
     render: (row) => {
       const { text, color } = renderStatus(row.status)
       return h('span', { style: { color } }, text)
-    },
+    }
   },
   { title: '部门', key: 'deptName', width: 120 },
-  { title: '创建时间', key: 'createTime', width: 180, render: (row) => formatDateTime(row.createTime) },
+  {
+    title: '创建时间',
+    key: 'createTime',
+    width: 180,
+    render: (row) => formatDateTime(row.createTime)
+  },
   {
     title: '操作',
     key: 'actions',
@@ -267,11 +346,16 @@ const columns: DataTableColumns<UserVO> = [
       const isSelf = row.id === currentUserId.value
       return renderActions([
         edit(() => handleEdit(row), hasPermission('system:user:edit') && (!isSuperAdmin || isSelf)),
-        { label: '重置密码', color: '#d97706', onClick: () => handleResetPassword(row), show: hasPermission('system:user:resetPwd') && !isSuperAdmin },
-        del(() => handleDelete(row), hasPermission('system:user:delete') && !isSuperAdmin),
+        {
+          label: '重置密码',
+          color: '#d97706',
+          onClick: () => handleResetPassword(row),
+          show: hasPermission('system:user:resetPwd') && !isSuperAdmin
+        },
+        del(() => handleDelete(row), hasPermission('system:user:delete') && !isSuperAdmin)
       ])
-    },
-  },
+    }
+  }
 ]
 
 // 弹窗相关
@@ -293,7 +377,7 @@ const { formData, resetForm, setForm } = useFormReset({
   status: 1,
   deptId: undefined as string | undefined,
   roleIds: [] as string[],
-  remark: '',
+  remark: ''
 })
 
 // 判断是否为超级管理员
@@ -308,7 +392,7 @@ const isSuperAdminEditingSelf = computed(() => {
 const computedFormRules = computed<FormRules>(() => ({
   username: { required: true, message: '请输入用户名', trigger: 'blur' },
   nickname: { required: true, message: '请输入昵称', trigger: 'blur' },
-  password: isEdit.value ? {} : { required: true, message: '请输入密码', trigger: 'blur' },
+  password: isEdit.value ? {} : { required: true, message: '请输入密码', trigger: 'blur' }
 }))
 
 // 重置密码相关
@@ -318,12 +402,12 @@ const resetPasswordFormRef = ref<FormInst | null>(null)
 const resetPasswordForm = reactive({
   userId: '' as string,
   password: '',
-  confirmPassword: '',
+  confirmPassword: ''
 })
 const resetPasswordRules: FormRules = {
   password: [
     { required: true, message: '请输入新密码', trigger: 'blur' },
-    { min: 6, message: '密码至少6位', trigger: 'blur' },
+    { min: 6, message: '密码至少6位', trigger: 'blur' }
   ],
   confirmPassword: [
     { required: true, message: '请确认密码', trigger: 'blur' },
@@ -331,9 +415,9 @@ const resetPasswordRules: FormRules = {
       validator: (_rule, value) => {
         return value === resetPasswordForm.password ? true : new Error('两次密码不一致')
       },
-      trigger: 'blur',
-    },
-  ],
+      trigger: 'blur'
+    }
+  ]
 }
 
 // 加载部门树
@@ -382,7 +466,7 @@ const handleEdit = async (row: UserVO) => {
       status: detail.status,
       deptId: detail.deptId,
       roleIds: detail.roleIds || [],
-      remark: detail.remark,
+      remark: detail.remark
     })
     showModal.value = true
   } catch (error: any) {
@@ -429,7 +513,9 @@ const handleBatchDelete = () => {
     return
   }
   // 过滤掉超级管理员用户
-  const adminUsers = tableData.value.filter(u => selectedKeys.value.includes(u.id) && u.username === 'admin')
+  const adminUsers = tableData.value.filter(
+    (u) => selectedKeys.value.includes(u.id) && u.username === 'admin'
+  )
   if (adminUsers.length > 0) {
     message.warning('超级管理员用户不可删除')
     return
@@ -461,7 +547,11 @@ const handleSubmit = async () => {
       const errorMsg = error.message || error.response?.data?.message || '操作失败'
       // 将分号分隔的错误信息转换为换行显示
       if (errorMsg.includes(';')) {
-        const errors = errorMsg.split(';').filter(Boolean).map((e: string) => e.trim()).join('\n')
+        const errors = errorMsg
+          .split(';')
+          .filter(Boolean)
+          .map((e: string) => e.trim())
+          .join('\n')
         message.error(errors, { duration: 5000 })
       } else {
         message.error(errorMsg)
@@ -469,7 +559,7 @@ const handleSubmit = async () => {
     } finally {
       submitLoading.value = false
     }
-  } catch (errors: any) {
+  } catch {
     // 验证失败
   }
 }

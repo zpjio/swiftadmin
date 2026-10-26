@@ -92,6 +92,6 @@ export function deleteRoleApi(ids: number[]) {
  */
 export function assignMenusApi(roleId: number, menuIds: number[]) {
   return put('/system/role/menu', null, {
-    params: { roleId, menuIds },
+    params: { roleId, menuIds }
   })
 }

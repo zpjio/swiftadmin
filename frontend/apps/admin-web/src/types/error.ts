@@ -21,10 +21,10 @@ export const ErrorModule = {
   /** 消息模块 */
   MESSAGE: 6,
   /** 定时任务模块 */
-  SCHEDULE: 7,
+  SCHEDULE: 7
 } as const
 
-export type ErrorModuleType = typeof ErrorModule[keyof typeof ErrorModule]
+export type ErrorModuleType = (typeof ErrorModule)[keyof typeof ErrorModule]
 
 /**
  * 错误类型编码
@@ -39,10 +39,10 @@ export const ErrorType = {
   /** 业务错误 */
   BIZ: 3,
   /** 系统错误 */
-  SYSTEM: 4,
+  SYSTEM: 4
 } as const
 
-export type ErrorTypeValue = typeof ErrorType[keyof typeof ErrorType]
+export type ErrorTypeValue = (typeof ErrorType)[keyof typeof ErrorType]
 
 /**
  * 字段级错误信息
@@ -93,7 +93,7 @@ export function parseErrorCode(code: number): {
   return {
     module: Math.floor(code / 100000) as ErrorModuleType,
     type: Math.floor((code / 1000) % 100) as ErrorTypeValue,
-    seq: code % 1000,
+    seq: code % 1000
   }
 }
 

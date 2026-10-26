@@ -53,11 +53,7 @@
             <template #icon><icon-mdi-folder-plus /></template>
             新建文件夹
           </NButton>
-          <NButton
-            type="error"
-            :disabled="!hasSelection"
-            @click="handleBatchDelete"
-          >
+          <NButton type="error" :disabled="!hasSelection" @click="handleBatchDelete">
             <template #icon><icon-mdi-delete /></template>
             批量删除
           </NButton>
@@ -76,11 +72,29 @@
       />
 
       <!-- 文件预览弹窗 -->
-      <NModal v-model:show="showPreview" preset="dialog" :title="previewTitle" :style="{ width: '800px' }">
+      <NModal
+        v-model:show="showPreview"
+        preset="dialog"
+        :title="previewTitle"
+        :style="{ width: '800px' }"
+      >
         <div class="min-h-[400px] flex items-center justify-center">
-          <img v-if="previewType === 'image'" :src="previewUrl" class="max-w-full max-h-[600px] object-contain" />
-          <video v-else-if="previewType === 'video'" :src="previewUrl" controls class="max-w-full max-h-[600px]" />
-          <iframe v-else-if="previewType === 'pdf'" :src="previewUrl" class="w-full h-[600px] border-none" />
+          <img
+            v-if="previewType === 'image'"
+            :src="previewUrl"
+            class="max-w-full max-h-[600px] object-contain"
+          />
+          <video
+            v-else-if="previewType === 'video'"
+            :src="previewUrl"
+            controls
+            class="max-w-full max-h-[600px]"
+          />
+          <iframe
+            v-else-if="previewType === 'pdf'"
+            :src="previewUrl"
+            class="w-full h-[600px] border-none"
+          />
           <div v-else class="text-center text-gray-400">
             <icon-mdi-file class="text-6xl" />
             <p class="mt-4">该文件类型不支持预览</p>
@@ -110,7 +124,7 @@ const fileTypeOptions = [
   { label: '文档', value: 'doc' },
   { label: '视频', value: 'video' },
   { label: '音频', value: 'audio' },
-  { label: '其他', value: 'other' },
+  { label: '其他', value: 'other' }
 ]
 
 // 上传配置
@@ -127,15 +141,15 @@ const {
   loadData,
   handleSearch,
   handleReset,
-  selection,
+  selection
 } = useTablePage<FileVO, FileQuery>({
   fetchFn: getFilePageApi,
   defaultQuery: {
     fileName: undefined,
-    fileType: undefined,
+    fileType: undefined
   },
   enableSelection: true,
-  immediate: true,
+  immediate: true
 })
 
 // 选择相关的便捷访问
@@ -150,7 +164,7 @@ const columns: DataTableColumns<FileVO> = [
     title: '序号',
     key: 'index',
     width: 60,
-    render: (_row, index) => getIndex(index),
+    render: (_row, index) => getIndex(index)
   },
   {
     title: '文件名',
@@ -160,24 +174,30 @@ const columns: DataTableColumns<FileVO> = [
     render: (row) =>
       h('div', { class: 'flex items-center gap-2' }, [
         h('i', { class: `${getIconClass(getFileIcon(row.fileType))} text-lg` }),
-        h('span', row.fileName),
-      ]),
+        h('span', row.fileName)
+      ])
   },
   { title: '文件类型', key: 'fileType', width: 100 },
   { title: '文件大小', key: 'fileSize', width: 100, render: (row) => formatFileSize(row.fileSize) },
   { title: '存储路径', key: 'filePath', width: 200, ellipsis: { tooltip: true } },
-  { title: '上传时间', key: 'createTime', width: 160, render: (row) => formatDateTime(row.createTime) },
+  {
+    title: '上传时间',
+    key: 'createTime',
+    width: 160,
+    render: (row) => formatDateTime(row.createTime)
+  },
   {
     title: '操作',
     key: 'actions',
     width: 200,
     fixed: 'right',
-    render: (row) => renderActions([
-      { label: '预览', color: '#2563eb', onClick: () => handlePreview(row) },
-      { label: '下载', color: '#059669', onClick: () => handleDownload(row) },
-      { label: '删除', color: '#dc2626', onClick: () => handleDelete(row) },
-    ]),
-  },
+    render: (row) =>
+      renderActions([
+        { label: '预览', color: '#2563eb', onClick: () => handlePreview(row) },
+        { label: '下载', color: '#059669', onClick: () => handleDownload(row) },
+        { label: '删除', color: '#dc2626', onClick: () => handleDelete(row) }
+      ])
+  }
 ]
 
 // 预览相关

@@ -7,10 +7,10 @@ export const MenuType = {
   /** 菜单 */
   MENU: 2,
   /** 按钮 */
-  BUTTON: 3,
+  BUTTON: 3
 } as const
 
-export type MenuTypeEnum = typeof MenuType[keyof typeof MenuType]
+export type MenuTypeEnum = (typeof MenuType)[keyof typeof MenuType]
 
 /**
  * 菜单信息

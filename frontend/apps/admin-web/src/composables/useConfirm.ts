@@ -62,7 +62,7 @@ export function useConfirm() {
       content,
       confirmText = '确定',
       cancelText = '取消',
-      type = 'info',
+      type = 'info'
     } = opts
 
     dialog[type]({
@@ -77,7 +77,7 @@ export function useConfirm() {
           message.error(getErrorMessage(error))
         }
       },
-      onNegativeClick: onCancel,
+      onNegativeClick: onCancel
     })
   }
 
@@ -97,7 +97,7 @@ export function useConfirm() {
       {
         title: '确认删除',
         type: 'warning',
-        ...opts,
+        ...opts
       },
       onConfirm,
       onCancel
@@ -109,14 +109,11 @@ export function useConfirm() {
    * @param count 删除数量
    * @param onConfirm 确认回调
    */
-  const confirmBatchDelete = (
-    count: number,
-    onConfirm: () => Promise<void> | void
-  ) => {
+  const confirmBatchDelete = (count: number, onConfirm: () => Promise<void> | void) => {
     confirmDelete(
       {
         title: '确认批量删除',
-        content: `确定要删除选中的 ${count} 条数据吗？`,
+        content: `确定要删除选中的 ${count} 条数据吗？`
       },
       onConfirm
     )
@@ -125,6 +122,6 @@ export function useConfirm() {
   return {
     confirm: showConfirm,
     confirmDelete,
-    confirmBatchDelete,
+    confirmBatchDelete
   }
 }

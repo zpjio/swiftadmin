@@ -99,8 +99,8 @@ export function logoutApi() {
 export function refreshTokenApi(refreshToken: string) {
   return post<LoginResult>('/auth/refresh', null, {
     headers: {
-      'Refresh-Token': refreshToken,
-    },
+      'Refresh-Token': refreshToken
+    }
   })
 }
 
@@ -128,8 +128,8 @@ export function changePasswordApi(data: ChangePasswordParams) {
     params: {
       userId: data.userId,
       oldPassword: data.oldPassword,
-      newPassword: data.newPassword,
-    },
+      newPassword: data.newPassword
+    }
   })
 }
 
@@ -156,8 +156,8 @@ export function forceChangePasswordApi(data: ForceChangePasswordParams) {
   return post<ForceChangePasswordResult>('/auth/password/force-change', null, {
     params: {
       tempToken: data.tempToken,
-      newPassword: data.newPassword,
-    },
+      newPassword: data.newPassword
+    }
   })
 }
 

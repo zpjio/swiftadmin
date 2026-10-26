@@ -30,8 +30,8 @@ const themeOverrides = computed<GlobalThemeOverrides>(() => {
         actionColor: '#28282c',
         hoverColor: 'rgba(255, 255, 255, 0.09)',
         borderColor: '#3a3a3a',
-        dividerColor: '#3a3a3a',
-      },
+        dividerColor: '#3a3a3a'
+      }
     }
   }
   return {
@@ -39,8 +39,8 @@ const themeOverrides = computed<GlobalThemeOverrides>(() => {
       primaryColor: '#1890ff',
       primaryColorHover: '#40a9ff',
       primaryColorPressed: '#096dd9',
-      primaryColorSuppl: '#40a9ff',
-    },
+      primaryColorSuppl: '#40a9ff'
+    }
   }
 })
 

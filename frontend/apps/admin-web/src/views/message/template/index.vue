@@ -4,10 +4,20 @@
       <!-- 搜索栏 -->
       <NForm :model="queryForm" inline class="mb-4">
         <NFormItem label="模板名称" path="templateName">
-          <NInput v-model:value="queryForm.templateName" placeholder="请输入模板名称" clearable style="width: 180px" />
+          <NInput
+            v-model:value="queryForm.templateName"
+            placeholder="请输入模板名称"
+            clearable
+            style="width: 180px"
+          />
         </NFormItem>
         <NFormItem label="模板编码" path="templateCode">
-          <NInput v-model:value="queryForm.templateCode" placeholder="请输入模板编码" clearable style="width: 180px" />
+          <NInput
+            v-model:value="queryForm.templateCode"
+            placeholder="请输入模板编码"
+            clearable
+            style="width: 180px"
+          />
         </NFormItem>
         <NFormItem label="渠道类型" path="channelType">
           <NSelect
@@ -38,7 +48,12 @@
           <template #icon><icon-mdi-plus /></template>
           新增模板
         </NButton>
-        <NButton v-auth="'message:template:delete'" type="error" :disabled="!hasSelection" @click="handleBatchDelete">
+        <NButton
+          v-auth="'message:template:delete'"
+          type="error"
+          :disabled="!hasSelection"
+          @click="handleBatchDelete"
+        >
           <template #icon><icon-mdi-delete /></template>
           批量删除
         </NButton>
@@ -57,15 +72,23 @@
     </NCard>
 
     <!-- 新增/编辑弹窗 -->
-    <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 600px;">
+    <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 600px">
       <NForm ref="formRef" :model="form" :rules="rules" label-width="100">
         <NFormItem label="模板名称" path="templateName">
           <NInput v-model:value="form.templateName" placeholder="请输入模板名称" />
         </NFormItem>
         <NFormItem label="模板编码" path="templateCode">
-          <NInput v-model:value="form.templateCode" placeholder="请输入模板编码" :disabled="isEdit" />
+          <NInput
+            v-model:value="form.templateCode"
+            placeholder="请输入模板编码"
+            :disabled="isEdit"
+          />
         </NFormItem>
-        <NFormItem v-if="form.channelType === 'sms'" label="服务商模板码" path="providerTemplateCode">
+        <NFormItem
+          v-if="form.channelType === 'sms'"
+          label="服务商模板码"
+          path="providerTemplateCode"
+        >
           <NInput v-model:value="form.providerTemplateCode" placeholder="如阿里云 SMS_123456789" />
         </NFormItem>
         <NFormItem label="渠道类型" path="channelType">
@@ -79,10 +102,18 @@
           <NInput v-model:value="form.subject" placeholder="请输入邮件主题" />
         </NFormItem>
         <NFormItem label="模板内容" path="content">
-          <NInput v-model:value="form.content" type="textarea" placeholder="请输入模板内容，使用 ${变量名} 表示变量" :rows="5" />
+          <NInput
+            v-model:value="form.content"
+            type="textarea"
+            placeholder="请输入模板内容，使用 ${变量名} 表示变量"
+            :rows="5"
+          />
         </NFormItem>
         <NFormItem label="变量列表" path="variables">
-          <NInput v-model:value="form.variables" placeholder='变量列表，JSON数组格式，如：["username","code"]' />
+          <NInput
+            v-model:value="form.variables"
+            placeholder='变量列表，JSON数组格式，如：["username","code"]'
+          />
         </NFormItem>
         <NFormItem label="状态" path="status">
           <NRadioGroup v-model:value="form.status">
@@ -107,7 +138,15 @@
 
 <script setup lang="ts">
 import { ref, reactive, h, onMounted } from 'vue'
-import { useMessage, useDialog, NTag, NButton, NSpace, NSwitch, type DataTableColumns, type DataTableRowKey } from 'naive-ui'
+import {
+  useMessage,
+  useDialog,
+  NTag,
+  NButton,
+  NSpace,
+  NSwitch,
+  type DataTableColumns
+} from 'naive-ui'
 import {
   getTemplatePageApi,
   getTemplateDetailApi,
@@ -116,7 +155,7 @@ import {
   deleteTemplateApi,
   updateTemplateStatusApi,
   type MessageTemplate,
-  type ChannelType,
+  type ChannelType
 } from '@/api/message'
 import { useDict } from '@/composables/useDict'
 import { usePagination, useTableSelection } from '@/composables'
@@ -139,13 +178,13 @@ const { options: channelTypeOptions, getLabel: getChannelTypeLabel } = useDict('
 const queryForm = reactive({
   templateName: undefined as string | undefined,
   templateCode: undefined as string | undefined,
-  channelType: undefined as ChannelType | undefined,
+  channelType: undefined as ChannelType | undefined
 })
 
 // 分页
 const { paginationProps, setTotal, getParams } = usePagination({
   onChange: () => loadData(),
-  onPageSizeChange: () => loadData(),
+  onPageSizeChange: () => loadData()
 })
 
 const form = reactive({
@@ -158,14 +197,14 @@ const form = reactive({
   content: '',
   variables: '',
   status: 1,
-  remark: '',
+  remark: ''
 })
 
 const rules = {
   templateName: [{ required: true, message: '请输入模板名称', trigger: 'blur' }],
   templateCode: [{ required: true, message: '请输入模板编码', trigger: 'blur' }],
   channelType: [{ required: true, message: '请选择渠道类型', trigger: 'change' }],
-  content: [{ required: true, message: '请输入模板内容', trigger: 'blur' }],
+  content: [{ required: true, message: '请输入模板内容', trigger: 'blur' }]
 }
 
 const columns: DataTableColumns<MessageTemplate> = [
@@ -177,7 +216,7 @@ const columns: DataTableColumns<MessageTemplate> = [
     title: '渠道类型',
     key: 'channelType',
     width: 100,
-    render: (row) => h(NTag, { type: 'info' }, () => getChannelTypeLabel(row.channelType)),
+    render: (row) => h(NTag, { type: 'info' }, () => getChannelTypeLabel(row.channelType))
   },
   {
     title: '状态',
@@ -186,11 +225,16 @@ const columns: DataTableColumns<MessageTemplate> = [
     render: (row) =>
       h(NSwitch, {
         value: row.status === 1,
-        onUpdateValue: (val: boolean) => handleStatusChange(row, val),
-      }),
+        onUpdateValue: (val: boolean) => handleStatusChange(row, val)
+      })
   },
   { title: '备注', key: 'remark', width: 200, ellipsis: { tooltip: true } },
-  { title: '创建时间', key: 'createTime', width: 170, render: (row) => formatDateTime(row.createTime) },
+  {
+    title: '创建时间',
+    key: 'createTime',
+    width: 170,
+    render: (row) => formatDateTime(row.createTime)
+  },
   {
     title: '操作',
     key: 'actions',
@@ -198,9 +242,13 @@ const columns: DataTableColumns<MessageTemplate> = [
     render: (row) =>
       h(NSpace, null, () => [
         h(NButton, { text: true, type: 'primary', onClick: () => handleEdit(row) }, () => '编辑'),
-        h(NButton, { text: true, type: 'error', onClick: () => handleDelete([row.id]) }, () => '删除'),
-      ]),
-  },
+        h(
+          NButton,
+          { text: true, type: 'error', onClick: () => handleDelete([row.id]) },
+          () => '删除'
+        )
+      ])
+  }
 ]
 
 onMounted(() => {
@@ -252,7 +300,7 @@ function handleAdd() {
     content: '',
     variables: '',
     status: 1,
-    remark: '',
+    remark: ''
   })
   showModal.value = true
 }
@@ -264,7 +312,7 @@ async function handleEdit(row: MessageTemplate) {
     const res = await getTemplateDetailApi(row.id)
     Object.assign(form, res)
     showModal.value = true
-  } catch (error) {
+  } catch {
     message.error('获取模板详情失败')
   }
 }
@@ -294,7 +342,7 @@ async function handleStatusChange(row: MessageTemplate, val: boolean) {
     await updateTemplateStatusApi(row.id, val ? 1 : 0)
     message.success('状态更新成功')
     loadData()
-  } catch (error) {
+  } catch {
     message.error('状态更新失败')
   }
 }
@@ -310,11 +358,10 @@ function handleDelete(ids: string[]) {
         await deleteTemplateApi(ids)
         message.success('删除成功')
         loadData()
-      } catch (error) {
+      } catch {
         message.error('删除失败')
       }
-    },
+    }
   })
 }
 </script>
-

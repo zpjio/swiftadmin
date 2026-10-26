@@ -16,17 +16,22 @@ const service: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api',
   timeout: 15000,
   headers: {
-    'Content-Type': 'application/json',
+    'Content-Type': 'application/json'
   },
   // 跨域请求时携带凭证
-  withCredentials: false,
+  withCredentials: false
 })
 
 // 请求拦截器
 service.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token')
-    console.log('[Request] URL:', config.url, 'Token:', token ? token.substring(0, 20) + '...' : 'null')
+    console.log(
+      '[Request] URL:',
+      config.url,
+      'Token:',
+      token ? token.substring(0, 20) + '...' : 'null'
+    )
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -48,7 +53,14 @@ service.interceptors.response.use(
 
     const res = response.data
 
-    console.log('[Response] URL:', response.config.url, 'Code:', res.code, 'Data:', res.data ? 'has data' : 'null')
+    console.log(
+      '[Response] URL:',
+      response.config.url,
+      'Code:',
+      res.code,
+      'Data:',
+      res.data ? 'has data' : 'null'
+    )
 
     // 后端成功码为 0
     if (res.code !== 0) {

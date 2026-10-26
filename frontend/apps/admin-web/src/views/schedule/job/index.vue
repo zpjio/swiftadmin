@@ -4,10 +4,20 @@
       <!-- 搜索栏 -->
       <NForm :model="queryForm" inline class="mb-4">
         <NFormItem label="任务名称" path="jobName">
-          <NInput v-model:value="queryForm.jobName" placeholder="请输入任务名称" clearable style="width: 180px" />
+          <NInput
+            v-model:value="queryForm.jobName"
+            placeholder="请输入任务名称"
+            clearable
+            style="width: 180px"
+          />
         </NFormItem>
         <NFormItem label="任务分组" path="jobGroup">
-          <NInput v-model:value="queryForm.jobGroup" placeholder="请输入任务分组" clearable style="width: 180px" />
+          <NInput
+            v-model:value="queryForm.jobGroup"
+            placeholder="请输入任务分组"
+            clearable
+            style="width: 180px"
+          />
         </NFormItem>
         <NFormItem label="状态" path="status">
           <NSelect
@@ -38,7 +48,12 @@
           <template #icon><icon-mdi-plus /></template>
           新增任务
         </NButton>
-        <NButton v-auth="'schedule:job:delete'" type="error" :disabled="!hasSelection" @click="handleBatchDelete">
+        <NButton
+          v-auth="'schedule:job:delete'"
+          type="error"
+          :disabled="!hasSelection"
+          @click="handleBatchDelete"
+        >
           <template #icon><icon-mdi-delete /></template>
           批量删除
         </NButton>
@@ -58,7 +73,7 @@
     </NCard>
 
     <!-- 新增/编辑弹窗 -->
-    <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 700px;">
+    <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 700px">
       <NForm ref="formRef" :model="form" :rules="rules" label-width="120px">
         <NFormItem label="任务名称" path="jobName">
           <NInput v-model:value="form.jobName" placeholder="请输入任务名称" />
@@ -67,28 +82,60 @@
           <NInput v-model:value="form.jobGroup" placeholder="请输入任务分组" />
         </NFormItem>
         <NFormItem label="Bean名称" path="beanName">
-          <NInput v-model:value="form.beanName" placeholder="请输入Bean名称（如：socialTokenRefreshTask）" />
+          <NInput
+            v-model:value="form.beanName"
+            placeholder="请输入Bean名称（如：socialTokenRefreshTask）"
+          />
         </NFormItem>
         <NFormItem label="方法名称" path="methodName">
-          <NInput v-model:value="form.methodName" placeholder="请输入方法名称（如：refreshToken）" />
+          <NInput
+            v-model:value="form.methodName"
+            placeholder="请输入方法名称（如：refreshToken）"
+          />
         </NFormItem>
         <NFormItem label="方法参数" path="methodParams">
-          <NInput v-model:value="form.methodParams" type="textarea" placeholder="请输入方法参数（JSON数组格式）" :rows="3" />
+          <NInput
+            v-model:value="form.methodParams"
+            type="textarea"
+            placeholder="请输入方法参数（JSON数组格式）"
+            :rows="3"
+          />
         </NFormItem>
         <NFormItem label="Cron表达式" path="cronExpression">
           <NSpace vertical style="width: 100%">
-            <NInput v-model:value="form.cronExpression" placeholder="请输入Cron表达式（如：0/5 * * * * ?）" />
+            <NInput
+              v-model:value="form.cronExpression"
+              placeholder="请输入Cron表达式（如：0/5 * * * * ?）"
+            />
             <CronEditor v-model="form.cronExpression" />
           </NSpace>
         </NFormItem>
         <NFormItem label="超时时间（秒）" path="timeout">
-          <NInputNumber v-model:value="form.timeout" :min="1" :max="3600" placeholder="请输入超时时间" style="width: 100%" />
+          <NInputNumber
+            v-model:value="form.timeout"
+            :min="1"
+            :max="3600"
+            placeholder="请输入超时时间"
+            style="width: 100%"
+          />
         </NFormItem>
         <NFormItem label="重试次数" path="retryTimes">
-          <NInputNumber v-model:value="form.retryTimes" :min="0" :max="10" placeholder="请输入重试次数" style="width: 100%" />
+          <NInputNumber
+            v-model:value="form.retryTimes"
+            :min="0"
+            :max="10"
+            placeholder="请输入重试次数"
+            style="width: 100%"
+          />
         </NFormItem>
         <NFormItem label="重试间隔（秒）" path="retryInterval">
-          <NInputNumber v-model:value="form.retryInterval" :min="0" :max="3600" placeholder="请输入重试间隔" style="width: 100%" />
+          <NInputNumber
+            v-model:value="form.retryInterval"
+            :min="0"
+            :max="3600"
+            placeholder="请输入重试间隔"
+            style="width: 100%"
+          />
         </NFormItem>
         <NFormItem label="状态" path="status">
           <NRadioGroup v-model:value="form.status">
@@ -115,7 +162,14 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, h } from 'vue'
-import { useMessage, useDialog, type DataTableColumns, type DataTableRowKey, type FormRules, NButton as NButtonComponent, NTag } from 'naive-ui'
+import {
+  useMessage,
+  useDialog,
+  type DataTableColumns,
+  type FormRules,
+  NButton as NButtonComponent,
+  NTag
+} from 'naive-ui'
 import {
   getJobPageApi,
   getJobDetailApi,
@@ -128,7 +182,7 @@ import {
   type JobVO,
   type JobDTO,
   JobStatus,
-  type JobQuery,
+  type JobQuery
 } from '@/api/schedule'
 import CronEditor from '@/components/schedule/CronEditor.vue'
 import { formatDateTime } from '@/utils/date'
@@ -147,13 +201,13 @@ const modalTitle = ref('')
 
 const statusOptions = [
   { label: '正常', value: 0 },
-  { label: '暂停', value: 1 },
+  { label: '暂停', value: 1 }
 ]
 
 const queryForm = reactive<JobQuery>({
   jobName: undefined,
   jobGroup: undefined,
-  status: undefined,
+  status: undefined
 })
 
 const form = reactive<JobDTO>({
@@ -167,7 +221,7 @@ const form = reactive<JobDTO>({
   retryTimes: 0,
   retryInterval: 0,
   status: 0,
-  remark: '',
+  remark: ''
 })
 
 const rules: FormRules = {
@@ -178,13 +232,13 @@ const rules: FormRules = {
   cronExpression: [{ required: true, message: '请输入Cron表达式', trigger: 'blur' }],
   timeout: [{ required: true, type: 'number', message: '请输入超时时间', trigger: 'blur' }],
   retryTimes: [{ required: true, type: 'number', message: '请输入重试次数', trigger: 'blur' }],
-  retryInterval: [{ required: true, type: 'number', message: '请输入重试间隔', trigger: 'blur' }],
+  retryInterval: [{ required: true, type: 'number', message: '请输入重试间隔', trigger: 'blur' }]
 }
 
 // 分页
 const { paginationProps, setTotal, getIndex } = usePagination({
   onChange: () => loadData(),
-  onPageSizeChange: () => loadData(),
+  onPageSizeChange: () => loadData()
 })
 
 const columns: DataTableColumns<JobVO> = [
@@ -193,20 +247,19 @@ const columns: DataTableColumns<JobVO> = [
     title: '序号',
     key: 'index',
     width: 70,
-    render: (_row, index) => getIndex(index),
+    render: (_row, index) => getIndex(index)
   },
   { title: '任务名称', key: 'jobName', width: 160 },
   { title: '任务分组', key: 'jobGroup', width: 110 },
-  { title: '状态', key: 'status', width: 90,
+  {
+    title: '状态',
+    key: 'status',
+    width: 90,
     render: (row) => {
       const tag = row.status === JobStatus.NORMAL ? 'success' : 'warning'
       const text = row.status === JobStatus.NORMAL ? '正常' : '暂停'
-      return h(
-        NTag,
-        { type: tag, size: 'small' },
-        { default: () => text },
-      )
-    },
+      return h(NTag, { type: tag, size: 'small' }, { default: () => text })
+    }
   },
   { title: 'Bean名称', key: 'beanName', width: 180 },
   { title: '方法名称', key: 'methodName', width: 140 },
@@ -214,13 +267,13 @@ const columns: DataTableColumns<JobVO> = [
     title: 'Cron表达式',
     key: 'cronExpression',
     width: 160,
-    ellipsis: { tooltip: true },
+    ellipsis: { tooltip: true }
   },
   {
     title: '下次执行时间',
     key: 'nextExecuteTime',
     width: 170,
-    render: (row) => formatDateTime(row.nextExecuteTime) || '-',
+    render: (row) => formatDateTime(row.nextExecuteTime) || '-'
   },
   {
     title: '操作',
@@ -234,9 +287,9 @@ const columns: DataTableColumns<JobVO> = [
           {
             size: 'small',
             onClick: () => handleEdit(row),
-            'v-auth': 'schedule:job:edit',
+            'v-auth': 'schedule:job:edit'
           },
-          { default: () => '编辑' },
+          { default: () => '编辑' }
         ),
         h(
           NButtonComponent,
@@ -244,9 +297,10 @@ const columns: DataTableColumns<JobVO> = [
             size: 'small',
             type: row.status === JobStatus.NORMAL ? 'warning' : 'success',
             onClick: () => handleToggleStatus(row),
-            'v-auth': row.status === JobStatus.NORMAL ? 'schedule:job:disable' : 'schedule:job:enable',
+            'v-auth':
+              row.status === JobStatus.NORMAL ? 'schedule:job:disable' : 'schedule:job:enable'
           },
-          { default: () => (row.status === JobStatus.NORMAL ? '暂停' : '启用') },
+          { default: () => (row.status === JobStatus.NORMAL ? '暂停' : '启用') }
         ),
         h(
           NButtonComponent,
@@ -254,9 +308,9 @@ const columns: DataTableColumns<JobVO> = [
             size: 'small',
             type: 'info',
             onClick: () => handleTrigger(row),
-            'v-auth': 'schedule:job:trigger',
+            'v-auth': 'schedule:job:trigger'
           },
-          { default: () => '触发' },
+          { default: () => '触发' }
         ),
         h(
           NButtonComponent,
@@ -264,13 +318,13 @@ const columns: DataTableColumns<JobVO> = [
             size: 'small',
             type: 'error',
             onClick: () => handleDelete(row),
-            'v-auth': 'schedule:job:delete',
+            'v-auth': 'schedule:job:delete'
           },
-          { default: () => '删除' },
-        ),
+          { default: () => '删除' }
+        )
       ])
-    },
-  },
+    }
+  }
 ]
 
 const loadData = async () => {
@@ -279,7 +333,7 @@ const loadData = async () => {
     const res = await getJobPageApi(queryForm)
     tableData.value = res.records
     setTotal(res.totalRow)
-  } catch (error) {
+  } catch {
     message.error('加载任务列表失败')
   } finally {
     loading.value = false
@@ -294,7 +348,7 @@ const handleReset = () => {
   Object.assign(queryForm, {
     jobName: undefined,
     jobGroup: undefined,
-    status: undefined,
+    status: undefined
   })
   loadData()
 }
@@ -313,7 +367,7 @@ const handleAdd = () => {
     retryTimes: 0,
     retryInterval: 0,
     status: 0,
-    remark: '',
+    remark: ''
   })
   showModal.value = true
 }
@@ -325,7 +379,7 @@ const handleEdit = async (row: JobVO) => {
     const res = await getJobDetailApi(row.id)
     Object.assign(form, res)
     showModal.value = true
-  } catch (error) {
+  } catch {
     message.error('获取任务详情失败')
   }
 }
@@ -346,7 +400,7 @@ const handleSave = async () => {
     }
     showModal.value = false
     loadData()
-  } catch (error) {
+  } catch {
     message.error(isEdit.value ? '更新任务失败' : '创建任务失败')
   } finally {
     saving.value = false
@@ -364,10 +418,10 @@ const handleDelete = (row: JobVO) => {
         await deleteJobApi([row.id])
         message.success('删除任务成功')
         loadData()
-      } catch (error) {
+      } catch {
         message.error('删除任务失败')
       }
-    },
+    }
   })
 }
 
@@ -383,10 +437,10 @@ const handleBatchDelete = () => {
         message.success('批量删除成功')
         clearSelection()
         loadData()
-      } catch (error) {
+      } catch {
         message.error('批量删除失败')
       }
-    },
+    }
   })
 }
 
@@ -400,7 +454,7 @@ const handleToggleStatus = async (row: JobVO) => {
       message.success('启用任务成功')
     }
     loadData()
-  } catch (error) {
+  } catch {
     message.error(row.status === JobStatus.NORMAL ? '暂停任务失败' : '启用任务失败')
   }
 }
@@ -415,10 +469,10 @@ const handleTrigger = async (row: JobVO) => {
       try {
         await triggerJobApi(row.id)
         message.success('任务已触发，请查看执行日志')
-      } catch (error) {
+      } catch {
         message.error('触发任务失败')
       }
-    },
+    }
   })
 }
 
@@ -426,4 +480,3 @@ onMounted(() => {
   loadData()
 })
 </script>
-

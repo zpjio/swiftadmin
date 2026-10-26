@@ -56,17 +56,19 @@ export interface UsePaginationReturn {
  * const params = { ...queryForm, ...getParams() }
  * ```
  */
-export function usePagination(options: {
-  defaultPageSize?: number
-  pageSizes?: number[]
-  onChange?: (page: number) => void
-  onPageSizeChange?: (pageSize: number) => void
-} = {}): UsePaginationReturn {
+export function usePagination(
+  options: {
+    defaultPageSize?: number
+    pageSizes?: number[]
+    onChange?: (page: number) => void
+    onPageSizeChange?: (pageSize: number) => void
+  } = {}
+): UsePaginationReturn {
   const {
     defaultPageSize = 10,
     pageSizes = [10, 20, 50, 100],
     onChange,
-    onPageSizeChange,
+    onPageSizeChange
   } = options
 
   const state = reactive<PaginationState>({
@@ -83,7 +85,7 @@ export function usePagination(options: {
       state.pageSize = pageSize
       state.page = 1 // 重置到第一页
       onPageSizeChange?.(pageSize)
-    },
+    }
   })
 
   /**
@@ -130,7 +132,7 @@ export function usePagination(options: {
    */
   const getParams = (): PaginationParams => ({
     page: state.page,
-    pageSize: state.pageSize,
+    pageSize: state.pageSize
   })
 
   /**
@@ -154,6 +156,6 @@ export function usePagination(options: {
     reset,
     resetPage,
     setTotal,
-    getIndex,
+    getIndex
   }
 }

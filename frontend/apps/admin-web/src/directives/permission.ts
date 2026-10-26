@@ -19,7 +19,7 @@ function checkPermission(value: string | string[]): boolean {
   }
 
   if (Array.isArray(value)) {
-    return value.some(perm => permissions.includes(perm))
+    return value.some((perm) => permissions.includes(perm))
   }
 
   return permissions.includes(value)
@@ -33,7 +33,7 @@ function checkRole(value: string | string[]): boolean {
   const roles = userStore.roles || []
 
   if (Array.isArray(value)) {
-    return value.some(role => roles.includes(role))
+    return value.some((role) => roles.includes(role))
   }
 
   return roles.includes(value)

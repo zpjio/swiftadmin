@@ -4,7 +4,12 @@
       <!-- 左侧：字典类型列表 -->
       <div class="w-80 flex-shrink-0 border-r pr-4">
         <div class="mb-4">
-          <NInput v-model:value="typeQueryForm.dictName" placeholder="搜索字典名称" clearable @update:value="handleSearchType">
+          <NInput
+            v-model:value="typeQueryForm.dictName"
+            placeholder="搜索字典名称"
+            clearable
+            @update:value="handleSearchType"
+          >
             <template #prefix>
               <icon-mdi-magnify />
             </template>
@@ -55,12 +60,18 @@
                 </div>
               </div>
             </div>
-            <div v-if="typeList.length === 0 && !typeLoading" class="text-center text-gray-400 py-8">
+            <div
+              v-if="typeList.length === 0 && !typeLoading"
+              class="text-center text-gray-400 py-8"
+            >
               暂无数据
             </div>
           </NScrollbar>
         </NSpin>
-        <div class="mt-4 flex justify-center" v-if="typePagination.itemCount > (typeQueryForm.size ?? 0)">
+        <div
+          v-if="typePagination.itemCount > (typeQueryForm.size ?? 0)"
+          class="mt-4 flex justify-center"
+        >
           <NPagination
             v-model:page="typeQueryForm.page"
             :page-size="typeQueryForm.size"
@@ -86,7 +97,13 @@
               <span class="text-xs text-gray-400">{{ selectedType.dictType }}</span>
             </div>
             <NSpace>
-              <NInput v-model:value="dataQueryForm.dictLabel" placeholder="搜索数据标签" clearable style="width: 150px" @update:value="handleSearchData" />
+              <NInput
+                v-model:value="dataQueryForm.dictLabel"
+                placeholder="搜索数据标签"
+                clearable
+                style="width: 150px"
+                @update:value="handleSearchData"
+              />
               <NButton type="primary" @click="handleAddData">
                 <template #icon><icon-mdi-plus /></template>
                 新增数据
@@ -107,7 +124,7 @@
     </div>
 
     <!-- 字典类型表单弹窗 -->
-    <NModal v-model:show="showTypeModal" :title="typeModalTitle" preset="card" style="width: 500px;">
+    <NModal v-model:show="showTypeModal" :title="typeModalTitle" preset="card" style="width: 500px">
       <NForm ref="typeFormRef" :model="typeForm" :rules="typeRules" label-width="100">
         <NFormItem label="字典名称" path="dictName">
           <NInput v-model:value="typeForm.dictName" placeholder="请输入字典名称" />
@@ -139,7 +156,7 @@
     </NModal>
 
     <!-- 字典数据表单弹窗 -->
-    <NModal v-model:show="showDataModal" :title="dataModalTitle" preset="card" style="width: 500px;">
+    <NModal v-model:show="showDataModal" :title="dataModalTitle" preset="card" style="width: 500px">
       <NForm ref="dataFormRef" :model="dataForm" :rules="dataRules" label-width="100">
         <NFormItem label="数据标签" path="label">
           <NInput v-model:value="dataForm.label" placeholder="请输入数据标签" />
@@ -173,7 +190,27 @@
 
 <script setup lang="ts">
 import { ref, reactive, h, onMounted } from 'vue'
-import { useMessage, useDialog, NDataTable, NTag, NButton, NSpace, NInput, NModal, NForm, NFormItem, NRadioGroup, NRadio, NInputNumber, NPopconfirm, NPagination, NSpin, NScrollbar, NCard, type DataTableColumns } from 'naive-ui'
+import {
+  useMessage,
+  useDialog,
+  NDataTable,
+  NTag,
+  NButton,
+  NSpace,
+  NInput,
+  NModal,
+  NForm,
+  NFormItem,
+  NRadioGroup,
+  NRadio,
+  NInputNumber,
+  NPopconfirm,
+  NPagination,
+  NSpin,
+  NScrollbar,
+  NCard,
+  type DataTableColumns
+} from 'naive-ui'
 import {
   getDictTypePageApi,
   getDictTypeDetailApi,
@@ -185,9 +222,16 @@ import {
   createDictDataApi,
   updateDictDataApi,
   deleteDictDataApi,
-  refreshDictCacheApi,
+  refreshDictCacheApi
 } from '@/api/dict'
-import type { DictTypeVO, DictDataVO, DictTypeDTO, DictDataDTO, DictTypeQuery, DictDataQuery } from '@/api/dict'
+import type {
+  DictTypeVO,
+  DictDataVO,
+  DictTypeDTO,
+  DictDataDTO,
+  DictTypeQuery,
+  DictDataQuery
+} from '@/api/dict'
 
 const message = useMessage()
 const dialog = useDialog()
@@ -206,7 +250,7 @@ const typeModalTitle = ref('')
 const typeQueryForm = reactive<DictTypeQuery>({ page: 1, size: 20, dictName: undefined })
 
 const typePagination = reactive({
-  itemCount: 0,
+  itemCount: 0
 })
 
 // 字典数据相关
@@ -227,7 +271,7 @@ const dataPagination = reactive({
     dataPagination.page = page
     dataQueryForm.page = page
     loadDataList()
-  },
+  }
 })
 
 // 字典类型表单
@@ -235,12 +279,12 @@ const typeForm = reactive<DictTypeDTO>({
   dictName: '',
   dictType: '',
   status: 1,
-  remark: '',
+  remark: ''
 })
 
 const typeRules = {
   dictName: [{ required: true, message: '请输入字典名称', trigger: 'blur' }],
-  dictType: [{ required: true, message: '请输入字典类型', trigger: 'blur' }],
+  dictType: [{ required: true, message: '请输入字典类型', trigger: 'blur' }]
 }
 
 // 字典数据表单
@@ -250,12 +294,12 @@ const dataForm = reactive<DictDataDTO>({
   value: '',
   sortOrder: 0,
   status: 1,
-  remark: '',
+  remark: ''
 })
 
 const dataRules = {
   label: [{ required: true, message: '请输入数据标签', trigger: 'blur' }],
-  value: [{ required: true, message: '请输入数据值', trigger: 'blur' }],
+  value: [{ required: true, message: '请输入数据值', trigger: 'blur' }]
 }
 
 // 字典数据表格列
@@ -269,7 +313,9 @@ const dataColumns: DataTableColumns<DictDataVO> = [
     key: 'status',
     width: 80,
     render: (row) =>
-      h(NTag, { type: row.status === 1 ? 'success' : 'error', size: 'small' }, () => row.status === 1 ? '正常' : '禁用'),
+      h(NTag, { type: row.status === 1 ? 'success' : 'error', size: 'small' }, () =>
+        row.status === 1 ? '正常' : '禁用'
+      )
   },
   { title: '备注', key: 'remark', ellipsis: { tooltip: true } },
   {
@@ -279,10 +325,36 @@ const dataColumns: DataTableColumns<DictDataVO> = [
     fixed: 'right',
     render: (row) =>
       h('div', { style: { display: 'flex', gap: '8px' } }, [
-        h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer' }, onClick: () => handleEditData(row) }, '编辑'),
-        h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer' }, onClick: () => handleDeleteData(row) }, '删除'),
-      ]),
-  },
+        h(
+          'button',
+          {
+            style: {
+              padding: '0 8px',
+              background: 'none',
+              border: 'none',
+              color: '#2563eb',
+              cursor: 'pointer'
+            },
+            onClick: () => handleEditData(row)
+          },
+          '编辑'
+        ),
+        h(
+          'button',
+          {
+            style: {
+              padding: '0 8px',
+              background: 'none',
+              border: 'none',
+              color: '#dc2626',
+              cursor: 'pointer'
+            },
+            onClick: () => handleDeleteData(row)
+          },
+          '删除'
+        )
+      ])
+  }
 ]
 
 // 加载字典类型列表
@@ -372,7 +444,7 @@ const handleEditType = async (row: DictTypeVO) => {
       dictName: detail.dictName || '',
       dictType: detail.dictType || '',
       status: detail.status ?? 1,
-      remark: detail.remark || '',
+      remark: detail.remark || ''
     })
     showTypeModal.value = true
   } catch (error: any) {
@@ -438,7 +510,7 @@ const handleAddData = () => {
     value: '',
     sortOrder: 0,
     status: 1,
-    remark: '',
+    remark: ''
   })
   showDataModal.value = true
 }
@@ -456,7 +528,7 @@ const handleEditData = async (row: DictDataVO) => {
       value: detail.value || '',
       sortOrder: detail.sortOrder ?? 0,
       status: detail.status ?? 1,
-      remark: detail.remark || '',
+      remark: detail.remark || ''
     })
     showDataModal.value = true
   } catch (error: any) {
@@ -501,7 +573,7 @@ const handleDeleteData = (row: DictDataVO) => {
       } catch (error: any) {
         message.error(error.message || '删除失败')
       }
-    },
+    }
   })
 }
 

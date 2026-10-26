@@ -26,7 +26,7 @@ export function convertToTreeOptions<T extends TreeNodeBase>(
   const {
     labelField = 'name' as keyof T,
     keyField = 'id' as keyof T,
-    childrenField = 'children' as keyof T,
+    childrenField = 'children' as keyof T
   } = options
 
   return items.map((item) => {
@@ -35,7 +35,7 @@ export function convertToTreeOptions<T extends TreeNodeBase>(
     return {
       key: String(item[keyField]),
       label: String(item[labelField]),
-      children: hasChildren ? convertToTreeOptions(children!, options) : undefined,
+      children: hasChildren ? convertToTreeOptions(children!, options) : undefined
     }
   })
 }
@@ -61,7 +61,7 @@ export function convertToTreeSelectOptions<T extends TreeNodeBase>(
     keyField = 'id' as keyof T,
     childrenField = 'children' as keyof T,
     rootLabel,
-    rootKey,
+    rootKey
   } = options
 
   const convert = (items: T[]): TreeSelectOption[] => {
@@ -71,7 +71,7 @@ export function convertToTreeSelectOptions<T extends TreeNodeBase>(
       return {
         key: item[keyField] as string | number,
         label: String(item[labelField]),
-        children: hasChildren ? convert(children!) : undefined,
+        children: hasChildren ? convert(children!) : undefined
       }
     })
   }
@@ -81,8 +81,8 @@ export function convertToTreeSelectOptions<T extends TreeNodeBase>(
       {
         key: rootKey ?? 0,
         label: rootLabel,
-        children: convert(items),
-      },
+        children: convert(items)
+      }
     ]
   }
 

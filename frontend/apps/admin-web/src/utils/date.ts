@@ -85,10 +85,7 @@ export function formatRelativeTime(date: string | number | Date | null | undefin
  * 表格列渲染器：格式化日期时间
  * 用于 NDataTable 列定义
  */
-export function renderDateTime(
-  row: Record<string, unknown>,
-  key: string = 'createTime'
-): string {
+export function renderDateTime(row: Record<string, unknown>, key: string = 'createTime'): string {
   const value = row[key]
   if (value === null || value === undefined) return ''
   return formatDateTime(String(value))

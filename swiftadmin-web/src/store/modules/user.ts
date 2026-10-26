@@ -1,8 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-import type { MenuVO } from '@/api/menu'
-
 export interface UserInfo {
   id: number
   username: string
@@ -42,11 +40,6 @@ export const useUserStore = defineStore('user', () => {
     permissions.value = info.permissions || []
   }
 
-  // 设置权限
-  const setPermissions = (perms: string[]) => {
-    permissions.value = perms || []
-  }
-
   // 登出
   const logout = () => {
     token.value = ''
@@ -80,6 +73,6 @@ export const useUserStore = defineStore('user', () => {
     setToken,
     setUserInfo,
     logout,
-    initToken,
+    initToken
   }
 })

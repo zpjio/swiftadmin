@@ -13,9 +13,9 @@ export function generateRoleCode(name: string, prefix = 'role_'): string {
 
   // 转换为拼音，不带声调，用下划线连接
   const py = pinyin(name, {
-    pattern: 'pinyin',    // 返回拼音
-    toneType: 'none',     // 不带声调
-    type: 'array',        // 返回数组
+    pattern: 'pinyin', // 返回拼音
+    toneType: 'none', // 不带声调
+    type: 'array' // 返回数组
   })
 
   // 拼接拼音，转小写

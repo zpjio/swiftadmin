@@ -3,10 +3,20 @@
     <div class="flex justify-between items-start flex-wrap gap-4 mb-4">
       <NForm :model="queryForm" inline class="flex flex-wrap gap-4">
         <NFormItem label="角色名称" path="name">
-          <NInput v-model:value="queryForm.name" placeholder="请输入角色名称" clearable style="width: 180px" />
+          <NInput
+            v-model:value="queryForm.name"
+            placeholder="请输入角色名称"
+            clearable
+            style="width: 180px"
+          />
         </NFormItem>
         <NFormItem label="角色编码" path="code">
-          <NInput v-model:value="queryForm.code" placeholder="请输入角色编码" clearable style="width: 180px" />
+          <NInput
+            v-model:value="queryForm.code"
+            placeholder="请输入角色编码"
+            clearable
+            style="width: 180px"
+          />
         </NFormItem>
         <NFormItem label="状态" path="status">
           <NSelect
@@ -36,7 +46,12 @@
             <template #icon><icon-mdi-plus /></template>
             新增角色
           </NButton>
-          <NButton v-auth="'system:role:delete'" type="error" :disabled="!hasSelection" @click="handleBatchDelete">
+          <NButton
+            v-auth="'system:role:delete'"
+            type="error"
+            :disabled="!hasSelection"
+            @click="handleBatchDelete"
+          >
             <template #icon><icon-mdi-delete /></template>
             批量删除
           </NButton>
@@ -55,11 +70,17 @@
     />
 
     <!-- 新增/编辑弹窗 -->
-    <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 600px;">
-      <NAlert v-if="isAdminRole" type="warning" style="margin-bottom: 16px;">
+    <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 600px">
+      <NAlert v-if="isAdminRole" type="warning" style="margin-bottom: 16px">
         超级管理员角色拥有系统全部权限和数据范围，无需配置权限
       </NAlert>
-      <NForm :model="formData" :rules="currentFormRules" ref="formRef" label-placement="left" label-width="100">
+      <NForm
+        ref="formRef"
+        :model="formData"
+        :rules="currentFormRules"
+        label-placement="left"
+        label-width="100"
+      >
         <NFormItem label="角色名称" path="name">
           <NInput v-model:value="formData.name" placeholder="请输入角色名称" />
         </NFormItem>
@@ -89,18 +110,15 @@
             <NRadio :value="1">正常</NRadio>
             <NRadio :value="0">禁用</NRadio>
           </NRadioGroup>
-          <NText v-if="isAdminRole" depth="3" style="margin-left: 8px;">超级管理员不可禁用</NText>
+          <NText v-if="isAdminRole" depth="3" style="margin-left: 8px">超级管理员不可禁用</NText>
         </NFormItem>
         <NFormItem v-if="!isAdminRole" label="数据范围" path="dataScope">
-          <NSelect
-            v-model:value="formData.dataScope"
-            :options="dataScopeOptions"
-          />
+          <NSelect v-model:value="formData.dataScope" :options="dataScopeOptions" />
         </NFormItem>
         <!-- 自定义数据权限 - 部门选择 -->
         <NFormItem v-if="!isAdminRole && formData.dataScope === 2" label="数据权限" path="deptIds">
           <div class="w-full">
-            <NSpace style="margin-bottom: 8px;">
+            <NSpace style="margin-bottom: 8px">
               <NButton size="small" @click="handleSelectAllDept">全选</NButton>
               <NButton size="small" @click="handleUnselectAllDept">取消全选</NButton>
             </NSpace>
@@ -109,12 +127,12 @@
                 ref="deptTreeRef"
                 :data="deptTreeData"
                 :checked-keys="formData.deptIds"
-                @update:checked-keys="handleDeptCheckedChange"
                 checkable
                 block-line
                 cascade
                 key-field="key"
                 label-field="label"
+                @update:checked-keys="handleDeptCheckedChange"
               />
             </div>
           </div>
@@ -132,11 +150,11 @@
     </NModal>
 
     <!-- 分配权限弹窗 -->
-    <NModal v-model:show="showPermissionModal" title="分配权限" preset="card" style="width: 600px;">
-      <NAlert type="info" style="margin-bottom: 16px;">
+    <NModal v-model:show="showPermissionModal" title="分配权限" preset="card" style="width: 600px">
+      <NAlert type="info" style="margin-bottom: 16px">
         当前角色：<strong>{{ currentRole?.name }}</strong>
       </NAlert>
-      <NSpace style="margin-bottom: 16px;">
+      <NSpace style="margin-bottom: 16px">
         <NButton size="small" @click="handleSelectAllMenu">全选</NButton>
         <NButton size="small" @click="handleUnselectAllMenu">取消全选</NButton>
         <NButton size="small" @click="handleExpandAllMenu">展开全部</NButton>
@@ -147,20 +165,22 @@
           ref="menuTreeRef"
           :data="menuTreeData"
           :checked-keys="permissionForm.menuIds"
-          @update:checked-keys="handleMenuCheckedChange"
           :expanded-keys="expandedMenuKeys"
-          @update:expanded-keys="handleMenuExpandedChange"
           checkable
           block-line
           cascade
           key-field="key"
           label-field="label"
+          @update:checked-keys="handleMenuCheckedChange"
+          @update:expanded-keys="handleMenuExpandedChange"
         />
       </div>
       <template #footer>
         <NSpace justify="end">
           <NButton @click="showPermissionModal = false">取消</NButton>
-          <NButton type="primary" :loading="permissionLoading" @click="handleSavePermission">确定</NButton>
+          <NButton type="primary" :loading="permissionLoading" @click="handleSavePermission"
+            >确定</NButton
+          >
         </NSpace>
       </template>
     </NModal>
@@ -169,15 +189,34 @@
 
 <script setup lang="ts">
 import { reactive, ref, h, computed, watch } from 'vue'
-import { useMessage, type DataTableColumns, type FormInst, type FormRules, type TreeOption } from 'naive-ui'
-import { getRolePageApi, getRoleDetailApi, createRoleApi, updateRoleApi, deleteRoleApi, assignMenusApi } from '@/api/role'
+import {
+  useMessage,
+  type DataTableColumns,
+  type FormInst,
+  type FormRules,
+  type TreeOption
+} from 'naive-ui'
+import {
+  getRolePageApi,
+  getRoleDetailApi,
+  createRoleApi,
+  updateRoleApi,
+  deleteRoleApi,
+  assignMenusApi
+} from '@/api/role'
 import { getMenuTreeApi } from '@/api/menu'
 import { getDeptTreeApi } from '@/api/dept'
 import type { RoleVO, RoleQuery } from '@/api/role'
 import type { MenuVO } from '@/api/menu'
 import type { DeptVO } from '@/api/dept'
 import { generateRoleCode } from '@/utils/codeGenerator'
-import { usePermission, useTablePage, useConfirm, useTableActions, useFormReset } from '@/composables'
+import {
+  usePermission,
+  useTablePage,
+  useConfirm,
+  useTableActions,
+  useFormReset
+} from '@/composables'
 import { formatDateTime } from '@/utils/date'
 import { convertToTreeOptions, getAllIds, getParentIds } from '@/utils/tree'
 import { StatusOptions, renderStatus } from '@/utils/constants'
@@ -193,7 +232,7 @@ const dataScopeOptions = [
   { label: '自定义', value: 2 },
   { label: '本部门', value: 3 },
   { label: '本部门及以下', value: 4 },
-  { label: '仅本人', value: 5 },
+  { label: '仅本人', value: 5 }
 ]
 
 // 表格分页
@@ -206,16 +245,16 @@ const {
   loadData,
   handleSearch,
   handleReset,
-  selection,
+  selection
 } = useTablePage<RoleVO, RoleQuery>({
   fetchFn: getRolePageApi,
   defaultQuery: {
     name: undefined,
     code: undefined,
-    status: undefined,
+    status: undefined
   },
   enableSelection: true,
-  immediate: true,
+  immediate: true
 })
 
 // 选择相关的便捷访问
@@ -231,7 +270,7 @@ const columns: DataTableColumns<RoleVO> = [
     title: '序号',
     key: 'index',
     width: 60,
-    render: (_row, index) => getIndex(index),
+    render: (_row, index) => getIndex(index)
   },
   {
     title: '角色名称',
@@ -241,7 +280,19 @@ const columns: DataTableColumns<RoleVO> = [
       if (row.code === 'admin') {
         return h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } }, [
           h('span', row.name),
-          h('span', { style: { background: '#ff9800', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontSize: '12px' } }, '超管')
+          h(
+            'span',
+            {
+              style: {
+                background: '#ff9800',
+                color: '#fff',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                fontSize: '12px'
+              }
+            },
+            '超管'
+          )
         ])
       }
       return row.name
@@ -253,7 +304,7 @@ const columns: DataTableColumns<RoleVO> = [
     title: '数据范围',
     key: 'dataScope',
     width: 120,
-    render: (row) => dataScopeOptions.find(o => o.value === row.dataScope)?.label || '未知',
+    render: (row) => dataScopeOptions.find((o) => o.value === row.dataScope)?.label || '未知'
   },
   {
     title: '状态',
@@ -262,9 +313,14 @@ const columns: DataTableColumns<RoleVO> = [
     render: (row) => {
       const { text, color } = renderStatus(row.status)
       return h('span', { style: { color } }, text)
-    },
+    }
   },
-  { title: '创建时间', key: 'createTime', width: 160, render: (row) => formatDateTime(row.createTime) },
+  {
+    title: '创建时间',
+    key: 'createTime',
+    width: 160,
+    render: (row) => formatDateTime(row.createTime)
+  },
   {
     title: '操作',
     key: 'actions',
@@ -274,11 +330,16 @@ const columns: DataTableColumns<RoleVO> = [
       const isAdmin = row.code === 'admin'
       return renderActions([
         edit(() => handleEdit(row), hasPermission('system:role:edit') && !isAdmin),
-        { label: '分配权限', color: '#059669', onClick: () => handlePermission(row), show: hasPermission('system:role:edit') && !isAdmin },
-        del(() => handleDelete(row), hasPermission('system:role:delete') && !isAdmin),
+        {
+          label: '分配权限',
+          color: '#059669',
+          onClick: () => handlePermission(row),
+          show: hasPermission('system:role:edit') && !isAdmin
+        },
+        del(() => handleDelete(row), hasPermission('system:role:delete') && !isAdmin)
       ])
-    },
-  },
+    }
+  }
 ]
 
 // 新增/编辑弹窗相关
@@ -297,7 +358,7 @@ const { formData, resetForm, setForm } = useFormReset({
   description: '',
   status: 1,
   dataScope: 5,
-  deptIds: [] as string[],
+  deptIds: [] as string[]
 })
 
 // 计算生成的编码预览
@@ -309,18 +370,25 @@ const generatedCodePreview = computed(() => {
 const isAdminRole = computed(() => formData.code === 'admin')
 
 // 监听角色名称变化，自动生成编码
-watch(() => formData.name, (newName) => {
-  if (autoGenerateCode.value && !isEdit.value && newName) {
-    formData.code = generatedCodePreview.value
+watch(
+  () => formData.name,
+  (newName) => {
+    if (autoGenerateCode.value && !isEdit.value && newName) {
+      formData.code = generatedCodePreview.value
+    }
   }
-})
+)
 
 const formRules: FormRules = {
   name: { required: true, message: '请输入角色名称', trigger: 'blur' },
   code: [
     { required: true, message: '请输入角色编码', trigger: 'blur' },
-    { pattern: /^[a-z][a-z0-9_]*$/, message: '角色编码必须以小写字母开头，只能包含小写字母、数字和下划线', trigger: 'blur' },
-  ],
+    {
+      pattern: /^[a-z][a-z0-9_]*$/,
+      message: '角色编码必须以小写字母开头，只能包含小写字母、数字和下划线',
+      trigger: 'blur'
+    }
+  ]
 }
 
 // 动态表单验证规则
@@ -329,7 +397,7 @@ const currentFormRules = computed<FormRules>(() => {
     return formRules
   }
   return {
-    name: { required: true, message: '请输入角色名称', trigger: 'blur' },
+    name: { required: true, message: '请输入角色名称', trigger: 'blur' }
   }
 })
 
@@ -344,7 +412,7 @@ const expandedMenuKeys = ref<string[]>([])
 
 const permissionForm = reactive({
   roleId: '' as string,
-  menuIds: [] as string[],
+  menuIds: [] as string[]
 })
 
 // 部门树相关
@@ -445,7 +513,7 @@ const handleEdit = async (row: RoleVO) => {
       description: detail.description,
       status: detail.status ?? 1,
       dataScope: detail.dataScope ?? 5,
-      deptIds: detail.deptIds || [],
+      deptIds: detail.deptIds || []
     })
     showModal.value = true
   } catch (error: any) {
@@ -460,7 +528,7 @@ const handlePermission = async (row: RoleVO) => {
     const detail = await getRoleDetailApi(row.id)
     permissionForm.roleId = detail.id
     permissionForm.menuIds = detail.menuIds || []
-    expandedMenuKeys.value = getParentIds(await getMenuTreeApi() as MenuVO[]).map(String)
+    expandedMenuKeys.value = getParentIds((await getMenuTreeApi()) as MenuVO[]).map(String)
     showPermissionModal.value = true
   } catch (error: any) {
     message.error(error.message || '获取角色详情失败')
@@ -498,7 +566,9 @@ const handleBatchDelete = () => {
     return
   }
   // 过滤掉超级管理员角色
-  const adminRoles = tableData.value.filter(r => selectedKeys.value.includes(r.id) && r.code === 'admin')
+  const adminRoles = tableData.value.filter(
+    (r) => selectedKeys.value.includes(r.id) && r.code === 'admin'
+  )
   if (adminRoles.length > 0) {
     message.warning('超级管理员角色不可删除')
     return
@@ -537,7 +607,7 @@ const handleSubmit = async () => {
     } finally {
       submitLoading.value = false
     }
-  } catch (errors: any) {
+  } catch {
     // 验证失败
   }
 }
