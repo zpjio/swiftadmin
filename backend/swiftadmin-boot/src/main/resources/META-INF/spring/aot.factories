@@ -1,0 +1,9 @@
+# MyBatis Mapper 的 GraalVM native 提示注册(spring AotServices 加载,
+# 仅作用于 native 构建时的 AOT 处理阶段)
+org.springframework.beans.factory.aot.BeanFactoryInitializationAotProcessor=\
+cn.swiftadmin.config.MyBatisMapperHintsProcessor
+
+# 应用级 RuntimeHintsRegistrar:Framework 7 的 AOT 采集只认 aot.factories
+# 与 @ImportRuntimeHints 两个通道,普通 @Component 注册器不会生效
+org.springframework.aot.hint.RuntimeHintsRegistrar=\
+cn.swiftadmin.config.NativeRuntimeHints

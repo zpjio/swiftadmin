@@ -152,10 +152,9 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <executions>
-                    <execution>
-                        <id>process-aot</id>
-                        <phase>none</phase>
-                    </execution>
+                    <!-- 注意:不要给 process-aot 预留 phase=none 的占位 execution——
+                         与 native profile 的同名 execution 合并时 none 会生效,导致
+                         AOT 处理被静默跳过(AOT 产物不落地,native 编译拿不到主类)。 -->
                     <execution>
                         <id>repackage</id>
                         <goals>
@@ -167,5 +166,75 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- Native 编译 Profile(仅 boot 模块;父 pom 全 reactor 激活会导致
+             native-maven-plugin 在无 jar 的模块上跑并报 Image classpath is empty) -->
+        <profile>
+            <id>native</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <configuration>
+                            <archive>
+                                <manifestEntries>
+                                    <Spring-Boot-Native-Processed>true</Spring-Boot-Native-Processed>
+                                </manifestEntries>
+                            </archive>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>process-aot</id>
+                                <goals>
+                                    <goal>process-aot</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <!-- 关键配置(与 spring-boot-starter-parent 的 native profile 一致):
+                             1) classesDirectory 用展开的 target/classes 作 image classpath
+                                首条目——repackage 产物的 fat jar 把应用类藏在 BOOT-INF 下,
+                                直接喂给 native-image 会报 "Main entry point class neither
+                                found on the classpath";
+                             2) mainClass 显式指定,不依赖探测 -->
+                        <configuration>
+                            <classesDirectory>${project.build.outputDirectory}</classesDirectory>
+                            <mainClass>cn.swiftadmin.SwiftAdminApplication</mainClass>
+                            <exclusions>
+                                <exclusion>
+                                    <groupId>org.springframework.boot</groupId>
+                                    <artifactId>spring-boot-devtools</artifactId>
+                                </exclusion>
+                            </exclusions>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>add-reachability-metadata</id>
+                                <goals>
+                                    <goal>add-reachability-metadata</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>build-native</id>
+                                <goals>
+                                    <goal>compile-no-fork</goal>
+                                </goals>
+                                <phase>package</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
