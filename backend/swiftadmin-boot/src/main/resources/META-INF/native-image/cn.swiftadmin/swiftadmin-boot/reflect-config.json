@@ -1,0 +1,7 @@
+[
+  {
+    "name": "ch.qos.logback.classic.BasicConfigurator",
+    "allPublicConstructors": true,
+    "allPublicMethods": true
+  }
+]
