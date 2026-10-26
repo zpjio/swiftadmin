@@ -18,13 +18,19 @@
       :loading="loading"
       :row-key="(row) => row.id"
       :expanded-row-keys="expandedRowKeys"
-      @update:expanded-row-keys="onExpandedRowKeysChange"
       :scroll-x="1000"
+      @update:expanded-row-keys="onExpandedRowKeysChange"
     />
 
     <!-- 新增/编辑弹窗 -->
-    <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 600px;">
-      <NForm :model="formData" :rules="formRules" ref="formRef" label-placement="left" label-width="100">
+    <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 600px">
+      <NForm
+        ref="formRef"
+        :model="formData"
+        :rules="formRules"
+        label-placement="left"
+        label-width="100"
+      >
         <NFormItem label="上级部门" path="parentId">
           <NTreeSelect
             v-model:value="formData.parentId"
@@ -69,8 +75,20 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, h } from 'vue'
-import { useMessage, type DataTableColumns, type FormInst, type FormRules, type TreeSelectOption } from 'naive-ui'
-import { getDeptTreeApi, getDeptDetailApi, createDeptApi, updateDeptApi, deleteDeptApi } from '@/api/dept'
+import {
+  useMessage,
+  type DataTableColumns,
+  type FormInst,
+  type FormRules,
+  type TreeSelectOption
+} from 'naive-ui'
+import {
+  getDeptTreeApi,
+  getDeptDetailApi,
+  createDeptApi,
+  updateDeptApi,
+  deleteDeptApi
+} from '@/api/dept'
 import type { DeptVO, DeptDTO } from '@/api/dept'
 
 import { usePermission, useConfirm, useTableActions, useFormReset } from '@/composables'
@@ -118,24 +136,25 @@ const columns: DataTableColumns<DeptVO> = [
     render: (row) => {
       const { text, color } = renderStatus(row.status)
       return h('span', { style: { color } }, text)
-    },
+    }
   },
   {
     title: '操作',
     key: 'actions',
     width: 180,
     fixed: 'right',
-    render: (row) => renderActions([
-      {
-        label: '新增',
-        color: '#1890ff',
-        onClick: () => handleAdd(row.id),
-        show: hasPermission('system:dept:add'),
-      },
-      edit(() => handleEdit(row), hasPermission('system:dept:edit')),
-      del(() => handleDelete(row), hasPermission('system:dept:delete')),
-    ]),
-  },
+    render: (row) =>
+      renderActions([
+        {
+          label: '新增',
+          color: '#1890ff',
+          onClick: () => handleAdd(row.id),
+          show: hasPermission('system:dept:add')
+        },
+        edit(() => handleEdit(row), hasPermission('system:dept:edit')),
+        del(() => handleDelete(row), hasPermission('system:dept:delete'))
+      ])
+  }
 ]
 
 // 弹窗相关
@@ -153,11 +172,11 @@ const { formData, resetForm } = useFormReset<DeptDTO>({
   leader: '',
   phone: '',
   email: '',
-  status: 1,
+  status: 1
 })
 
 const formRules: FormRules = {
-  name: { required: true, message: '请输入部门名称', trigger: 'blur' },
+  name: { required: true, message: '请输入部门名称', trigger: 'blur' }
 }
 
 // 加载部门树
@@ -169,7 +188,7 @@ const loadDeptTree = async () => {
     tableData.value = treeData
     deptSelectTreeData.value = convertToTreeSelectOptions(treeData, {
       rootLabel: '顶级部门',
-      rootKey: '',
+      rootKey: ''
     })
     allDeptIds.value = getParentIds(treeData) as string[]
     // 默认展开全部
@@ -201,7 +220,7 @@ const handleEdit = async (row: DeptVO) => {
       leader: detail.leader,
       phone: detail.phone,
       email: detail.email,
-      status: detail.status,
+      status: detail.status
     })
     showModal.value = true
   } catch (error: unknown) {

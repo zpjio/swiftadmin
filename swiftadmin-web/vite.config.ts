@@ -9,7 +9,7 @@ import IconsResolver from 'unplugin-icons/resolver'
 
 export default defineConfig(({ mode }: ConfigEnv) => {
   const env = loadEnv(mode, process.cwd())
-  
+
   return {
     plugins: [
       vue(),
@@ -22,35 +22,33 @@ export default defineConfig(({ mode }: ConfigEnv) => {
         ],
         dts: 'src/auto-imports.d.ts',
         eslintrc: {
-          enabled: true,
-        },
+          enabled: true
+        }
       }),
       Components({
         resolvers: [
           NaiveUiResolver(),
           IconsResolver({
-            prefix: 'icon',
-          }),
+            prefix: 'icon'
+          })
         ],
-        dts: 'src/components.d.ts',
+        dts: 'src/components.d.ts'
       }),
       Icons({
-        autoInstall: true,
-      }),
+        autoInstall: true
+      })
     ],
     resolve: {
       alias: {
-        '@': resolve(__dirname, 'src'),
-      },
+        '@': resolve(__dirname, 'src')
+      }
     },
     server: {
       port: 5173,
       host: true,
       // 支持 Vue Router 的 history 模式，刷新时返回 index.html
       historyApiFallback: {
-        rewrites: [
-          { from: /.*/, to: '/index.html' },
-        ],
+        rewrites: [{ from: /.*/, to: '/index.html' }]
       },
       proxy: {
         '/api': {
@@ -63,9 +61,9 @@ export default defineConfig(({ mode }: ConfigEnv) => {
               return path.replace(/^\/api/, '')
             }
             return path
-          },
-        },
-      },
+          }
+        }
+      }
     },
     build: {
       outDir: 'dist',
@@ -76,13 +74,13 @@ export default defineConfig(({ mode }: ConfigEnv) => {
           manualChunks: {
             'naive-ui': ['naive-ui'],
             'vue-router': ['vue-router'],
-            'pinia': ['pinia'],
-            'axios': ['axios'],
-            'echarts': ['echarts'],
-            'vueuse': ['@vueuse/core'],
-          },
-        },
-      },
-    },
+            pinia: ['pinia'],
+            axios: ['axios'],
+            echarts: ['echarts'],
+            vueuse: ['@vueuse/core']
+          }
+        }
+      }
+    }
   }
 })

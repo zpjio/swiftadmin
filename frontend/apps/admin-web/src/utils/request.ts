@@ -2,7 +2,7 @@ import axios, {
   type AxiosInstance,
   type AxiosRequestConfig,
   type AxiosResponse,
-  AxiosError,
+  AxiosError
 } from 'axios'
 import { createDiscreteApi } from 'naive-ui'
 import {
@@ -12,8 +12,7 @@ import {
   CancelError,
   shouldRedirectLogin,
   shouldShowMessage,
-  type FieldError,
-  type ApiResponse,
+  type ApiResponse
 } from '@/types'
 import router from '@/router'
 
@@ -69,9 +68,9 @@ const service: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api',
   timeout: 15000,
   headers: {
-    'Content-Type': 'application/json',
+    'Content-Type': 'application/json'
   },
-  withCredentials: false,
+  withCredentials: false
 })
 
 // 请求拦截器
@@ -107,7 +106,7 @@ service.interceptors.response.use(
       const error = new BusinessError(res.code, res.message, {
         traceId: res.traceId,
         fieldErrors: res.error?.fieldErrors,
-        detail: res.error,
+        detail: res.error
       })
 
       // Token 过期或无效，跳转登录（handleUnauthorized 内部已显示提示）
@@ -183,7 +182,7 @@ service.interceptors.response.use(
 
     return Promise.reject(
       new BusinessError(responseData?.code || status, message, {
-        traceId: responseData?.traceId,
+        traceId: responseData?.traceId
       })
     )
   }
@@ -201,7 +200,7 @@ function getHttpErrorMessage(status: number): string {
     500: '服务器内部错误',
     502: '网关错误',
     503: '服务暂不可用',
-    504: '网关超时',
+    504: '网关超时'
   }
   return messages[status] || `请求失败 (${status})`
 }
@@ -227,7 +226,7 @@ function filterParams(params?: Record<string, unknown>): Record<string, unknown>
  * @param params 查询参数（会被过滤空值）
  * @param config 请求配置
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 export function get<T = unknown>(url: string, params?: any, config?: RequestOptions): Promise<T> {
   return service.get(url, { params: filterParams(params), ...config })
 }
@@ -246,11 +245,7 @@ export function post<T = unknown>(
 /**
  * PUT 请求
  */
-export function put<T = unknown>(
-  url: string,
-  data?: unknown,
-  config?: RequestOptions
-): Promise<T> {
+export function put<T = unknown>(url: string, data?: unknown, config?: RequestOptions): Promise<T> {
   return service.put(url, data, config)
 }
 
@@ -280,7 +275,7 @@ export function download(
     .get(url, {
       params: filterParams(params),
       responseType: 'blob',
-      ...options,
+      ...options
     })
     .then((response: AxiosResponse<Blob>) => {
       const blob = response.data
@@ -291,7 +286,7 @@ export function download(
           try {
             const errorData = JSON.parse(text) as ApiResponse
             const error = new BusinessError(errorData.code, errorData.message, {
-              traceId: errorData.traceId,
+              traceId: errorData.traceId
             })
             if (!silent) {
               showErrorMessage(error.getFormattedMessage())

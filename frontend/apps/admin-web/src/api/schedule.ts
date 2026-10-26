@@ -6,10 +6,10 @@ import type { PageResult } from '@/types'
  */
 export const JobStatus = {
   NORMAL: 0,
-  PAUSED: 1,
+  PAUSED: 1
 } as const
 
-export type JobStatusType = typeof JobStatus[keyof typeof JobStatus]
+export type JobStatusType = (typeof JobStatus)[keyof typeof JobStatus]
 
 /**
  * 任务执行状态
@@ -17,20 +17,20 @@ export type JobStatusType = typeof JobStatus[keyof typeof JobStatus]
 export const JobExecuteStatus = {
   RUNNING: 0,
   SUCCESS: 1,
-  FAILED: 2,
+  FAILED: 2
 } as const
 
-export type JobExecuteStatusType = typeof JobExecuteStatus[keyof typeof JobExecuteStatus]
+export type JobExecuteStatusType = (typeof JobExecuteStatus)[keyof typeof JobExecuteStatus]
 
 /**
  * 执行类型
  */
 export const ExecuteType = {
   AUTO: 1,
-  MANUAL: 2,
+  MANUAL: 2
 } as const
 
-export type ExecuteTypeValue = typeof ExecuteType[keyof typeof ExecuteType]
+export type ExecuteTypeValue = (typeof ExecuteType)[keyof typeof ExecuteType]
 
 /**
  * 定时任务信息

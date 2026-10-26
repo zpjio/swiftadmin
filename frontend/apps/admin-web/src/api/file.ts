@@ -55,7 +55,7 @@ export function deleteFileApi(ids: string[]) {
  */
 export async function downloadFileApi(id: string, fileName?: string) {
   const response = await service.get(`/system/file/download/${id}`, {
-    responseType: 'blob',
+    responseType: 'blob'
   })
 
   // 优先使用传入的文件名，否则尝试从响应头获取

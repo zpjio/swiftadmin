@@ -68,7 +68,7 @@ export {
   isSystemError,
   isParamError,
   type FieldError,
-  type ErrorDetail,
+  type ErrorDetail
 } from './error'
 
 // 重导出菜单相关类型
@@ -78,5 +78,5 @@ export {
   type MenuVO,
   type MenuTreeVO,
   type MenuDTO,
-  type RouteMeta,
+  type RouteMeta
 } from './menu'

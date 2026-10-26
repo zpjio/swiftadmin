@@ -66,11 +66,7 @@
 
       <!-- 操作按钮 -->
       <NSpace class="mb-4">
-        <NButton
-          type="error"
-          :disabled="selectedRowKeys.length === 0"
-          @click="handleBatchDelete"
-        >
+        <NButton type="error" :disabled="selectedRowKeys.length === 0" @click="handleBatchDelete">
           <template #icon>
             <icon-mdi-delete />
           </template>
@@ -103,7 +99,13 @@
     </NCard>
 
     <!-- 详情弹窗 -->
-    <NModal v-model:show="showDetailModal" preset="dialog" title="操作日志详情" :closable="true" class="w-[800px]">
+    <NModal
+      v-model:show="showDetailModal"
+      preset="dialog"
+      title="操作日志详情"
+      :closable="true"
+      class="w-[800px]"
+    >
       <NDescriptions :column="2" bordered>
         <NDescriptionsItem label="日志 ID">{{ currentDetail?.id }}</NDescriptionsItem>
         <NDescriptionsItem label="操作标题">{{ currentDetail?.title }}</NDescriptionsItem>
@@ -132,7 +134,7 @@
         <NDescriptionsItem label="返回结果" :span="2">
           <NCode :code="formatJson(currentDetail?.jsonResult)" language="json" :wrap="true" />
         </NDescriptionsItem>
-        <NDescriptionsItem label="错误信息" :span="2" v-if="currentDetail?.errorMsg">
+        <NDescriptionsItem v-if="currentDetail?.errorMsg" label="错误信息" :span="2">
           <NText type="error">{{ currentDetail?.errorMsg }}</NText>
         </NDescriptionsItem>
       </NDescriptions>
@@ -146,7 +148,12 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, h } from 'vue'
 import { useMessage, type DataTableColumns } from 'naive-ui'
-import { getOperLogPageApi, deleteOperLogApi, clearOperLogApi, getOperLogDetailApi } from '@/api/operlog'
+import {
+  getOperLogPageApi,
+  deleteOperLogApi,
+  clearOperLogApi,
+  getOperLogDetailApi
+} from '@/api/operlog'
 import type { OperLogVO, OperLogQuery } from '@/api/operlog'
 
 const message = useMessage()
@@ -165,7 +172,7 @@ const queryForm = reactive<OperLogQuery & { dateRange?: [number, number] }>({
   status: undefined,
   beginTime: '',
   endTime: '',
-  dateRange: undefined,
+  dateRange: undefined
 })
 
 const pagination = reactive({
@@ -185,7 +192,7 @@ const pagination = reactive({
     pagination.page = 1
     queryForm.page = 1
     loadData()
-  },
+  }
 })
 
 // 业务类型选项
@@ -201,13 +208,13 @@ const businessTypeOptions = [
   { label: '生成代码', value: 8 },
   { label: '清空数据', value: 9 },
   { label: '创建', value: 10 },
-  { label: '刷新', value: 11 },
+  { label: '刷新', value: 11 }
 ]
 
 // 状态选项
 const statusOptions = [
   { label: '成功', value: 0 },
-  { label: '失败', value: 1 },
+  { label: '失败', value: 1 }
 ]
 
 // 表格列定义
@@ -217,48 +224,43 @@ const columns: DataTableColumns<OperLogVO> = [
     title: '日志 ID',
     key: 'id',
     width: 80,
-    ellipsis: { tooltip: true },
+    ellipsis: { tooltip: true }
   },
   {
     title: '操作标题',
     key: 'title',
     width: 150,
-    ellipsis: { tooltip: true },
+    ellipsis: { tooltip: true }
   },
   {
     title: '业务类型',
     key: 'businessType',
     width: 100,
-    render: (row) => getBusinessTypeLabel(row.businessType),
+    render: (row) => getBusinessTypeLabel(row.businessType)
   },
   {
     title: '请求方法',
     key: 'requestMethod',
     width: 100,
-    render: (row) =>
-      h(
-        'span',
-        { class: 'font-mono' },
-        row.requestMethod
-      ),
+    render: (row) => h('span', { class: 'font-mono' }, row.requestMethod)
   },
   {
     title: '操作人员',
     key: 'operName',
     width: 100,
-    ellipsis: { tooltip: true },
+    ellipsis: { tooltip: true }
   },
   {
     title: '操作 IP',
     key: 'operIp',
     width: 120,
-    ellipsis: { tooltip: true },
+    ellipsis: { tooltip: true }
   },
   {
     title: '操作地点',
     key: 'operLocation',
     width: 120,
-    ellipsis: { tooltip: true },
+    ellipsis: { tooltip: true }
   },
   {
     title: '状态',
@@ -269,19 +271,19 @@ const columns: DataTableColumns<OperLogVO> = [
         'span',
         { class: row.status === 0 ? 'text-green-600' : 'text-red-600' },
         row.status === 0 ? '✓ 成功' : '✗ 失败'
-      ),
+      )
   },
   {
     title: '耗时',
     key: 'costTime',
     width: 80,
-    render: (row) => `${row.costTime}ms`,
+    render: (row) => `${row.costTime}ms`
   },
   {
     title: '操作时间',
     key: 'operTime',
     width: 160,
-    ellipsis: { tooltip: true },
+    ellipsis: { tooltip: true }
   },
   {
     title: '操作',
@@ -293,11 +295,11 @@ const columns: DataTableColumns<OperLogVO> = [
         'button',
         {
           class: 'text-blue-600 hover:underline',
-          onClick: () => handleViewDetail(row),
+          onClick: () => handleViewDetail(row)
         },
         '详情'
-      ),
-  },
+      )
+  }
 ]
 
 // 加载数据

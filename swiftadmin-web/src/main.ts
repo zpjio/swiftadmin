@@ -4,7 +4,7 @@ import router from './router'
 import App from './App.vue'
 import './styles/index.css'
 import { setupPermissionDirective } from './directives/permission'
-import { initTheme, theme, themeOverrides } from '@/utils/theme'
+import { initTheme } from '@/utils/theme'
 
 const app = createApp(App)
 const pinia = createPinia()

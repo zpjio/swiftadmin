@@ -39,8 +39,8 @@ export function convertMenusToRoutes(menus: MenuVO[]): RouteRecordRaw[] {
         icon: menu.icon || undefined,
         permission: menu.permission || undefined,
         hidden: false,
-        keepAlive: true, // 默认启用页面缓存
-      } as RouteMeta,
+        keepAlive: true // 默认启用页面缓存
+      } as RouteMeta
     }
 
     routes.push(route)
@@ -57,13 +57,13 @@ export function getMenuName(path: string): string {
   if (!path) {
     return 'Menu_' + Date.now()
   }
-  
+
   // 移除开头的 /
   const cleanPath = path.replace(/^\//, '')
   // 将 /system/user 转换为 SystemUser
   return cleanPath
     .split('/')
-    .filter(segment => segment.length > 0)
+    .filter((segment) => segment.length > 0)
     .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
     .join('')
 }

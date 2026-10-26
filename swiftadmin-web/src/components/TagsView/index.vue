@@ -44,7 +44,6 @@ const route = useRoute()
 const tagsStore = useTagsStore()
 
 const visitedViews = computed(() => tagsStore.visitedViews)
-const activeView = computed(() => tagsStore.activeView)
 
 const scrollbarRef = ref<any>(null)
 const showDropdown = ref(false)
@@ -83,28 +82,28 @@ const dropdownOptions = computed<DropdownOption[]>(() => {
       label: '关闭',
       key: 'close',
       disabled: !currentTag.value?.closable,
-      icon: () => h('i', { class: `${getIconClass('mdi-close')} text-lg` }),
+      icon: () => h('i', { class: `${getIconClass('mdi-close')} text-lg` })
     },
     {
       label: '关闭其他',
       key: 'close-others',
-      icon: () => h('i', { class: `${getIconClass('mdi-close-circle-outline')} text-lg` }),
+      icon: () => h('i', { class: `${getIconClass('mdi-close-circle-outline')} text-lg` })
     },
     {
       label: '关闭全部',
       key: 'close-all',
-      icon: () => h('i', { class: `${getIconClass('mdi-close-network-outline')} text-lg` }),
+      icon: () => h('i', { class: `${getIconClass('mdi-close-network-outline')} text-lg` })
     },
     {
       type: 'divider',
-      key: 'd1',
+      key: 'd1'
     },
     {
       label: '刷新',
       key: 'refresh',
       disabled: !currentTag.value?.closable,
-      icon: () => h('i', { class: `${getIconClass('mdi-refresh')} text-lg` }),
-    },
+      icon: () => h('i', { class: `${getIconClass('mdi-refresh')} text-lg` })
+    }
   ]
   return options
 })

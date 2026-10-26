@@ -3,10 +3,20 @@
     <div class="toolbar mb-4">
       <NForm :model="queryForm" inline class="search-form">
         <NFormItem label="用户名" path="username">
-          <NInput v-model:value="queryForm.username" placeholder="请输入用户名" clearable style="width: 180px" />
+          <NInput
+            v-model:value="queryForm.username"
+            placeholder="请输入用户名"
+            clearable
+            style="width: 180px"
+          />
         </NFormItem>
         <NFormItem label="手机号" path="phone">
-          <NInput v-model:value="queryForm.phone" placeholder="请输入手机号" clearable style="width: 180px" />
+          <NInput
+            v-model:value="queryForm.phone"
+            placeholder="请输入手机号"
+            clearable
+            style="width: 180px"
+          />
         </NFormItem>
         <NFormItem label="状态" path="status">
           <NSelect
@@ -14,7 +24,7 @@
             :options="[
               { label: '全部', value: undefined },
               { label: '正常', value: 1 },
-              { label: '禁用', value: 0 },
+              { label: '禁用', value: 0 }
             ]"
             clearable
             style="width: 120px"
@@ -68,8 +78,14 @@
     />
 
     <!-- 新增/编辑弹窗 -->
-    <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 700px;">
-      <NForm :model="formData" :rules="computedFormRules" ref="formRef" label-placement="left" label-width="80">
+    <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 700px">
+      <NForm
+        ref="formRef"
+        :model="formData"
+        :rules="computedFormRules"
+        label-placement="left"
+        label-width="80"
+      >
         <NFormItem label="用户名" path="username">
           <NInput v-model:value="formData.username" placeholder="请输入用户名" :disabled="isEdit" />
         </NFormItem>
@@ -111,7 +127,12 @@
           <NSwitch v-model:value="formData.status" :checked-value="1" :unchecked-value="0" />
         </NFormItem>
         <NFormItem v-if="!isEdit" label="密码" path="password">
-          <NInput v-model:value="formData.password" type="password" placeholder="请输入密码" show-password-on="click" />
+          <NInput
+            v-model:value="formData.password"
+            type="password"
+            placeholder="请输入密码"
+            show-password-on="click"
+          />
         </NFormItem>
         <NFormItem label="备注" path="remark">
           <NInput v-model:value="formData.remark" type="textarea" placeholder="请输入备注" />
@@ -126,8 +147,13 @@
     </NModal>
 
     <!-- 重置密码弹窗 -->
-    <NModal v-model:show="showResetPasswordModal" preset="dialog" title="重置密码" style="width: 400px;">
-      <NForm :model="resetPasswordForm" :rules="resetPasswordRules" ref="resetPasswordFormRef">
+    <NModal
+      v-model:show="showResetPasswordModal"
+      preset="dialog"
+      title="重置密码"
+      style="width: 400px"
+    >
+      <NForm ref="resetPasswordFormRef" :model="resetPasswordForm" :rules="resetPasswordRules">
         <NFormItem label="新密码" path="password">
           <NInput
             v-model:value="resetPasswordForm.password"
@@ -148,7 +174,12 @@
       <template #action>
         <NSpace justify="end">
           <NButton @click="showResetPasswordModal = false">取消</NButton>
-          <NButton type="primary" :loading="resetPasswordLoading" @click="handleConfirmResetPassword">确定</NButton>
+          <NButton
+            type="primary"
+            :loading="resetPasswordLoading"
+            @click="handleConfirmResetPassword"
+            >确定</NButton
+          >
         </NSpace>
       </template>
     </NModal>
@@ -157,8 +188,22 @@
 
 <script setup lang="ts">
 import { reactive, ref, h, computed, onMounted } from 'vue'
-import { useMessage, useDialog, type DataTableColumns, type FormInst, type FormRules, type TreeSelectOption } from 'naive-ui'
-import { getUserPageApi, getUserDetailApi, createUserApi, updateUserApi, deleteUserApi, resetPasswordApi } from '@/api/user'
+import {
+  useMessage,
+  useDialog,
+  type DataTableColumns,
+  type FormInst,
+  type FormRules,
+  type TreeSelectOption
+} from 'naive-ui'
+import {
+  getUserPageApi,
+  getUserDetailApi,
+  createUserApi,
+  updateUserApi,
+  deleteUserApi,
+  resetPasswordApi
+} from '@/api/user'
 import { getDeptTreeApi } from '@/api/dept'
 import { getRoleListApi } from '@/api/role'
 import type { UserVO, UserDTO, UserQuery } from '@/api/user'
@@ -173,7 +218,7 @@ const tableData = ref<UserVO[]>([])
 const selectedRowKeys = ref<number[]>([])
 const queryForm = reactive<UserQuery>({
   page: 1,
-  size: 10,
+  size: 10
 })
 
 // 部门选择树数据
@@ -198,7 +243,7 @@ const pagination = reactive({
     queryForm.page = 1
     queryForm.size = pageSize
     loadData()
-  },
+  }
 })
 
 // 表格列定义
@@ -213,13 +258,18 @@ const columns: DataTableColumns<UserVO> = [
     title: '性别',
     key: 'sex',
     width: 80,
-    render: (row) => ({ 0: '未知', 1: '男', 2: '女' }[row.sex] || '未知'),
+    render: (row) => ({ 0: '未知', 1: '男', 2: '女' })[row.sex] || '未知'
   },
   {
     title: '状态',
     key: 'status',
     width: 80,
-    render: (row) => h('span', { style: { color: row.status === 1 ? '#52c41a' : '#ff4d4f' } }, row.status === 1 ? '正常' : '禁用'),
+    render: (row) =>
+      h(
+        'span',
+        { style: { color: row.status === 1 ? '#52c41a' : '#ff4d4f' } },
+        row.status === 1 ? '正常' : '禁用'
+      )
   },
   { title: '部门', key: 'deptName', width: 120 },
   { title: '创建时间', key: 'createTime', width: 180 },
@@ -228,12 +278,52 @@ const columns: DataTableColumns<UserVO> = [
     key: 'actions',
     width: 200,
     fixed: 'right',
-    render: (row) => h('div', { style: { display: 'flex', gap: '8px' } }, [
-      h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#1890ff', cursor: 'pointer' }, onClick: () => handleEdit(row) }, '编辑'),
-      h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#faad14', cursor: 'pointer' }, onClick: () => handleResetPassword(row) }, '重置密码'),
-      h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer' }, onClick: () => handleDelete(row) }, '删除'),
-    ]),
-  },
+    render: (row) =>
+      h('div', { style: { display: 'flex', gap: '8px' } }, [
+        h(
+          'button',
+          {
+            style: {
+              padding: '0 8px',
+              background: 'none',
+              border: 'none',
+              color: '#1890ff',
+              cursor: 'pointer'
+            },
+            onClick: () => handleEdit(row)
+          },
+          '编辑'
+        ),
+        h(
+          'button',
+          {
+            style: {
+              padding: '0 8px',
+              background: 'none',
+              border: 'none',
+              color: '#faad14',
+              cursor: 'pointer'
+            },
+            onClick: () => handleResetPassword(row)
+          },
+          '重置密码'
+        ),
+        h(
+          'button',
+          {
+            style: {
+              padding: '0 8px',
+              background: 'none',
+              border: 'none',
+              color: '#ff4d4f',
+              cursor: 'pointer'
+            },
+            onClick: () => handleDelete(row)
+          },
+          '删除'
+        )
+      ])
+  }
 ]
 
 // 弹窗相关
@@ -253,14 +343,14 @@ const formData = reactive<UserDTO>({
   status: 1,
   deptId: undefined,
   roleIds: [],
-  remark: '',
+  remark: ''
 })
 
 // 动态表单验证规则
 const computedFormRules = computed<FormRules>(() => ({
   username: { required: true, message: '请输入用户名', trigger: 'blur' },
   nickname: { required: true, message: '请输入昵称', trigger: 'blur' },
-  password: isEdit.value ? {} : { required: true, message: '请输入密码', trigger: 'blur' },
+  password: isEdit.value ? {} : { required: true, message: '请输入密码', trigger: 'blur' }
 }))
 
 // 重置密码相关
@@ -270,12 +360,12 @@ const resetPasswordFormRef = ref<FormInst | null>(null)
 const resetPasswordForm = reactive({
   userId: 0,
   password: '',
-  confirmPassword: '',
+  confirmPassword: ''
 })
 const resetPasswordRules: FormRules = {
   password: [
     { required: true, message: '请输入新密码', trigger: 'blur' },
-    { min: 6, message: '密码至少6位', trigger: 'blur' },
+    { min: 6, message: '密码至少6位', trigger: 'blur' }
   ],
   confirmPassword: [
     { required: true, message: '请确认密码', trigger: 'blur' },
@@ -283,9 +373,9 @@ const resetPasswordRules: FormRules = {
       validator: (_rule, value) => {
         return value === resetPasswordForm.password ? true : new Error('两次密码不一致')
       },
-      trigger: 'blur',
-    },
-  ],
+      trigger: 'blur'
+    }
+  ]
 }
 
 // 加载部门树
@@ -303,7 +393,7 @@ const convertDeptTree = (items: DeptVO[]): TreeSelectOption[] => {
   return items.map((item) => ({
     key: item.id,
     label: item.name,
-    children: item.children ? convertDeptTree(item.children) : undefined,
+    children: item.children ? convertDeptTree(item.children) : undefined
   }))
 }
 
@@ -364,7 +454,7 @@ const handleAdd = () => {
     status: 1,
     deptId: undefined,
     roleIds: [],
-    remark: '',
+    remark: ''
   })
   showModal.value = true
 }
@@ -385,7 +475,7 @@ const handleEdit = async (row: UserVO) => {
       status: detail.status,
       deptId: detail.deptId,
       roleIds: detail.roleIds || [],
-      remark: detail.remark,
+      remark: detail.remark
     })
     showModal.value = true
   } catch (error: any) {
@@ -431,7 +521,7 @@ const handleDelete = (row: UserVO) => {
       } catch (error: any) {
         message.error(error.message || '删除失败')
       }
-    },
+    }
   })
 }
 
@@ -455,7 +545,7 @@ const handleBatchDelete = () => {
       } catch (error: any) {
         message.error(error.message || '删除失败')
       }
-    },
+    }
   })
 }
 
@@ -478,7 +568,11 @@ const handleSubmit = async () => {
       const errorMsg = error.message || error.response?.data?.message || '操作失败'
       // 将分号分隔的错误信息转换为换行显示
       if (errorMsg.includes(';')) {
-        const errors = errorMsg.split(';').filter(Boolean).map((e: string) => e.trim()).join('\n')
+        const errors = errorMsg
+          .split(';')
+          .filter(Boolean)
+          .map((e: string) => e.trim())
+          .join('\n')
         message.error(errors, { duration: 5000 })
       } else {
         message.error(errorMsg)
@@ -486,7 +580,7 @@ const handleSubmit = async () => {
     } finally {
       submitLoading.value = false
     }
-  } catch (errors: any) {
+  } catch {
     // 验证失败
   }
 }

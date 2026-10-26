@@ -22,7 +22,12 @@
           />
         </NFormItem>
         <NFormItem label="关键词" path="keyword">
-          <NInput v-model:value="queryForm.keyword" placeholder="搜索标题/内容" clearable style="width: 200px" />
+          <NInput
+            v-model:value="queryForm.keyword"
+            placeholder="搜索标题/内容"
+            clearable
+            style="width: 200px"
+          />
         </NFormItem>
         <NFormItem>
           <NSpace>
@@ -48,7 +53,12 @@
           <template #icon><icon-mdi-check-all /></template>
           全部已读
         </NButton>
-        <NButton v-auth="'message:inbox:delete'" type="error" :disabled="!hasSelection" @click="handleBatchDelete">
+        <NButton
+          v-auth="'message:inbox:delete'"
+          type="error"
+          :disabled="!hasSelection"
+          @click="handleBatchDelete"
+        >
           <template #icon><icon-mdi-delete /></template>
           批量删除
         </NButton>
@@ -72,7 +82,7 @@
     </NCard>
 
     <!-- 发送站内信弹窗 -->
-    <NModal v-model:show="showSendModal" title="发送站内信" preset="card" style="width: 600px;">
+    <NModal v-model:show="showSendModal" title="发送站内信" preset="card" style="width: 600px">
       <NForm ref="sendFormRef" :model="sendForm" :rules="sendRules" label-width="100">
         <NFormItem label="接收用户" path="userIds">
           <NInput v-model:value="sendForm.userIds" placeholder="请输入用户ID，多个用逗号分隔" />
@@ -88,7 +98,12 @@
           />
         </NFormItem>
         <NFormItem label="内容" path="content">
-          <NInput v-model:value="sendForm.content" type="textarea" placeholder="请输入消息内容" :rows="5" />
+          <NInput
+            v-model:value="sendForm.content"
+            type="textarea"
+            placeholder="请输入消息内容"
+            :rows="5"
+          />
         </NFormItem>
         <NFormItem label="优先级" path="priority">
           <NInputNumber v-model:value="sendForm.priority" :min="0" :max="10" style="width: 150px" />
@@ -104,12 +119,18 @@
     </NModal>
 
     <!-- 消息详情弹窗 -->
-    <NModal v-model:show="showDetailModal" title="消息详情" preset="card" style="width: 600px;">
+    <NModal v-model:show="showDetailModal" title="消息详情" preset="card" style="width: 600px">
       <NDescriptions :column="1" label-placement="left" bordered>
         <NDescriptionsItem label="标题">{{ currentMessage?.title }}</NDescriptionsItem>
-        <NDescriptionsItem label="发送者">{{ currentMessage?.senderName || '系统' }}</NDescriptionsItem>
-        <NDescriptionsItem label="发送时间">{{ formatDateTime(currentMessage?.createTime) }}</NDescriptionsItem>
-        <NDescriptionsItem label="消息类型">{{ getMsgTypeLabel(currentMessage?.msgType ?? '') }}</NDescriptionsItem>
+        <NDescriptionsItem label="发送者">{{
+          currentMessage?.senderName || '系统'
+        }}</NDescriptionsItem>
+        <NDescriptionsItem label="发送时间">{{
+          formatDateTime(currentMessage?.createTime)
+        }}</NDescriptionsItem>
+        <NDescriptionsItem label="消息类型">{{
+          getMsgTypeLabel(currentMessage?.msgType ?? '')
+        }}</NDescriptionsItem>
         <NDescriptionsItem label="内容">
           <div v-html="currentMessage?.content?.replace(/\n/g, '<br>')"></div>
         </NDescriptionsItem>
@@ -126,7 +147,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, h, onMounted } from 'vue'
-import { useMessage, useDialog, NTag, NButton, NSpace, type DataTableColumns, type DataTableRowKey } from 'naive-ui'
+import { useMessage, useDialog, NTag, NButton, NSpace, type DataTableColumns } from 'naive-ui'
 import {
   getInboxPageApi,
   getInboxDetailApi,
@@ -136,7 +157,7 @@ import {
   markAllInboxReadApi,
   setInboxStarApi,
   deleteInboxApi,
-  type InboxMessage,
+  type InboxMessage
 } from '@/api/message'
 import { useDict } from '@/composables/useDict'
 import { usePagination, useTableSelection } from '@/composables'
@@ -144,7 +165,6 @@ import { formatDateTime } from '@/utils/date'
 
 const message = useMessage()
 const dialog = useDialog()
-const formRef = ref<any>(null)
 const sendFormRef = ref<any>(null)
 const loading = ref(false)
 const tableData = ref<InboxMessage[]>([])
@@ -160,19 +180,19 @@ const { options: msgTypeOptions, getLabel: getMsgTypeLabel } = useDict('msg_type
 
 const readStatusOptions = [
   { label: '未读', value: 0 },
-  { label: '已读', value: 1 },
+  { label: '已读', value: 1 }
 ]
 
 const queryForm = reactive({
   isRead: undefined as number | undefined,
   msgType: undefined as string | undefined,
-  keyword: undefined as string | undefined,
+  keyword: undefined as string | undefined
 })
 
 // 分页
 const { paginationProps, setTotal, getParams } = usePagination({
   onChange: () => loadData(),
-  onPageSizeChange: () => loadData(),
+  onPageSizeChange: () => loadData()
 })
 
 const sendForm = reactive({
@@ -180,13 +200,13 @@ const sendForm = reactive({
   title: '',
   content: '',
   msgType: 'system',
-  priority: 0,
+  priority: 0
 })
 
 const sendRules = {
   userIds: [{ required: true, message: '请输入接收用户ID', trigger: 'blur' }],
   title: [{ required: true, message: '请输入消息标题', trigger: 'blur' }],
-  content: [{ required: true, message: '请输入消息内容', trigger: 'blur' }],
+  content: [{ required: true, message: '请输入消息内容', trigger: 'blur' }]
 }
 
 const columns: DataTableColumns<InboxMessage> = [
@@ -195,28 +215,39 @@ const columns: DataTableColumns<InboxMessage> = [
     title: '状态',
     key: 'isRead',
     width: 80,
-    render: (row) => h(NTag, { type: row.isRead ? 'default' : 'error' }, () => row.isRead ? '已读' : '未读'),
+    render: (row) =>
+      h(NTag, { type: row.isRead ? 'default' : 'error' }, () => (row.isRead ? '已读' : '未读'))
   },
   {
     title: '星标',
     key: 'isStar',
     width: 60,
     render: (row) =>
-      h(NButton, {
-        text: true,
-        type: row.isStar ? 'warning' : 'default',
-        onClick: () => handleToggleStar(row),
-      }, () => row.isStar ? '★' : '☆'),
+      h(
+        NButton,
+        {
+          text: true,
+          type: row.isStar ? 'warning' : 'default',
+          onClick: () => handleToggleStar(row)
+        },
+        () => (row.isStar ? '★' : '☆')
+      )
   },
   { title: '标题', key: 'title', width: 200, ellipsis: { tooltip: true } },
   {
     title: '消息类型',
     key: 'msgType',
     width: 100,
-    render: (row) => h(NTag, { type: 'info', size: 'small' }, () => getMsgTypeLabel(row.msgType ?? '')),
+    render: (row) =>
+      h(NTag, { type: 'info', size: 'small' }, () => getMsgTypeLabel(row.msgType ?? ''))
   },
   { title: '发送者', key: 'senderName', width: 100 },
-  { title: '发送时间', key: 'createTime', width: 170, render: (row) => formatDateTime(row.createTime) },
+  {
+    title: '发送时间',
+    key: 'createTime',
+    width: 170,
+    render: (row) => formatDateTime(row.createTime)
+  },
   {
     title: '操作',
     key: 'actions',
@@ -224,10 +255,18 @@ const columns: DataTableColumns<InboxMessage> = [
     render: (row) =>
       h(NSpace, null, () => [
         h(NButton, { text: true, type: 'primary', onClick: () => handleDetail(row) }, () => '查看'),
-        h(NButton, { text: true, type: 'warning', onClick: () => handleMarkRead([row.id]) }, () => '标为已读'),
-        h(NButton, { text: true, type: 'error', onClick: () => handleDelete([row.id]) }, () => '删除'),
-      ]),
-  },
+        h(
+          NButton,
+          { text: true, type: 'warning', onClick: () => handleMarkRead([row.id]) },
+          () => '标为已读'
+        ),
+        h(
+          NButton,
+          { text: true, type: 'error', onClick: () => handleDelete([row.id]) },
+          () => '删除'
+        )
+      ])
+  }
 ]
 
 onMounted(() => {
@@ -274,7 +313,7 @@ function handleSend() {
     title: '',
     content: '',
     msgType: 'system',
-    priority: 0,
+    priority: 0
   })
   showSendModal.value = true
 }
@@ -299,7 +338,7 @@ async function handleDetail(row: InboxMessage) {
     currentMessage.value = res
     showDetailModal.value = true
     loadUnreadCount()
-  } catch (error) {
+  } catch {
     message.error('获取消息详情失败')
   }
 }
@@ -310,7 +349,7 @@ async function handleMarkRead(ids: string[]) {
     message.success('标记成功')
     loadData()
     loadUnreadCount()
-  } catch (error) {
+  } catch {
     message.error('标记失败')
   }
 }
@@ -321,7 +360,7 @@ async function handleMarkAllRead() {
     message.success('已全部标记为已读')
     loadData()
     loadUnreadCount()
-  } catch (error) {
+  } catch {
     message.error('操作失败')
   }
 }
@@ -330,7 +369,7 @@ async function handleToggleStar(row: InboxMessage) {
   try {
     await setInboxStarApi(row.id, !row.isStar)
     loadData()
-  } catch (error) {
+  } catch {
     message.error('操作失败')
   }
 }
@@ -347,10 +386,10 @@ function handleDelete(ids: string[]) {
         message.success('删除成功')
         loadData()
         loadUnreadCount()
-      } catch (error) {
+      } catch {
         message.error('删除失败')
       }
-    },
+    }
   })
 }
 
@@ -362,4 +401,3 @@ function handleBatchDelete() {
   handleDelete(selectedKeys.value as string[])
 }
 </script>
-

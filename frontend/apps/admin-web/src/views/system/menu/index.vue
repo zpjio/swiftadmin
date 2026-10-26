@@ -50,17 +50,27 @@
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-medium">{{ isEditing ? '编辑菜单' : '菜单详情' }}</h3>
             <NSpace>
-              <NButton v-if="!isEditing && hasPermission('system:menu:edit')" type="primary" @click="startEdit">
+              <NButton
+                v-if="!isEditing && hasPermission('system:menu:edit')"
+                type="primary"
+                @click="startEdit"
+              >
                 <template #icon><icon-mdi-pencil /></template>
                 编辑
               </NButton>
-              <NButton v-if="!isEditing && hasPermission('system:menu:add')" type="primary" @click="handleAdd(selectedMenu.id)">
+              <NButton
+                v-if="!isEditing && hasPermission('system:menu:add')"
+                type="primary"
+                @click="handleAdd(selectedMenu.id)"
+              >
                 <template #icon><icon-mdi-plus /></template>
                 新增子菜单
               </NButton>
               <template v-else-if="isEditing">
                 <NButton @click="cancelEdit">取消</NButton>
-                <NButton type="primary" :loading="submitLoading" @click="handleSubmit">保存</NButton>
+                <NButton type="primary" :loading="submitLoading" @click="handleSubmit"
+                  >保存</NButton
+                >
               </template>
             </NSpace>
           </div>
@@ -80,21 +90,35 @@
               <span v-else>-</span>
             </NDescriptionsItem>
             <NDescriptionsItem label="路由地址">{{ selectedMenu.path || '-' }}</NDescriptionsItem>
-            <NDescriptionsItem label="组件路径">{{ selectedMenu.component || '-' }}</NDescriptionsItem>
-            <NDescriptionsItem label="权限标识">{{ selectedMenu.permission || '-' }}</NDescriptionsItem>
+            <NDescriptionsItem label="组件路径">{{
+              selectedMenu.component || '-'
+            }}</NDescriptionsItem>
+            <NDescriptionsItem label="权限标识">{{
+              selectedMenu.permission || '-'
+            }}</NDescriptionsItem>
             <NDescriptionsItem label="排序">{{ selectedMenu.sortOrder }}</NDescriptionsItem>
             <NDescriptionsItem label="状态">
               <NTag :type="selectedMenu.status === 1 ? 'success' : 'error'" size="small">
                 {{ selectedMenu.status === 1 ? '正常' : '禁用' }}
               </NTag>
             </NDescriptionsItem>
-            <NDescriptionsItem label="创建时间">{{ selectedMenu.createTime || '-' }}</NDescriptionsItem>
+            <NDescriptionsItem label="创建时间">{{
+              selectedMenu.createTime || '-'
+            }}</NDescriptionsItem>
             <NDescriptionsItem label="操作" :span="2">
               <NSpace>
-                <NButton v-if="hasPermission('system:menu:add')" type="primary" size="small" @click="handleAdd(selectedMenu.id)">
+                <NButton
+                  v-if="hasPermission('system:menu:add')"
+                  type="primary"
+                  size="small"
+                  @click="handleAdd(selectedMenu.id)"
+                >
                   新增子菜单
                 </NButton>
-                <NPopconfirm v-if="hasPermission('system:menu:delete')" @positive-click="handleDelete">
+                <NPopconfirm
+                  v-if="hasPermission('system:menu:delete')"
+                  @positive-click="handleDelete"
+                >
                   <template #trigger>
                     <NButton type="error" size="small">删除</NButton>
                   </template>
@@ -116,12 +140,8 @@
     </div>
 
     <!-- 新增弹窗 -->
-    <NModal v-model:show="showAddModal" title="新增菜单" preset="card" style="width: 600px;">
-      <MenuForm
-        ref="addFormRef"
-        v-model="formData"
-        :menu-options="menuSelectTreeData"
-      />
+    <NModal v-model:show="showAddModal" title="新增菜单" preset="card" style="width: 600px">
+      <MenuForm ref="addFormRef" v-model="formData" :menu-options="menuSelectTreeData" />
       <template #footer>
         <NSpace justify="end">
           <NButton @click="showAddModal = false">取消</NButton>
@@ -135,7 +155,14 @@
 <script setup lang="ts">
 import { reactive, ref, h, computed, onMounted, nextTick } from 'vue'
 import { useMessage, NTag, type FormInst, type TreeSelectOption, type TreeOption } from 'naive-ui'
-import { getMenuTreeApi, getMenuSelectTreeApi, getMenuDetailApi, createMenuApi, updateMenuApi, deleteMenuApi } from '@/api/menu'
+import {
+  getMenuTreeApi,
+  getMenuSelectTreeApi,
+  getMenuDetailApi,
+  createMenuApi,
+  updateMenuApi,
+  deleteMenuApi
+} from '@/api/menu'
 import type { MenuVO, MenuDTO, MenuTreeVO } from '@/api/menu'
 import MenuForm from './MenuForm.vue'
 import { Icon } from '@iconify/vue'
@@ -166,23 +193,26 @@ const parentMenuIds = ref<string[]>([])
 
 // 新增弹窗
 const showAddModal = ref(false)
-const editFormRef = ref<FormInst | null>(null)  // 编辑表单 ref
-const addFormRef = ref<FormInst | null>(null)   // 新增表单 ref
+const editFormRef = ref<FormInst | null>(null) // 编辑表单 ref
+const addFormRef = ref<FormInst | null>(null) // 新增表单 ref
 
 // 是否全部展开
 const isAllExpanded = computed(() => {
   if (parentMenuIds.value.length === 0) return false
-  return parentMenuIds.value.every(id => expandedKeys.value.includes(id))
+  return parentMenuIds.value.every((id) => expandedKeys.value.includes(id))
 })
 
 // 转换为 NTree 数据格式（带图标和类型标签）
 const convertMenuToTreeOptions = (menus: MenuVO[]): TreeOption[] => {
-  return menus.map(menu => ({
+  return menus.map((menu) => ({
     key: menu.id,
     label: menu.name,
     icon: normalizeIconName(menu.icon) || undefined,
     type: menu.type,
-    children: menu.children && menu.children.length > 0 ? convertMenuToTreeOptions(menu.children) : undefined
+    children:
+      menu.children && menu.children.length > 0
+        ? convertMenuToTreeOptions(menu.children)
+        : undefined
   }))
 }
 
@@ -191,13 +221,16 @@ const treeData = computed<TreeOption[]>(() => {
   return convertMenuToTreeOptions(rawTreeData.value)
 })
 
-
 // 渲染树节点标签
 const renderTreeLabel = ({ option }: { option: TreeOption }) => {
   return h('div', { class: 'flex items-center gap-2 w-full py-1' }, [
     option.icon ? h(Icon, { icon: option.icon as string, style: { fontSize: '16px' } }) : null,
     h('span', null, option.label),
-    option.type ? h(NTag, { type: getTypeTagType(option.type as number), size: 'small', round: true }, () => getTypeLabel(option.type as number)) : null
+    option.type
+      ? h(NTag, { type: getTypeTagType(option.type as number), size: 'small', round: true }, () =>
+          getTypeLabel(option.type as number)
+        )
+      : null
   ])
 }
 
@@ -233,7 +266,9 @@ const onSelect = async (keys: (string | number)[]) => {
 }
 
 // 表单数据
-const formData = reactive<MenuDTO & { isExternal?: boolean; isCache?: boolean; isVisible?: boolean }>({
+const formData = reactive<
+  MenuDTO & { isExternal?: boolean; isCache?: boolean; isVisible?: boolean }
+>({
   parentId: '0',
   name: '',
   type: 1,
@@ -245,7 +280,7 @@ const formData = reactive<MenuDTO & { isExternal?: boolean; isCache?: boolean; i
   status: 1,
   isExternal: false,
   isCache: false,
-  isVisible: true,
+  isVisible: true
 })
 
 // 类型相关
@@ -278,7 +313,7 @@ const handleAdd = (parentId?: string) => {
     status: 1,
     isExternal: false,
     isCache: false,
-    isVisible: true,
+    isVisible: true
   })
   showAddModal.value = true
 }
@@ -301,7 +336,7 @@ const startEdit = () => {
     status: selectedMenu.value.status ?? 1,
     isExternal: false,
     isCache: false,
-    isVisible: true,
+    isVisible: true
   })
 
   isEditing.value = true
@@ -357,7 +392,7 @@ const handleSubmit = async () => {
     } finally {
       submitLoading.value = false
     }
-  } catch (errors: any) {
+  } catch {
     // 验证失败
   }
 }
@@ -373,7 +408,7 @@ const loadMenuTree = async () => {
     menuSelectTreeData.value = convertToTreeSelectOptions(selectTreeData, {
       labelField: 'label',
       rootLabel: '顶级菜单',
-      rootKey: '0',
+      rootKey: '0'
     })
     parentMenuIds.value = getParentIds(treeData).map(String)
     expandedKeys.value = parentMenuIds.value.map(String)

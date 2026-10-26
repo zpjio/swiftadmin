@@ -34,7 +34,7 @@
         </NCard>
       </NGi>
     </NGrid>
-    
+
     <NGrid :x-gap="16" :y-gap="16" cols="1 l:2" responsive="screen" class="mt-4">
       <NGi>
         <NCard title="访问趋势" class="h-80">
@@ -71,7 +71,7 @@ const activities = [
   { id: 1, type: 'success' as const, title: '新用户注册', time: '2026-03-11 16:30' },
   { id: 2, type: 'info' as const, title: '系统更新完成', time: '2026-03-11 15:00' },
   { id: 3, type: 'warning' as const, title: '服务器负载升高', time: '2026-03-11 14:20' },
-  { id: 4, type: 'success' as const, title: '订单支付成功', time: '2026-03-11 13:45' },
+  { id: 4, type: 'success' as const, title: '订单支付成功', time: '2026-03-11 13:45' }
 ]
 
 onMounted(() => {
@@ -81,7 +81,7 @@ onMounted(() => {
       tooltip: { trigger: 'axis' },
       xAxis: {
         type: 'category',
-        data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+        data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
       },
       yAxis: { type: 'value' },
       series: [
@@ -90,13 +90,13 @@ onMounted(() => {
           type: 'line',
           smooth: true,
           areaStyle: {
-            color: 'rgba(24, 144, 255, 0.2)',
+            color: 'rgba(24, 144, 255, 0.2)'
           },
           itemStyle: {
-            color: '#1890ff',
-          },
-        },
-      ],
+            color: '#1890ff'
+          }
+        }
+      ]
     })
   }
 })

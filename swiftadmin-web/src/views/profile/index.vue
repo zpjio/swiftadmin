@@ -7,18 +7,18 @@
             <NFormItem label="用户名" path="username">
               <NInput v-model:value="basicForm.username" disabled placeholder="用户名不可修改" />
             </NFormItem>
-            
+
             <NFormItem label="昵称" path="nickname">
               <NInput v-model:value="basicForm.nickname" placeholder="请输入昵称" />
             </NFormItem>
-            
+
             <NFormItem label="头像" path="avatar">
               <div class="flex items-center gap-4">
                 <NAvatar :size="64" :src="basicForm.avatar || undefined" />
                 <NButton @click="handleUpdateAvatar">更换头像</NButton>
               </div>
             </NFormItem>
-            
+
             <NFormItem label="性别" path="sex">
               <NRadioGroup v-model:value="basicForm.sex">
                 <NRadio :value="0">未知</NRadio>
@@ -26,60 +26,67 @@
                 <NRadio :value="2">女</NRadio>
               </NRadioGroup>
             </NFormItem>
-            
+
             <NFormItem label="手机号" path="phone">
               <NInput v-model:value="basicForm.phone" placeholder="请输入手机号" />
             </NFormItem>
-            
+
             <NFormItem label="邮箱" path="email">
               <NInput v-model:value="basicForm.email" placeholder="请输入邮箱" />
             </NFormItem>
-            
+
             <NFormItem label="部门" path="deptName">
               <NInput v-model:value="basicForm.deptName" disabled placeholder="部门不可修改" />
             </NFormItem>
-            
+
             <NFormItem label="角色" path="roleNames">
               <NDynamicTags v-model:value="basicForm.roleNames" :max="5" disabled />
             </NFormItem>
-            
+
             <NFormItem>
-              <NButton type="primary" @click="handleSaveBasic" :loading="saving">保存修改</NButton>
+              <NButton type="primary" :loading="saving" @click="handleSaveBasic">保存修改</NButton>
             </NFormItem>
           </NForm>
         </NTabPane>
-        
+
         <NTabPane name="security" tab="安全设置" display-directive="show">
-          <NForm :model="securityForm" :rules="securityRules" label-placement="left" label-width="100px">
+          <NForm
+            :model="securityForm"
+            :rules="securityRules"
+            label-placement="left"
+            label-width="100px"
+          >
             <NFormItem label="旧密码" path="oldPassword">
-              <NInput 
-                v-model:value="securityForm.oldPassword" 
-                type="password" 
-                placeholder="请输入旧密码" 
+              <NInput
+                v-model:value="securityForm.oldPassword"
+                type="password"
+                placeholder="请输入旧密码"
                 show-password-on="click"
               />
             </NFormItem>
-            
+
             <NFormItem label="新密码" path="newPassword">
-              <NInput 
-                v-model:value="securityForm.newPassword" 
-                type="password" 
-                placeholder="请输入新密码（至少 6 位）" 
+              <NInput
+                v-model:value="securityForm.newPassword"
+                type="password"
+                placeholder="请输入新密码（至少 6 位）"
                 show-password-on="click"
               />
             </NFormItem>
-            
+
             <NFormItem label="确认密码" path="confirmPassword">
-              <NInput 
-                v-model:value="securityForm.confirmPassword" 
-                type="password" 
-                placeholder="请再次输入新密码" 
+              <NInput
+                v-model:value="securityForm.confirmPassword"
+                type="password"
+                placeholder="请再次输入新密码"
                 show-password-on="click"
               />
             </NFormItem>
-            
+
             <NFormItem>
-              <NButton type="primary" @click="handleUpdatePassword" :loading="updatingPassword">修改密码</NButton>
+              <NButton type="primary" :loading="updatingPassword" @click="handleUpdatePassword"
+                >修改密码</NButton
+              >
             </NFormItem>
           </NForm>
         </NTabPane>
@@ -105,7 +112,7 @@ const updatingPassword = ref(false)
 // 上传配置
 const uploadUrl = computed(() => `${import.meta.env.VITE_API_BASE_URL}/system/file/upload`)
 const uploadHeaders = computed(() => ({
-  Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+  Authorization: `Bearer ${localStorage.getItem('token') || ''}`
 }))
 
 // 基本信息
@@ -118,29 +125,29 @@ const basicForm = reactive({
   phone: '',
   email: '',
   deptName: '',
-  roleNames: [] as string[],
+  roleNames: [] as string[]
 })
 
 // 安全设置
 const securityForm = reactive({
   oldPassword: '',
   newPassword: '',
-  confirmPassword: '',
+  confirmPassword: ''
 })
 
 const basicRules: FormRules = {
   nickname: [{ required: true, message: '请输入昵称', trigger: 'blur' }],
   phone: [{ pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }],
-  email: [{ pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: '请输入正确的邮箱', trigger: 'blur' }],
+  email: [{ pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: '请输入正确的邮箱', trigger: 'blur' }]
 }
 
 const securityRules: FormRules = {
   oldPassword: [{ required: true, message: '请输入旧密码', trigger: 'blur' }],
   newPassword: [
     { required: true, message: '请输入新密码', trigger: 'blur' },
-    { min: 6, message: '密码长度至少 6 位', trigger: 'blur' },
+    { min: 6, message: '密码长度至少 6 位', trigger: 'blur' }
   ],
-  confirmPassword: [{ required: true, message: '请再次输入密码', trigger: 'blur' }],
+  confirmPassword: [{ required: true, message: '请再次输入密码', trigger: 'blur' }]
 }
 
 // 加载用户信息
@@ -170,7 +177,7 @@ onMounted(async () => {
       sex: userInfo.sex,
       phone: userInfo.phone,
       email: userInfo.email,
-      deptName: userInfo.deptName,
+      deptName: userInfo.deptName
     })
   } catch (error: any) {
     message.error(error.message || '获取用户信息失败')
@@ -187,9 +194,9 @@ const handleSaveBasic = async () => {
       avatar: basicForm.avatar,
       sex: basicForm.sex,
       phone: basicForm.phone,
-      email: basicForm.email,
+      email: basicForm.email
     })
-    
+
     // 更新本地用户信息
     const userInfo = userStore.userInfo
     if (userInfo) {
@@ -199,10 +206,10 @@ const handleSaveBasic = async () => {
         avatar: basicForm.avatar,
         phone: basicForm.phone,
         email: basicForm.email,
-        sex: basicForm.sex,
+        sex: basicForm.sex
       })
     }
-    
+
     message.success('保存成功')
   } catch (error: any) {
     message.error(error.message || '保存失败')
@@ -242,7 +249,7 @@ const handleUpdateAvatar = (_e: MouseEvent) => {
       const response = await fetch(uploadUrl.value, {
         method: 'POST',
         headers: uploadHeaders.value,
-        body: formData,
+        body: formData
       })
 
       const result = await response.json()
@@ -258,7 +265,7 @@ const handleUpdateAvatar = (_e: MouseEvent) => {
       } else {
         message.error(result.message || '上传失败')
       }
-    } catch (error) {
+    } catch {
       message.error('上传失败，请重试')
     }
   }
@@ -272,7 +279,7 @@ const handleUpdatePassword = async () => {
     message.error('两次输入的密码不一致')
     return
   }
-  
+
   updatingPassword.value = true
   try {
     const userId = userStore.userInfo?.id
@@ -280,20 +287,20 @@ const handleUpdatePassword = async () => {
       message.error('未获取到用户信息，请重新登录')
       return
     }
-    
+
     await changePasswordApi({
       userId,
       oldPassword: securityForm.oldPassword,
-      newPassword: securityForm.newPassword,
+      newPassword: securityForm.newPassword
     })
-    
+
     // 清空表单
     securityForm.oldPassword = ''
     securityForm.newPassword = ''
     securityForm.confirmPassword = ''
-    
+
     message.success('密码修改成功，请重新登录')
-    
+
     // 退出登录
     setTimeout(() => {
       userStore.logout()

@@ -6,7 +6,9 @@ import type { PageResult } from '@/types'
 /**
  * 分页查询函数类型
  */
-export type PageFetchFn<T, Q extends Record<string, any>> = (params: Q & PaginationParams) => Promise<PageResult<T>>
+export type PageFetchFn<T, Q extends Record<string, any>> = (
+  params: Q & PaginationParams
+) => Promise<PageResult<T>>
 
 /**
  * useTablePage 配置选项
@@ -85,7 +87,7 @@ export function useTablePage<T, Q extends Record<string, any> = Record<string, a
     defaultQuery,
     defaultPageSize = 10,
     enableSelection = false,
-    immediate = false,
+    immediate = false
   } = options
 
   // 加载状态
@@ -96,14 +98,14 @@ export function useTablePage<T, Q extends Record<string, any> = Record<string, a
 
   // 查询参数
   const queryForm = reactive<Q>({
-    ...defaultQuery,
+    ...defaultQuery
   } as Q) as Q
 
   // 分页
   const { paginationProps, setTotal, getIndex, resetPage } = usePagination({
     defaultPageSize,
     onChange: () => loadData(),
-    onPageSizeChange: () => loadData(),
+    onPageSizeChange: () => loadData()
   })
 
   // 选择功能（可选）
@@ -116,7 +118,7 @@ export function useTablePage<T, Q extends Record<string, any> = Record<string, a
       const res = await fetchFn({
         ...queryForm,
         page: paginationProps.value.page,
-        pageSize: paginationProps.value.pageSize,
+        pageSize: paginationProps.value.pageSize
       })
       tableData.value = res.records || []
       setTotal(res.totalRow || 0)
@@ -166,6 +168,6 @@ export function useTablePage<T, Q extends Record<string, any> = Record<string, a
     loadData,
     handleSearch,
     handleReset,
-    selection,
+    selection
   }
 }

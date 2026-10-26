@@ -5,10 +5,20 @@
       <div class="flex justify-between items-start flex-wrap gap-4 mb-4">
         <NForm :model="queryForm" inline class="flex flex-wrap gap-4">
           <NFormItem label="配置名称" path="configName">
-            <NInput v-model:value="queryForm.configName" placeholder="请输入配置名称" clearable style="width: 180px" />
+            <NInput
+              v-model:value="queryForm.configName"
+              placeholder="请输入配置名称"
+              clearable
+              style="width: 180px"
+            />
           </NFormItem>
           <NFormItem label="配置键" path="configKey">
-            <NInput v-model:value="queryForm.configKey" placeholder="请输入配置键" clearable style="width: 180px" />
+            <NInput
+              v-model:value="queryForm.configKey"
+              placeholder="请输入配置键"
+              clearable
+              style="width: 180px"
+            />
           </NFormItem>
           <NFormItem label="配置类型" path="configType">
             <NSelect
@@ -42,7 +52,12 @@
             <template #icon><icon-mdi-refresh /></template>
             刷新缓存
           </NButton>
-          <NButton v-auth="'system:config:delete'" type="error" :disabled="!hasSelection" @click="handleBatchDelete">
+          <NButton
+            v-auth="'system:config:delete'"
+            type="error"
+            :disabled="!hasSelection"
+            @click="handleBatchDelete"
+          >
             <template #icon><icon-mdi-delete /></template>
             批量删除
           </NButton>
@@ -62,13 +77,17 @@
     </NCard>
 
     <!-- 新增/编辑弹窗 -->
-    <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 500px;">
+    <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 500px">
       <NForm ref="formRef" :model="formData" :rules="rules" label-width="100">
         <NFormItem label="配置名称" path="configName">
           <NInput v-model:value="formData.configName" placeholder="请输入配置名称" />
         </NFormItem>
         <NFormItem label="配置键" path="configKey">
-          <NInput v-model:value="formData.configKey" placeholder="请输入配置键（如：system.name）" :disabled="isEdit" />
+          <NInput
+            v-model:value="formData.configKey"
+            placeholder="请输入配置键（如：system.name）"
+            :disabled="isEdit"
+          />
         </NFormItem>
         <NFormItem label="配置值" path="configValue">
           <NInput v-model:value="formData.configValue" placeholder="请输入配置值" />
@@ -81,7 +100,12 @@
           />
         </NFormItem>
         <NFormItem label="描述" path="description">
-          <NInput v-model:value="formData.description" type="textarea" placeholder="请输入配置描述" :rows="3" />
+          <NInput
+            v-model:value="formData.description"
+            type="textarea"
+            placeholder="请输入配置描述"
+            :rows="3"
+          />
         </NFormItem>
       </NForm>
 
@@ -107,9 +131,16 @@ import {
   refreshConfigCacheApi,
   type ConfigVO,
   type ConfigDTO,
-  type ConfigQuery,
+  type ConfigQuery
 } from '@/api/config'
-import { useDict, usePermission, useTablePage, useConfirm, useTableActions, useFormReset } from '@/composables'
+import {
+  useDict,
+  usePermission,
+  useTablePage,
+  useConfirm,
+  useTableActions,
+  useFormReset
+} from '@/composables'
 
 const message = useMessage()
 const { hasPermission } = usePermission()
@@ -135,16 +166,16 @@ const {
   loadData,
   handleSearch,
   handleReset,
-  selection,
+  selection
 } = useTablePage<ConfigVO, ConfigQuery>({
   fetchFn: getConfigPageApi,
   defaultQuery: {
     configName: undefined,
     configKey: undefined,
-    configType: undefined,
+    configType: undefined
   },
   enableSelection: true,
-  immediate: true,
+  immediate: true
 })
 
 // 选择相关的便捷访问
@@ -160,14 +191,14 @@ const { formData, resetForm, setForm } = useFormReset<ConfigDTO>({
   configKey: '',
   configValue: '',
   configType: '',
-  description: '',
+  description: ''
 })
 
 const rules: FormRules = {
   configName: [{ required: true, message: '请输入配置名称', trigger: 'blur' }],
   configKey: [{ required: true, message: '请输入配置键', trigger: 'blur' }],
   configValue: [{ required: true, message: '请输入配置值', trigger: 'blur' }],
-  configType: [{ required: true, message: '请选择配置类型', trigger: 'change' }],
+  configType: [{ required: true, message: '请选择配置类型', trigger: 'change' }]
 }
 
 const columns: DataTableColumns<ConfigVO> = [
@@ -176,7 +207,7 @@ const columns: DataTableColumns<ConfigVO> = [
     title: '序号',
     key: 'index',
     width: 60,
-    render: (_row, index) => getIndex(index),
+    render: (_row, index) => getIndex(index)
   },
   { title: '配置名称', key: 'configName', width: 150, ellipsis: { tooltip: true } },
   { title: '配置键', key: 'configKey', width: 180, ellipsis: { tooltip: true } },
@@ -185,7 +216,7 @@ const columns: DataTableColumns<ConfigVO> = [
     title: '配置类型',
     key: 'configType',
     width: 120,
-    render: (row) => getConfigTypeLabel(row.configType),
+    render: (row) => getConfigTypeLabel(row.configType)
   },
   { title: '描述', key: 'description', width: 200, ellipsis: { tooltip: true } },
   {
@@ -193,11 +224,12 @@ const columns: DataTableColumns<ConfigVO> = [
     key: 'actions',
     width: 150,
     fixed: 'right',
-    render: (row) => renderActions([
-      edit(() => handleEdit(row), hasPermission('system:config:edit')),
-      del(() => handleDelete(row), hasPermission('system:config:delete')),
-    ]),
-  },
+    render: (row) =>
+      renderActions([
+        edit(() => handleEdit(row), hasPermission('system:config:edit')),
+        del(() => handleDelete(row), hasPermission('system:config:delete'))
+      ])
+  }
 ]
 
 const handleAdd = () => {

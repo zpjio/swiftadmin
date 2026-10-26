@@ -10,6 +10,10 @@
     "build": "pnpm --filter admin-web build",
     "preview": "pnpm --filter admin-web preview",
     "type-check": "pnpm --filter admin-web type-check",
+    "lint": "pnpm --filter admin-web lint",
+    "lint:fix": "pnpm --filter admin-web lint:fix",
+    "format": "pnpm --filter admin-web format",
+    "format:check": "pnpm --filter admin-web format:check",
     "clean": "pnpm -r exec rm -rf node_modules dist"
   },
   "engines": {

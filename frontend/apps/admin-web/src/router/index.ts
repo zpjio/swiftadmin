@@ -11,20 +11,20 @@ export const staticRoutes: RouteRecordRaw[] = [
     path: '/login',
     name: 'Login',
     component: () => import('@/views/auth/Login.vue'),
-    meta: { title: '登录' },
+    meta: { title: '登录' }
   },
   {
     path: '/change-password',
     name: 'ChangePassword',
     component: () => import('@/views/auth/ChangePassword.vue'),
-    meta: { title: '修改密码' },
+    meta: { title: '修改密码' }
   },
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('@/views/error/404.vue'),
-    meta: { title: '404' },
-  },
+    meta: { title: '404' }
+  }
 ]
 
 // 基础布局路由（占位，动态路由会添加到这里）
@@ -38,21 +38,21 @@ export const layoutRoute: RouteRecordRaw = {
       path: 'dashboard',
       name: 'Dashboard',
       component: () => import('@/views/dashboard/index.vue'),
-      meta: { title: '工作台', icon: 'mdi-dashboard' },
+      meta: { title: '工作台', icon: 'mdi-dashboard' }
     },
     {
       path: 'profile',
       name: 'Profile',
       component: () => import('@/views/profile/index.vue'),
-      meta: { title: '个人设置', icon: 'mdi-account-cog' },
-    },
-  ],
+      meta: { title: '个人设置', icon: 'mdi-account-cog' }
+    }
+  ]
 }
 
 // 先不添加 404 路由，等动态路由加载完再添加
 const router = createRouter({
   history: createWebHistory(),
-  routes: [...staticRoutes.filter(r => r.name !== 'NotFound'), layoutRoute, redirectRoute],
+  routes: [...staticRoutes.filter((r) => r.name !== 'NotFound'), layoutRoute, redirectRoute]
 })
 
 // 是否已添加动态路由
@@ -82,11 +82,11 @@ router.beforeEach(async (to, from, next) => {
   if (to.meta.title) {
     document.title = `${to.meta.title} - SwiftAdmin`
   }
-  
+
   // 检查是否已登录
   const token = localStorage.getItem('token')
   const tempToken = localStorage.getItem('tempToken')
-  
+
   // 放行登录页和修改密码页
   if (to.path === '/login' || to.path === '/change-password') {
     if (token) {
@@ -96,13 +96,13 @@ router.beforeEach(async (to, from, next) => {
     }
     return
   }
-  
+
   // 其他页面需要 token 或 tempToken
   if (!token && !tempToken) {
     next('/login')
     return
   }
-  
+
   // 添加动态路由
   if (!isDynamicRoutesAdded) {
     try {
@@ -133,7 +133,7 @@ router.beforeEach(async (to, from, next) => {
       isDynamicRoutesAdded = true
 
       // 添加 404 路由（必须在所有路由之后）
-      router.addRoute(staticRoutes.find(r => r.name === 'NotFound')!)
+      router.addRoute(staticRoutes.find((r) => r.name === 'NotFound')!)
 
       // 重要：添加完路由后，使用 replace: true 重新导航到目标路径
       // 这样 Vue Router 会重新匹配路由，找到刚添加的动态路由
@@ -147,7 +147,7 @@ router.beforeEach(async (to, from, next) => {
     }
     return
   }
-  
+
   next()
 })
 

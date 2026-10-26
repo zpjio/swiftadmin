@@ -75,7 +75,10 @@
               </NRadio>
               <NRadio value="specific">
                 <span>指定</span>
-                <NCheckboxGroup v-model:value="config.second.values" :disabled="config.second.type !== 'specific'">
+                <NCheckboxGroup
+                  v-model:value="config.second.values"
+                  :disabled="config.second.type !== 'specific'"
+                >
                   <div class="checkbox-grid">
                     <NCheckbox v-for="i in 60" :key="i - 1" :value="i - 1">
                       {{ i - 1 }}
@@ -138,7 +141,10 @@
               </NRadio>
               <NRadio value="specific">
                 <span>指定</span>
-                <NCheckboxGroup v-model:value="config.minute.values" :disabled="config.minute.type !== 'specific'">
+                <NCheckboxGroup
+                  v-model:value="config.minute.values"
+                  :disabled="config.minute.type !== 'specific'"
+                >
                   <div class="checkbox-grid">
                     <NCheckbox v-for="i in 60" :key="i - 1" :value="i - 1">
                       {{ i - 1 }}
@@ -201,7 +207,10 @@
               </NRadio>
               <NRadio value="specific">
                 <span>指定</span>
-                <NCheckboxGroup v-model:value="config.hour.values" :disabled="config.hour.type !== 'specific'">
+                <NCheckboxGroup
+                  v-model:value="config.hour.values"
+                  :disabled="config.hour.type !== 'specific'"
+                >
                   <div class="checkbox-grid">
                     <NCheckbox v-for="i in 24" :key="i - 1" :value="i - 1">
                       {{ i - 1 }}
@@ -264,7 +273,10 @@
               </NRadio>
               <NRadio value="specific">
                 <span>指定</span>
-                <NCheckboxGroup v-model:value="config.day.values" :disabled="config.day.type !== 'specific'">
+                <NCheckboxGroup
+                  v-model:value="config.day.values"
+                  :disabled="config.day.type !== 'specific'"
+                >
                   <div class="checkbox-grid">
                     <NCheckbox v-for="i in 31" :key="i" :value="i">
                       {{ i }}
@@ -333,7 +345,10 @@
               </NRadio>
               <NRadio value="specific">
                 <span>指定</span>
-                <NCheckboxGroup v-model:value="config.month.values" :disabled="config.month.type !== 'specific'">
+                <NCheckboxGroup
+                  v-model:value="config.month.values"
+                  :disabled="config.month.type !== 'specific'"
+                >
                   <div class="checkbox-grid">
                     <NCheckbox v-for="i in 12" :key="i" :value="i">
                       {{ i }}
@@ -353,7 +368,10 @@
               </NRadio>
               <NRadio value="specific">
                 <span>指定</span>
-                <NCheckboxGroup v-model:value="config.week.values" :disabled="config.week.type !== 'specific'">
+                <NCheckboxGroup
+                  v-model:value="config.week.values"
+                  :disabled="config.week.type !== 'specific'"
+                >
                   <div class="checkbox-grid">
                     <NCheckbox :value="1">周日</NCheckbox>
                     <NCheckbox :value="2">周一</NCheckbox>
@@ -397,7 +415,7 @@ const emit = defineEmits<{
 
 const cronExpression = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value),
+  set: (value) => emit('update:modelValue', value)
 })
 
 const expressionDescription = ref('每秒执行')
@@ -409,7 +427,7 @@ const config = reactive({
     end: 59,
     intervalStart: 0,
     intervalValue: 1,
-    values: [] as number[],
+    values: [] as number[]
   },
   minute: {
     type: 'every',
@@ -417,7 +435,7 @@ const config = reactive({
     end: 59,
     intervalStart: 0,
     intervalValue: 1,
-    values: [] as number[],
+    values: [] as number[]
   },
   hour: {
     type: 'every',
@@ -425,7 +443,7 @@ const config = reactive({
     end: 23,
     intervalStart: 0,
     intervalValue: 1,
-    values: [] as number[],
+    values: [] as number[]
   },
   day: {
     type: 'every',
@@ -433,7 +451,7 @@ const config = reactive({
     end: 31,
     intervalStart: 1,
     intervalValue: 1,
-    values: [] as number[],
+    values: [] as number[]
   },
   month: {
     type: 'every',
@@ -441,13 +459,13 @@ const config = reactive({
     end: 12,
     intervalStart: 1,
     intervalValue: 1,
-    values: [] as number[],
+    values: [] as number[]
   },
   week: {
     type: 'every',
     values: [] as number[],
-    lastValue: 1,
-  },
+    lastValue: 1
+  }
 })
 
 const weekOptions = [
@@ -457,7 +475,7 @@ const weekOptions = [
   { label: '周三', value: 4 },
   { label: '周四', value: 5 },
   { label: '周五', value: 6 },
-  { label: '周六', value: 7 },
+  { label: '周六', value: 7 }
 ]
 
 const presets = {
@@ -467,7 +485,7 @@ const presets = {
   everyHour: '0 0 * * * ?',
   everyDay: '0 0 0 * * ?',
   everyWeek: '0 0 0 ? * 1',
-  everyMonth: '0 0 0 1 * ?',
+  everyMonth: '0 0 0 1 * ?'
 }
 
 const setPreset = (key: keyof typeof presets) => {
@@ -481,7 +499,7 @@ const parseExpression = (expr: string) => {
     return
   }
 
-  const [second, minute, hour, day, month, week] = parts
+  const [second] = parts
 
   // 解析秒
   if (!second) return
@@ -677,7 +695,7 @@ watch(
     parseExpression(value)
     updateDescription()
   },
-  { immediate: true },
+  { immediate: true }
 )
 </script>
 

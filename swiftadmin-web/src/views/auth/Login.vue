@@ -3,21 +3,16 @@
     <div class="login-box">
       <h1 class="title">SwiftAdmin</h1>
       <p class="subtitle">高效、简洁、美观的后台管理系统</p>
-      
+
       <NForm :model="form" :rules="rules" class="login-form">
         <NFormItem path="username">
-          <NInput
-            v-model:value="form.username"
-            placeholder="请输入用户名"
-            size="large"
-            clearable
-          >
+          <NInput v-model:value="form.username" placeholder="请输入用户名" size="large" clearable>
             <template #prefix>
               <icon-mdi-account />
             </template>
           </NInput>
         </NFormItem>
-        
+
         <NFormItem path="password">
           <NInput
             v-model:value="form.password"
@@ -31,25 +26,21 @@
             </template>
           </NInput>
         </NFormItem>
-        
+
         <NFormItem v-if="captchaEnabled" path="captchaCode">
           <div class="captcha-input">
-            <NInput
-              v-model:value="form.captchaCode"
-              placeholder="请输入验证码"
-              size="large"
-            />
+            <NInput v-model:value="form.captchaCode" placeholder="请输入验证码" size="large" />
             <div class="captcha-image" @click="refreshCaptcha">
               <img v-if="captchaUrl" :src="captchaUrl" alt="验证码" />
               <span v-else>点击获取</span>
             </div>
           </div>
         </NFormItem>
-        
+
         <NFormItem>
           <NCheckbox v-model:checked="form.remember">记住密码</NCheckbox>
         </NFormItem>
-        
+
         <NButton type="primary" size="large" block :loading="loading" @click="handleLogin">
           登录
         </NButton>
@@ -78,20 +69,20 @@ const form = reactive({
   username: 'admin',
   password: 'admin123',
   captchaCode: '',
-  remember: false,
+  remember: false
 })
 
 const rules: FormRules = {
   username: {
     required: true,
     message: '请输入用户名',
-    trigger: 'blur',
+    trigger: 'blur'
   },
   password: {
     required: true,
     message: '请输入密码',
-    trigger: 'blur',
-  },
+    trigger: 'blur'
+  }
 }
 
 // 获取验证码
@@ -119,7 +110,7 @@ const handleLogin = async () => {
       username: form.username,
       password: form.password,
       captchaId: captchaEnabled.value ? captchaId.value : undefined,
-      captchaCode: captchaEnabled.value ? form.captchaCode : undefined,
+      captchaCode: captchaEnabled.value ? form.captchaCode : undefined
     })
 
     // 检查是否需要修改密码
@@ -149,7 +140,7 @@ const handleLogin = async () => {
           nickname: loginRes.userInfo.nickname || '',
           avatar: loginRes.userInfo.avatar || '',
           roles: loginRes.userInfo.roles || [],
-          permissions: loginRes.userInfo.permissions || [],
+          permissions: loginRes.userInfo.permissions || []
         })
       }
 

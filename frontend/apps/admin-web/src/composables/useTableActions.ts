@@ -22,21 +22,21 @@ const BUTTON_STYLE = {
   padding: '0 8px',
   background: 'none',
   border: 'none',
-  cursor: 'pointer',
+  cursor: 'pointer'
 }
 
 /**
  * 渲染单个操作按钮
  */
-export function renderActionButton(
-  label: string,
-  color: string,
-  onClick: () => void
-): VNode {
-  return h('button', {
-    style: { ...BUTTON_STYLE, color },
-    onClick,
-  }, label)
+export function renderActionButton(label: string, color: string, onClick: () => void): VNode {
+  return h(
+    'button',
+    {
+      style: { ...BUTTON_STYLE, color },
+      onClick
+    },
+    label
+  )
 }
 
 /**
@@ -45,9 +45,11 @@ export function renderActionButton(
  * @returns VNode
  */
 export function renderActionButtons(buttons: ActionButtonConfig[]): VNode {
-  const visibleButtons = buttons.filter(btn => btn.show !== false)
-  return h('div', { style: { display: 'flex', gap: '8px' } },
-    visibleButtons.map(btn =>
+  const visibleButtons = buttons.filter((btn) => btn.show !== false)
+  return h(
+    'div',
+    { style: { display: 'flex', gap: '8px' } },
+    visibleButtons.map((btn) =>
       renderActionButton(btn.label, btn.color || ACTION_COLORS.primary, btn.onClick)
     )
   )
@@ -61,7 +63,7 @@ export function editAction(onClick: () => void, show = true): ActionButtonConfig
     label: '编辑',
     color: ACTION_COLORS.primary,
     onClick,
-    show,
+    show
   }
 }
 
@@ -73,7 +75,7 @@ export function deleteAction(onClick: () => void, show = true): ActionButtonConf
     label: '删除',
     color: ACTION_COLORS.danger,
     onClick,
-    show,
+    show
   }
 }
 
@@ -101,6 +103,6 @@ export function useTableActions() {
     renderActionButtons,
     renderActions: renderActionButtons,
     edit: editAction,
-    del: deleteAction,
+    del: deleteAction
   }
 }

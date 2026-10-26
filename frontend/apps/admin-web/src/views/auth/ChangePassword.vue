@@ -1,10 +1,12 @@
 <template>
-  <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#667eea] to-[#764ba2]">
+  <div
+    class="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#667eea] to-[#764ba2]"
+  >
     <div class="w-[450px] p-10 bg-white rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.3)]">
       <h1 class="text-center text-3xl font-bold text-blue-500 mb-2">修改密码</h1>
       <p class="text-center text-gray-400 text-sm mb-8">为了您的账号安全，首次登录需要修改密码</p>
 
-      <NForm :model="form" :rules="rules" class="flex flex-col gap-5" ref="formRef">
+      <NForm ref="formRef" :model="form" :rules="rules" class="flex flex-col gap-5">
         <NFormItem label="新密码" path="newPassword">
           <NInput
             v-model:value="form.newPassword"
@@ -51,17 +53,15 @@ const formRef = ref<FormInst | null>(null)
 
 const form = reactive({
   newPassword: '',
-  confirmPassword: '',
+  confirmPassword: ''
 })
 
 const rules: FormRules = {
   newPassword: [
     { required: true, message: '请输入新密码', trigger: 'blur' },
-    { min: 6, message: '密码长度至少 6 位', trigger: 'blur' },
+    { min: 6, message: '密码长度至少 6 位', trigger: 'blur' }
   ],
-  confirmPassword: [
-    { required: true, message: '请再次输入密码', trigger: 'blur' },
-  ],
+  confirmPassword: [{ required: true, message: '请再次输入密码', trigger: 'blur' }]
 }
 
 const handleSubmit = async () => {
@@ -74,13 +74,13 @@ const handleSubmit = async () => {
     message.error('两次输入的密码不一致')
     return
   }
-  
+
   // 表单验证
   await formRef.value?.validate(async (errors) => {
     if (errors) {
       return
     }
-    
+
     loading.value = true
     try {
       // 获取临时 Token
@@ -90,12 +90,12 @@ const handleSubmit = async () => {
         router.push('/login')
         return
       }
-      
+
       const res = await forceChangePasswordApi({
         tempToken,
-        newPassword: form.newPassword,
+        newPassword: form.newPassword
       })
-      
+
       // 保存新的 Token
       if (res && res.accessToken) {
         localStorage.setItem('token', res.accessToken)
@@ -104,9 +104,9 @@ const handleSubmit = async () => {
         }
       }
       localStorage.removeItem('tempToken')
-      
+
       message.success('密码修改成功')
-      
+
       // 跳转到首页
       setTimeout(() => {
         router.push('/dashboard')

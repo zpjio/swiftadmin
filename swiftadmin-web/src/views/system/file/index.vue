@@ -53,11 +53,7 @@
           <template #icon><icon-mdi-folder-plus /></template>
           新建文件夹
         </NButton>
-        <NButton
-          type="error"
-          :disabled="selectedRowKeys.length === 0"
-          @click="handleBatchDelete"
-        >
+        <NButton type="error" :disabled="selectedRowKeys.length === 0" @click="handleBatchDelete">
           <template #icon><icon-mdi-delete /></template>
           批量删除
         </NButton>
@@ -76,10 +72,20 @@
       />
 
       <!-- 文件预览弹窗 -->
-      <NModal v-model:show="showPreview" preset="dialog" :title="previewTitle" :style="{ width: '800px' }">
+      <NModal
+        v-model:show="showPreview"
+        preset="dialog"
+        :title="previewTitle"
+        :style="{ width: '800px' }"
+      >
         <div class="preview-content">
           <img v-if="previewType === 'image'" :src="previewUrl" class="preview-image" />
-          <video v-else-if="previewType === 'video'" :src="previewUrl" controls class="preview-video" />
+          <video
+            v-else-if="previewType === 'video'"
+            :src="previewUrl"
+            controls
+            class="preview-video"
+          />
           <iframe v-else-if="previewType === 'pdf'" :src="previewUrl" class="preview-pdf" />
           <div v-else class="preview-unsupported">
             <icon-mdi-file class="text-6xl text-gray-400" />
@@ -107,7 +113,7 @@ const queryForm = reactive<FileQuery>({
   page: 1,
   size: 10,
   fileName: undefined,
-  fileType: undefined,
+  fileType: undefined
 })
 
 const pagination = reactive({
@@ -127,7 +133,7 @@ const pagination = reactive({
     pagination.page = 1
     queryForm.page = 1
     loadData()
-  },
+  }
 })
 
 const fileTypeOptions = [
@@ -135,13 +141,13 @@ const fileTypeOptions = [
   { label: '文档', value: 'doc' },
   { label: '视频', value: 'video' },
   { label: '音频', value: 'audio' },
-  { label: '其他', value: 'other' },
+  { label: '其他', value: 'other' }
 ]
 
 // 上传配置
 const uploadUrl = computed(() => `${import.meta.env.VITE_API_BASE_URL}/system/file/upload`)
 const uploadHeaders = computed(() => ({
-  Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+  Authorization: `Bearer ${localStorage.getItem('token') || ''}`
 }))
 
 const columns: DataTableColumns<FileVO> = [
@@ -155,8 +161,8 @@ const columns: DataTableColumns<FileVO> = [
     render: (row) =>
       h('div', { class: 'flex items-center gap-2' }, [
         h('i', { class: `${getIconClass(getFileIcon(row.fileType))} text-lg` }),
-        h('span', row.fileName),
-      ]),
+        h('span', row.fileName)
+      ])
   },
   { title: '文件类型', key: 'fileType', width: 100 },
   { title: '文件大小', key: 'fileSize', width: 100, render: (row) => formatFileSize(row.fileSize) },
@@ -169,11 +175,23 @@ const columns: DataTableColumns<FileVO> = [
     fixed: 'right',
     render: (row) =>
       h('div', { class: 'flex gap-2' }, [
-        h('button', { class: 'text-blue-600 hover:underline', onClick: () => handlePreview(row) }, '预览'),
-        h('button', { class: 'text-green-600 hover:underline', onClick: () => handleDownload(row) }, '下载'),
-        h('button', { class: 'text-red-600 hover:underline', onClick: () => handleDelete(row) }, '删除'),
-      ]),
-  },
+        h(
+          'button',
+          { class: 'text-blue-600 hover:underline', onClick: () => handlePreview(row) },
+          '预览'
+        ),
+        h(
+          'button',
+          { class: 'text-green-600 hover:underline', onClick: () => handleDownload(row) },
+          '下载'
+        ),
+        h(
+          'button',
+          { class: 'text-red-600 hover:underline', onClick: () => handleDelete(row) },
+          '删除'
+        )
+      ])
+  }
 ]
 
 // 预览相关

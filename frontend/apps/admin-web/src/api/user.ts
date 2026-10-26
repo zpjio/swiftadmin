@@ -95,7 +95,7 @@ export function deleteUserApi(ids: string[]) {
  */
 export function updateUserStatusApi(userId: string, status: number) {
   return put('/system/user/status', null, {
-    params: { userId, status },
+    params: { userId, status }
   })
 }
 
@@ -104,7 +104,7 @@ export function updateUserStatusApi(userId: string, status: number) {
  */
 export function resetPasswordApi(userId: string, password: string) {
   return put('/system/user/reset-password', null, {
-    params: { userId, password },
+    params: { userId, password }
   })
 }
 
@@ -113,7 +113,7 @@ export function resetPasswordApi(userId: string, password: string) {
  */
 export function assignRolesApi(userId: string, roleIds: string[]) {
   return put('/system/user/role', null, {
-    params: { userId, roleIds },
+    params: { userId, roleIds }
   })
 }
 

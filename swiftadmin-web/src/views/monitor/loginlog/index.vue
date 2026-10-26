@@ -53,11 +53,7 @@
 
       <!-- 操作按钮 -->
       <NSpace class="mb-4">
-        <NButton
-          type="error"
-          :disabled="selectedRowKeys.length === 0"
-          @click="handleBatchDelete"
-        >
+        <NButton type="error" :disabled="selectedRowKeys.length === 0" @click="handleBatchDelete">
           <template #icon><icon-mdi-delete /></template>
           批量删除
         </NButton>
@@ -106,7 +102,7 @@ const queryForm = reactive<LoginLogQuery & { dateRange?: [number, number] }>({
   status: undefined,
   beginTime: '',
   endTime: '',
-  dateRange: undefined,
+  dateRange: undefined
 })
 
 const pagination = reactive({
@@ -126,12 +122,12 @@ const pagination = reactive({
     pagination.page = 1
     queryForm.page = 1
     loadData()
-  },
+  }
 })
 
 const statusOptions = [
   { label: '成功', value: 1 },
-  { label: '失败', value: 0 },
+  { label: '失败', value: 0 }
 ]
 
 const columns: DataTableColumns<LoginLogVO> = [
@@ -143,7 +139,11 @@ const columns: DataTableColumns<LoginLogVO> = [
     key: 'status',
     width: 80,
     render: (row) =>
-      h('span', { class: row.status === 1 ? 'text-green-600' : 'text-red-600' }, row.status === 1 ? '✓ 成功' : '✗ 失败'),
+      h(
+        'span',
+        { class: row.status === 1 ? 'text-green-600' : 'text-red-600' },
+        row.status === 1 ? '✓ 成功' : '✗ 失败'
+      )
   },
   { title: '登录 IP', key: 'ipAddress', width: 140 },
   { title: '浏览器/操作系统', key: 'userAgent', width: 200, ellipsis: { tooltip: true } },
@@ -155,8 +155,12 @@ const columns: DataTableColumns<LoginLogVO> = [
     width: 100,
     fixed: 'right',
     render: (row) =>
-      h('button', { class: 'text-red-600 hover:underline', onClick: () => handleDelete(row) }, '删除'),
-  },
+      h(
+        'button',
+        { class: 'text-red-600 hover:underline', onClick: () => handleDelete(row) },
+        '删除'
+      )
+  }
 ]
 
 const loadData = async () => {

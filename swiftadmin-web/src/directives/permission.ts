@@ -13,17 +13,17 @@ export function setupPermissionDirective(app: any) {
   app.directive('permission', {
     mounted(el: HTMLElement, binding: DirectiveBinding) {
       const { value } = binding
-      
+
       if (!value) {
         return
       }
-      
+
       const userStore = useUserStore()
       const permissions = userStore.permissions || []
       const allPermissions = permissions.includes('*:*:*') // 超级管理员
-      
+
       let hasPermission = false
-      
+
       if (Array.isArray(value)) {
         // 数组：或关系，有一个权限就显示
         hasPermission = value.some((perm: string) => {
@@ -33,29 +33,29 @@ export function setupPermissionDirective(app: any) {
         // 字符串：单个权限
         hasPermission = allPermissions || permissions.includes(value)
       }
-      
+
       if (!hasPermission) {
         // 移除元素
-        el.parentNode && el.parentNode.removeChild(el)
+        el.parentNode?.removeChild(el)
       }
-    },
+    }
   } as Directive)
-  
+
   // v-auth 指令（v-permission 的别名）
   app.directive('auth', {
     mounted(el: HTMLElement, binding: DirectiveBinding) {
       const { value } = binding
-      
+
       if (!value) {
         return
       }
-      
+
       const userStore = useUserStore()
       const permissions = userStore.permissions || []
       const allPermissions = permissions.includes('*:*:*') // 超级管理员
-      
+
       let hasPermission = false
-      
+
       if (Array.isArray(value)) {
         // 数组：或关系，有一个权限就显示
         hasPermission = value.some((perm: string) => {
@@ -65,12 +65,12 @@ export function setupPermissionDirective(app: any) {
         // 字符串：单个权限
         hasPermission = allPermissions || permissions.includes(value)
       }
-      
+
       if (!hasPermission) {
         // 移除元素
-        el.parentNode && el.parentNode.removeChild(el)
+        el.parentNode?.removeChild(el)
       }
-    },
+    }
   } as Directive)
 }
 
@@ -82,12 +82,12 @@ export function setupPermissionDirective(app: any) {
 export function hasPermission(permission: string): boolean {
   const userStore = useUserStore()
   const permissions = userStore.permissions || []
-  
+
   // 超级管理员拥有所有权限
   if (permissions.includes('*:*:*')) {
     return true
   }
-  
+
   return permissions.includes(permission)
 }
 
@@ -100,12 +100,12 @@ export function hasPermission(permission: string): boolean {
 export function hasPermissions(permissions: string[], type: 'and' | 'or' = 'or'): boolean {
   const userStore = useUserStore()
   const userPermissions = userStore.permissions || []
-  
+
   // 超级管理员拥有所有权限
   if (userPermissions.includes('*:*:*')) {
     return true
   }
-  
+
   if (type === 'and') {
     return permissions.every((perm) => userPermissions.includes(perm))
   } else {

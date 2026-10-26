@@ -5,11 +5,11 @@ import type { RouteRecordRaw } from 'vue-router'
  */
 export const MenuType = {
   DIRECTORY: 1, // 目录
-  MENU: 2,      // 菜单
-  BUTTON: 3,    // 按钮
+  MENU: 2, // 菜单
+  BUTTON: 3 // 按钮
 } as const
 
-export type MenuTypeEnum = typeof MenuType[keyof typeof MenuType]
+export type MenuTypeEnum = (typeof MenuType)[keyof typeof MenuType]
 
 /**
  * 菜单数据接口
@@ -77,8 +77,8 @@ export function convertMenusToRoutes(menus: MenuVO[]): RouteRecordRaw[] {
         icon: menu.icon || undefined,
         permission: menu.permission || undefined,
         hidden: false,
-        keepAlive: true, // 默认启用页面缓存
-      },
+        keepAlive: true // 默认启用页面缓存
+      }
     }
 
     routes.push(route)
@@ -95,13 +95,13 @@ function getMenuName(path: string): string {
   if (!path) {
     return 'Menu_' + Date.now()
   }
-  
+
   // 移除开头的 /
   const cleanPath = path.replace(/^\//, '')
   // 将 /system/user 转换为 SystemUser
   return cleanPath
     .split('/')
-    .filter(segment => segment.length > 0)
+    .filter((segment) => segment.length > 0)
     .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
     .join('')
 }
@@ -129,7 +129,7 @@ function loadComponent(component?: string | null) {
     'monitor/operlog/index': () => import('@/views/monitor/operlog/index.vue'),
     'monitor/loginlog/index': () => import('@/views/monitor/loginlog/index.vue'),
     'monitor/online/index': () => import('@/views/system/online/index.vue'),
-    'profile/index': () => import('@/views/profile/index.vue'),
+    'profile/index': () => import('@/views/profile/index.vue')
   }
 
   return componentMap[component] || (() => import('@/views/error/404.vue'))

@@ -15,15 +15,13 @@
       <div class="notification-header">
         <span class="title">消息通知</span>
         <NSpace>
-          <NButton text size="small" @click="handleRefresh" :loading="loading">
+          <NButton text size="small" :loading="loading" @click="handleRefresh">
             <template #icon><icon-mdi-refresh :size="14" /></template>
           </NButton>
-          <NButton text size="small" @click="handleMarkAllRead" :disabled="unreadCount === 0">
+          <NButton text size="small" :disabled="unreadCount === 0" @click="handleMarkAllRead">
             全部已读
           </NButton>
-          <NButton text size="small" @click="handleGoInbox">
-            查看全部
-          </NButton>
+          <NButton text size="small" @click="handleGoInbox"> 查看全部 </NButton>
         </NSpace>
       </div>
 
@@ -72,7 +70,7 @@ import {
   getUnreadCountApi,
   markInboxReadApi,
   markAllInboxReadApi,
-  type InboxMessage,
+  type InboxMessage
 } from '@/api/message'
 
 const router = useRouter()
@@ -90,7 +88,7 @@ const msgTypeTagMap: Record<string, 'default' | 'info' | 'success' | 'warning' |
   promotion: 'success',
   task: 'info',
   notice: 'default',
-  alert: 'error',
+  alert: 'error'
 }
 
 const msgTypeLabelMap: Record<string, string> = {
@@ -100,7 +98,7 @@ const msgTypeLabelMap: Record<string, string> = {
   promotion: '营销',
   task: '任务',
   notice: '公告',
-  alert: '告警',
+  alert: '告警'
 }
 
 function getMsgTypeTag(type?: string) {
@@ -152,7 +150,7 @@ async function loadMessages() {
   try {
     const res = await getInboxPageApi({
       page: 1,
-      pageSize: 10,
+      pageSize: 10
     })
     messageList.value = res?.records || []
   } catch (error) {
@@ -205,10 +203,10 @@ async function handleMessageClick(msg: InboxMessage) {
 async function handleMarkAllRead() {
   try {
     await markAllInboxReadApi()
-    messageList.value.forEach(msg => msg.isRead = 1)
+    messageList.value.forEach((msg) => (msg.isRead = 1))
     unreadCount.value = 0
     message.success('已全部标记为已读')
-  } catch (error) {
+  } catch {
     message.error('操作失败')
   }
 }

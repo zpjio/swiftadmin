@@ -4,7 +4,12 @@
       <!-- 搜索栏 -->
       <NForm :model="queryForm" inline class="mb-4">
         <NFormItem label="渠道名称" path="channelName">
-          <NInput v-model:value="queryForm.channelName" placeholder="请输入渠道名称" clearable style="width: 180px" />
+          <NInput
+            v-model:value="queryForm.channelName"
+            placeholder="请输入渠道名称"
+            clearable
+            style="width: 180px"
+          />
         </NFormItem>
         <NFormItem label="渠道类型" path="channelType">
           <NSelect
@@ -56,13 +61,15 @@
                   {{ group.channels.length }} 个渠道
                 </NTag>
               </template>
-              <NSpace vertical v-if="group.channels.length > 0">
+              <NSpace v-if="group.channels.length > 0" vertical>
                 <div
                   v-for="(channel, index) in group.channels"
                   :key="channel.id"
                   class="py-2"
                   :class="[
-                    index === 0 ? 'bg-gradient-to-r from-blue-500/5 to-transparent -my-2 -mx-3 px-3 py-2 rounded' : '',
+                    index === 0
+                      ? 'bg-gradient-to-r from-blue-500/5 to-transparent -my-2 -mx-3 px-3 py-2 rounded'
+                      : '',
                     channel.status !== 1 ? 'opacity-60' : ''
                   ]"
                 >
@@ -76,7 +83,7 @@
                         {{ index === 0 ? '主渠道' : `备用 ${index}` }}
                       </NTag>
                       <NText strong>{{ channel.channelName }}</NText>
-                      <NText depth="3" style="font-size: 12px;">({{ channel.channelCode }})</NText>
+                      <NText depth="3" style="font-size: 12px">({{ channel.channelCode }})</NText>
                     </NSpace>
                     <NSpace>
                       <NSwitch
@@ -97,12 +104,16 @@
                   </div>
                   <div class="mt-1 pl-1">
                     <NSpace size="small">
-                      <NText depth="3" style="font-size: 12px;">优先级: {{ channel.priority }}</NText>
-                      <NText depth="3" style="font-size: 12px;">|</NText>
-                      <NText depth="3" style="font-size: 12px;">{{ formatDateTime(channel.createTime) }}</NText>
+                      <NText depth="3" style="font-size: 12px"
+                        >优先级: {{ channel.priority }}</NText
+                      >
+                      <NText depth="3" style="font-size: 12px">|</NText>
+                      <NText depth="3" style="font-size: 12px">{{
+                        formatDateTime(channel.createTime)
+                      }}</NText>
                     </NSpace>
                   </div>
-                  <NDivider v-if="index < group.channels.length - 1" style="margin: 8px 0;" />
+                  <NDivider v-if="index < group.channels.length - 1" style="margin: 8px 0" />
                 </div>
               </NSpace>
               <NEmpty v-else description="暂无渠道" size="small" />
@@ -123,7 +134,7 @@
     </NCard>
 
     <!-- 新增/编辑弹窗 -->
-    <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 700px;">
+    <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 700px">
       <NForm ref="formRef" :model="form" :rules="rules" label-width="100">
         <NFormItem label="渠道名称" path="channelName">
           <NInput v-model:value="form.channelName" placeholder="请输入渠道名称" />
@@ -137,14 +148,25 @@
           />
         </NFormItem>
         <NFormItem label="渠道编码" path="channelCode">
-          <NInput v-model:value="form.channelCode" placeholder="请输入渠道编码" :disabled="isEdit" />
+          <NInput
+            v-model:value="form.channelCode"
+            placeholder="请输入渠道编码"
+            :disabled="isEdit"
+          />
         </NFormItem>
         <NFormItem label="配置信息" path="config">
-          <NInput v-model:value="form.config" type="textarea" placeholder="请输入JSON格式配置" :rows="6" />
+          <NInput
+            v-model:value="form.config"
+            type="textarea"
+            placeholder="请输入JSON格式配置"
+            :rows="6"
+          />
         </NFormItem>
         <NFormItem label="优先级" path="priority">
           <NInputNumber v-model:value="form.priority" :min="0" :max="100" style="width: 200px" />
-          <NText depth="3" style="margin-left: 8px;">数字越大优先级越高，发送时优先使用高优先级渠道</NText>
+          <NText depth="3" style="margin-left: 8px"
+            >数字越大优先级越高，发送时优先使用高优先级渠道</NText
+          >
         </NFormItem>
         <NFormItem label="状态" path="status">
           <NRadioGroup v-model:value="form.status">
@@ -169,7 +191,21 @@
 
 <script setup lang="ts">
 import { ref, reactive, h, computed, onMounted } from 'vue'
-import { useMessage, useDialog, NTag, NButton, NSpace, NSwitch, NDropdown, NGrid, NGridItem, NDivider, NText, NEmpty, type DataTableColumns } from 'naive-ui'
+import {
+  useMessage,
+  useDialog,
+  NTag,
+  NButton,
+  NSpace,
+  NSwitch,
+  NDropdown,
+  NGrid,
+  NGridItem,
+  NDivider,
+  NText,
+  NEmpty,
+  type DataTableColumns
+} from 'naive-ui'
 import {
   getChannelPageApi,
   getChannelDetailApi,
@@ -179,7 +215,7 @@ import {
   updateChannelStatusApi,
   testChannelApi,
   type MessageChannel,
-  type ChannelType,
+  type ChannelType
 } from '@/api/message'
 import { useDict } from '@/composables/useDict'
 import { usePagination } from '@/composables'
@@ -210,7 +246,7 @@ const channelGroups = computed<ChannelGroup[]>(() => {
   const groups: Map<string, ChannelGroup> = new Map()
 
   // 初始化所有类型
-  channelTypeOptions.value.forEach(opt => {
+  channelTypeOptions.value.forEach((opt) => {
     groups.set(opt.value as string, {
       type: opt.value as string,
       label: opt.label as string,
@@ -220,7 +256,7 @@ const channelGroups = computed<ChannelGroup[]>(() => {
 
   // 按优先级排序后分组
   const sorted = [...tableData.value].sort((a, b) => b.priority - a.priority)
-  sorted.forEach(channel => {
+  sorted.forEach((channel) => {
     const group = groups.get(channel.channelType)
     if (group) {
       group.channels.push(channel)
@@ -232,13 +268,13 @@ const channelGroups = computed<ChannelGroup[]>(() => {
 
 const queryForm = reactive({
   channelName: undefined as string | undefined,
-  channelType: undefined as ChannelType | undefined,
+  channelType: undefined as ChannelType | undefined
 })
 
 // 分页
 const { paginationProps, setTotal, getParams } = usePagination({
   onChange: () => loadData(),
-  onPageSizeChange: () => loadData(),
+  onPageSizeChange: () => loadData()
 })
 
 const form = reactive({
@@ -249,14 +285,14 @@ const form = reactive({
   config: '{}',
   status: 1,
   priority: 0,
-  remark: '',
+  remark: ''
 })
 
 const rules = {
   channelName: [{ required: true, message: '请输入渠道名称', trigger: 'blur' }],
   channelType: [{ required: true, message: '请选择渠道类型', trigger: 'change' }],
   channelCode: [{ required: true, message: '请输入渠道编码', trigger: 'blur' }],
-  config: [{ required: true, message: '请输入配置信息', trigger: 'blur' }],
+  config: [{ required: true, message: '请输入配置信息', trigger: 'blur' }]
 }
 
 const columns: DataTableColumns<MessageChannel> = [
@@ -266,7 +302,7 @@ const columns: DataTableColumns<MessageChannel> = [
     title: '渠道类型',
     key: 'channelType',
     width: 100,
-    render: (row) => h(NTag, { type: 'info' }, () => getChannelTypeLabel(row.channelType)),
+    render: (row) => h(NTag, { type: 'info' }, () => getChannelTypeLabel(row.channelType))
   },
   { title: '优先级', key: 'priority', width: 80 },
   {
@@ -276,11 +312,16 @@ const columns: DataTableColumns<MessageChannel> = [
     render: (row) =>
       h(NSwitch, {
         value: row.status === 1,
-        onUpdateValue: (val: boolean) => handleStatusChange(row, val),
-      }),
+        onUpdateValue: (val: boolean) => handleStatusChange(row, val)
+      })
   },
   { title: '备注', key: 'remark', width: 200, ellipsis: { tooltip: true } },
-  { title: '创建时间', key: 'createTime', width: 170, render: (row) => formatDateTime(row.createTime) },
+  {
+    title: '创建时间',
+    key: 'createTime',
+    width: 170,
+    render: (row) => formatDateTime(row.createTime)
+  },
   {
     title: '操作',
     key: 'actions',
@@ -289,9 +330,9 @@ const columns: DataTableColumns<MessageChannel> = [
       h(NSpace, null, () => [
         h(NButton, { text: true, type: 'primary', onClick: () => handleEdit(row) }, () => '编辑'),
         h(NButton, { text: true, type: 'warning', onClick: () => handleTest(row) }, () => '测试'),
-        h(NButton, { text: true, type: 'error', onClick: () => handleDelete(row.id) }, () => '删除'),
-      ]),
-  },
+        h(NButton, { text: true, type: 'error', onClick: () => handleDelete(row.id) }, () => '删除')
+      ])
+  }
 ]
 
 onMounted(() => {
@@ -332,7 +373,7 @@ function handleAdd() {
     config: '{}',
     status: 1,
     priority: 0,
-    remark: '',
+    remark: ''
   })
   showModal.value = true
 }
@@ -344,7 +385,7 @@ async function handleEdit(row: MessageChannel) {
     const res = await getChannelDetailApi(row.id)
     Object.assign(form, res)
     showModal.value = true
-  } catch (error) {
+  } catch {
     message.error('获取渠道详情失败')
   }
 }
@@ -374,7 +415,7 @@ async function handleStatusChange(row: MessageChannel, val: boolean) {
     await updateChannelStatusApi(row.id, val ? 1 : 0)
     message.success('状态更新成功')
     loadData()
-  } catch (error) {
+  } catch {
     message.error('状态更新失败')
   }
 }
@@ -387,7 +428,7 @@ async function handleTest(row: MessageChannel) {
     } else {
       message.error('渠道连接测试失败')
     }
-  } catch (error) {
+  } catch {
     message.error('渠道连接测试失败')
   }
 }
@@ -403,10 +444,10 @@ function handleDelete(id: string) {
         await deleteChannelApi([id])
         message.success('删除成功')
         loadData()
-      } catch (error) {
+      } catch {
         message.error('删除失败')
       }
-    },
+    }
   })
 }
 
@@ -414,11 +455,11 @@ function toggleGroupView() {
   groupByType.value = !groupByType.value
 }
 
-function getActionOptions(row: MessageChannel) {
+function getActionOptions(_row: MessageChannel) {
   return [
     { label: '编辑', key: 'edit' },
     { label: '测试', key: 'test' },
-    { label: '删除', key: 'delete' },
+    { label: '删除', key: 'delete' }
   ]
 }
 

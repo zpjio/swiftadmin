@@ -15,7 +15,7 @@ onMounted(() => {
   if (path) {
     router.replace({
       path: '/' + path,
-      query,
+      query
     })
   } else {
     router.push('/')

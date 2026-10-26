@@ -34,7 +34,7 @@ export function usePermission() {
     if (isSuperAdmin.value) {
       return true
     }
-    return permissions.some(p => userStore.permissions.includes(p))
+    return permissions.some((p) => userStore.permissions.includes(p))
   }
 
   /**
@@ -45,7 +45,7 @@ export function usePermission() {
     if (isSuperAdmin.value) {
       return true
     }
-    return permissions.every(p => userStore.permissions.includes(p))
+    return permissions.every((p) => userStore.permissions.includes(p))
   }
 
   /**
@@ -61,7 +61,7 @@ export function usePermission() {
    * @param roles 角色标识数组
    */
   function hasAnyRole(roles: string[]): boolean {
-    return roles.some(r => userStore.roles.includes(r))
+    return roles.some((r) => userStore.roles.includes(r))
   }
 
   /**
@@ -72,7 +72,9 @@ export function usePermission() {
     if (isSuperAdmin.value) {
       return buttons
     }
-    return buttons.filter(btn => !btn.permission || userStore.permissions.includes(btn.permission))
+    return buttons.filter(
+      (btn) => !btn.permission || userStore.permissions.includes(btn.permission)
+    )
   }
 
   return {
@@ -84,6 +86,6 @@ export function usePermission() {
     hasAllPermissions,
     hasRole,
     hasAnyRole,
-    filterAuthorized,
+    filterAuthorized
   }
 }

@@ -4,10 +4,20 @@
       <!-- 搜索栏 -->
       <NForm :model="queryForm" inline class="mb-4">
         <NFormItem label="任务名称" path="jobName">
-          <NInput v-model:value="queryForm.jobName" placeholder="请输入任务名称" clearable style="width: 180px" />
+          <NInput
+            v-model:value="queryForm.jobName"
+            placeholder="请输入任务名称"
+            clearable
+            style="width: 180px"
+          />
         </NFormItem>
         <NFormItem label="任务分组" path="jobGroup">
-          <NInput v-model:value="queryForm.jobGroup" placeholder="请输入任务分组" clearable style="width: 180px" />
+          <NInput
+            v-model:value="queryForm.jobGroup"
+            placeholder="请输入任务分组"
+            clearable
+            style="width: 180px"
+          />
         </NFormItem>
         <NFormItem label="执行状态" path="executeStatus">
           <NSelect
@@ -52,7 +62,7 @@
     </NCard>
 
     <!-- 日志详情弹窗 -->
-    <NModal v-model:show="showDetailModal" title="日志详情" preset="card" style="width: 800px;">
+    <NModal v-model:show="showDetailModal" title="日志详情" preset="card" style="width: 800px">
       <NDescriptions :column="2" bordered>
         <NDescriptionsItem label="日志ID">{{ currentLog.id }}</NDescriptionsItem>
         <NDescriptionsItem label="任务名称">{{ currentLog.jobName }}</NDescriptionsItem>
@@ -62,7 +72,9 @@
             {{ getExecuteStatusLabel(currentLog.executeStatus) }}
           </NTag>
         </NDescriptionsItem>
-        <NDescriptionsItem label="执行时间">{{ formatDateTime(currentLog.executeTime) || '-' }}</NDescriptionsItem>
+        <NDescriptionsItem label="执行时间">{{
+          formatDateTime(currentLog.executeTime) || '-'
+        }}</NDescriptionsItem>
         <NDescriptionsItem label="耗时">{{ currentLog.costTime }} ms</NDescriptionsItem>
         <NDescriptionsItem label="重试次数">{{ currentLog.retryCount }}</NDescriptionsItem>
         <NDescriptionsItem label="执行类型">
@@ -103,7 +115,7 @@ import {
   type JobLogVO,
   type JobLogQuery,
   JobExecuteStatus,
-  ExecuteType,
+  ExecuteType
 } from '@/api/schedule'
 import { formatDateTime } from '@/utils/date'
 import { usePagination } from '@/composables'
@@ -117,25 +129,25 @@ const currentLog = ref<JobLogVO>({} as JobLogVO)
 const executeStatusOptions = [
   { label: '执行中', value: 0 },
   { label: '成功', value: 1 },
-  { label: '失败', value: 2 },
+  { label: '失败', value: 2 }
 ]
 
 const executeTypeOptions = [
   { label: '自动执行', value: 1 },
-  { label: '手动触发', value: 2 },
+  { label: '手动触发', value: 2 }
 ]
 
 const queryForm = reactive<JobLogQuery>({
   jobName: undefined,
   jobGroup: undefined,
   executeStatus: undefined,
-  executeType: undefined,
+  executeType: undefined
 })
 
 // 分页
 const { paginationProps, setTotal, getIndex } = usePagination({
   onChange: () => loadData(),
-  onPageSizeChange: () => loadData(),
+  onPageSizeChange: () => loadData()
 })
 
 const columns: DataTableColumns<JobLogVO> = [
@@ -143,7 +155,7 @@ const columns: DataTableColumns<JobLogVO> = [
     title: '序号',
     key: 'index',
     width: 60,
-    render: (_row, index) => getIndex(index),
+    render: (_row, index) => getIndex(index)
   },
   { title: '任务名称', key: 'jobName', width: 150 },
   { title: '任务分组', key: 'jobGroup', width: 120 },
@@ -154,26 +166,27 @@ const columns: DataTableColumns<JobLogVO> = [
     render: (row) => {
       const tag = getExecuteStatusTag(row.executeStatus)
       const text = getExecuteStatusLabel(row.executeStatus)
-      return h(
-        NTag,
-        { type: tag, size: 'small' },
-        { default: () => text },
-      )
-    },
+      return h(NTag, { type: tag, size: 'small' }, { default: () => text })
+    }
   },
-  { title: '执行时间', key: 'executeTime', width: 160, render: (row) => formatDateTime(row.executeTime) || '-' },
+  {
+    title: '执行时间',
+    key: 'executeTime',
+    width: 160,
+    render: (row) => formatDateTime(row.executeTime) || '-'
+  },
   {
     title: '耗时',
     key: 'costTime',
     width: 100,
-    render: (row) => row.costTime ? `${row.costTime}ms` : '-',
+    render: (row) => (row.costTime ? `${row.costTime}ms` : '-')
   },
   { title: '重试次数', key: 'retryCount', width: 80 },
   {
     title: '执行类型',
     key: 'executeType',
     width: 100,
-    render: (row) => (row.executeType === ExecuteType.AUTO ? '自动执行' : '手动触发'),
+    render: (row) => (row.executeType === ExecuteType.AUTO ? '自动执行' : '手动触发')
   },
   {
     title: '操作',
@@ -186,12 +199,12 @@ const columns: DataTableColumns<JobLogVO> = [
         {
           size: 'small',
           type: 'info',
-          onClick: () => handleViewDetail(row),
+          onClick: () => handleViewDetail(row)
         },
-        { default: () => '查看' },
+        { default: () => '查看' }
       )
-    },
-  },
+    }
+  }
 ]
 
 const loadData = async () => {
@@ -200,7 +213,7 @@ const loadData = async () => {
     const res = await getJobLogPageApi(queryForm)
     tableData.value = res.records
     setTotal(res.totalRow)
-  } catch (error) {
+  } catch {
     message.error('加载日志列表失败')
   } finally {
     loading.value = false
@@ -216,7 +229,7 @@ const handleReset = () => {
     jobName: undefined,
     jobGroup: undefined,
     executeStatus: undefined,
-    executeType: undefined,
+    executeType: undefined
   })
   loadData()
 }
@@ -226,7 +239,7 @@ const handleViewDetail = async (row: JobLogVO) => {
     const res = await getJobLogDetailApi(row.id)
     currentLog.value = res
     showDetailModal.value = true
-  } catch (error) {
+  } catch {
     // 错误消息已在 request.ts 拦截器中统一显示
   }
 }
@@ -261,4 +274,3 @@ onMounted(() => {
   loadData()
 })
 </script>
-

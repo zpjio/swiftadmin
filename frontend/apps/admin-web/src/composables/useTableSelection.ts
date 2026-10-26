@@ -5,9 +5,7 @@ import { ref, computed, shallowRef } from 'vue'
  * @param keyField 主键字段名，默认 'id'
  * @returns 选择状态和操作方法
  */
-export function useTableSelection<T>(
-  keyField: keyof T = 'id' as keyof T
-) {
+export function useTableSelection<T>(keyField: keyof T = 'id' as keyof T) {
   const selectedKeys = ref<Array<string | number>>([])
   // 使用 shallowRef 避免深层响应式转换，简化类型推断
   const selectedRows = shallowRef<T[]>([])
@@ -118,7 +116,7 @@ export function useTableSelection<T>(
     getSelectedIds,
     getSelectedNumbers,
     getSelectedRows,
-    getRowKey,
+    getRowKey
   }
 }
 /**

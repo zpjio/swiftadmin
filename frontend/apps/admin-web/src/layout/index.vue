@@ -18,7 +18,7 @@
         <div class="menu-wrapper">
           <NScrollbar>
             <NMenu
-              :options="(menuOptions as any)"
+              :options="menuOptions as any"
               :collapsed="collapsed"
               :collapsed-width="64"
               :collapsed-icon-size="22"
@@ -32,7 +32,7 @@
         </div>
       </div>
     </NLayoutSider>
-    
+
     <NLayout>
       <NLayoutHeader bordered class="h-16 flex items-center justify-between px-4">
         <div class="flex items-center">
@@ -43,7 +43,11 @@
           </NButton>
         </div>
         <div class="flex items-center gap-2">
-          <NButton quaternary @click="toggleTheme" :title="isDark ? '切换到亮色模式' : '切换到暗色模式'">
+          <NButton
+            quaternary
+            :title="isDark ? '切换到亮色模式' : '切换到暗色模式'"
+            @click="toggleTheme"
+          >
             <template #icon>
               <icon-mdi-white-balance-sunny v-if="isDark" />
               <icon-mdi-weather-night v-else />
@@ -56,19 +60,21 @@
               <NAvatar v-else :size="24" round>
                 {{ avatarText }}
               </NAvatar>
-              <span class="ml-2">{{ userStore.userInfo?.nickname || userStore.userInfo?.username }}</span>
+              <span class="ml-2">{{
+                userStore.userInfo?.nickname || userStore.userInfo?.username
+              }}</span>
             </NButton>
           </NDropdown>
         </div>
       </NLayoutHeader>
-      
+
       <!-- 标签页 -->
       <TagsView />
-      
+
       <NLayoutContent class="p-4 flex-1 overflow-auto">
         <RouterView v-slot="{ Component, route }">
           <KeepAlive :include="cachedViews">
-            <component :is="Component" :key="route.fullPath" v-if="isAlive" />
+            <component :is="Component" v-if="isAlive" :key="route.fullPath" />
           </KeepAlive>
         </RouterView>
       </NLayoutContent>
@@ -90,7 +96,7 @@ import { getMenuName } from '@/utils/router-helper'
 import { Icon } from '@iconify/vue'
 import TagsView from '@/components/TagsView/index.vue'
 import Notification from '@/components/Notification/index.vue'
-import type { MenuOption, DropdownOption } from 'naive-ui'
+import type { DropdownOption } from 'naive-ui'
 import type { MenuVO } from '@/types'
 
 /** 扩展的菜单选项，包含 path 属性 */
@@ -133,11 +139,15 @@ const getAllExpandKeys = (options: ExtendedMenuOption[]): string[] => {
 }
 
 // 监听菜单选项变化，自动展开所有菜单
-watch(menuOptions, (newOptions) => {
-  if (newOptions.length > 0) {
-    expandedKeys.value = getAllExpandKeys(newOptions)
-  }
-}, { immediate: true })
+watch(
+  menuOptions,
+  (newOptions) => {
+    if (newOptions.length > 0) {
+      expandedKeys.value = getAllExpandKeys(newOptions)
+    }
+  },
+  { immediate: true }
+)
 
 // 用户头像（优先使用用户配置的头像）
 const userAvatar = computed(() => {
@@ -173,8 +183,10 @@ function convertMenuTreeToOptions(menus: MenuVO[]): ExtendedMenuOption[] {
     const option: ExtendedMenuOption = {
       label: menu.name,
       key: getMenuName(menu.path),
-      icon: menu.icon ? () => h(Icon, { icon: normalizeIconName(menu.icon), style: { fontSize: '18px' } }) : null,
-      path: menu.path,
+      icon: menu.icon
+        ? () => h(Icon, { icon: normalizeIconName(menu.icon), style: { fontSize: '18px' } })
+        : null,
+      path: menu.path
     }
 
     // 处理子菜单（递归过滤掉按钮类型）
@@ -206,9 +218,12 @@ const updateMenuOptions = () => {
 }
 
 // 监听路由变化
-watch(() => router.getRoutes().length, () => {
-  updateMenuOptions()
-})
+watch(
+  () => router.getRoutes().length,
+  () => {
+    updateMenuOptions()
+  }
+)
 
 // 监听路由变化，添加标签页
 watch(
@@ -220,7 +235,7 @@ watch(
       fullPath: route.fullPath,
       query: route.query,
       params: route.params,
-      meta: route.meta,
+      meta: route.meta
     })
     tagsStore.setActiveView({
       name: route.name,
@@ -228,7 +243,7 @@ watch(
       fullPath: route.fullPath,
       query: route.query,
       params: route.params,
-      meta: route.meta,
+      meta: route.meta
     })
   },
   { immediate: true }
@@ -250,7 +265,7 @@ onMounted(async () => {
         sex: userInfo.sex,
         phone: userInfo.phone,
         email: userInfo.email,
-        deptName: userInfo.deptName,
+        deptName: userInfo.deptName
       })
     } catch (error) {
       console.error('[Layout] 获取用户信息失败:', error)
@@ -268,13 +283,13 @@ const userDropdownOptions: DropdownOption[] = [
   {
     label: '个人设置',
     key: 'profile',
-    icon: () => h(Icon, { icon: 'mdi:account-settings', style: { fontSize: '18px' } }),
+    icon: () => h(Icon, { icon: 'mdi:account-settings', style: { fontSize: '18px' } })
   },
   {
     label: '退出登录',
     key: 'logout',
-    icon: () => h(Icon, { icon: 'mdi:logout', style: { fontSize: '18px' } }),
-  },
+    icon: () => h(Icon, { icon: 'mdi:logout', style: { fontSize: '18px' } })
+  }
 ]
 
 // 从菜单选项中查找路径

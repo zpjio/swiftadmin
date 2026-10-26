@@ -10,7 +10,7 @@ const messageMap = new Map<number, string>([
   [501, '服务未实现'],
   [502, '网关错误'],
   [503, '服务不可用'],
-  [504, '网关超时'],
+  [504, '网关超时']
 ])
 
 export function showMessage(code: number, customMessage?: string) {

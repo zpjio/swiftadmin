@@ -3,10 +3,20 @@
     <div class="toolbar mb-4">
       <NForm :model="queryForm" inline class="search-form">
         <NFormItem label="角色名称" path="name">
-          <NInput v-model:value="queryForm.name" placeholder="请输入角色名称" clearable style="width: 180px" />
+          <NInput
+            v-model:value="queryForm.name"
+            placeholder="请输入角色名称"
+            clearable
+            style="width: 180px"
+          />
         </NFormItem>
         <NFormItem label="角色编码" path="code">
-          <NInput v-model:value="queryForm.code" placeholder="请输入角色编码" clearable style="width: 180px" />
+          <NInput
+            v-model:value="queryForm.code"
+            placeholder="请输入角色编码"
+            clearable
+            style="width: 180px"
+          />
         </NFormItem>
         <NFormItem label="状态" path="status">
           <NSelect
@@ -14,7 +24,7 @@
             :options="[
               { label: '全部', value: undefined },
               { label: '正常', value: 1 },
-              { label: '禁用', value: 0 },
+              { label: '禁用', value: 0 }
             ]"
             clearable
             style="width: 120px"
@@ -59,8 +69,14 @@
     />
 
     <!-- 新增/编辑弹窗 -->
-    <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 500px;">
-      <NForm :model="formData" :rules="currentFormRules" ref="formRef" label-placement="left" label-width="100">
+    <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 500px">
+      <NForm
+        ref="formRef"
+        :model="formData"
+        :rules="currentFormRules"
+        label-placement="left"
+        label-width="100"
+      >
         <NFormItem label="角色名称" path="name">
           <NInput v-model:value="formData.name" placeholder="请输入角色名称" />
         </NFormItem>
@@ -98,7 +114,7 @@
               { label: '全部数据', value: 1 },
               { label: '本部门及以下', value: 2 },
               { label: '本部门', value: 3 },
-              { label: '仅本人', value: 4 },
+              { label: '仅本人', value: 4 }
             ]"
           />
         </NFormItem>
@@ -115,11 +131,11 @@
     </NModal>
 
     <!-- 分配权限弹窗 -->
-    <NModal v-model:show="showPermissionModal" title="分配权限" preset="card" style="width: 600px;">
-      <NAlert type="info" style="margin-bottom: 16px;">
+    <NModal v-model:show="showPermissionModal" title="分配权限" preset="card" style="width: 600px">
+      <NAlert type="info" style="margin-bottom: 16px">
         当前角色：<strong>{{ currentRole?.name }}</strong>
       </NAlert>
-      <NSpace style="margin-bottom: 16px;">
+      <NSpace style="margin-bottom: 16px">
         <NButton size="small" @click="handleSelectAllMenu">全选</NButton>
         <NButton size="small" @click="handleUnselectAllMenu">取消全选</NButton>
         <NButton size="small" @click="handleExpandAllMenu">展开全部</NButton>
@@ -130,20 +146,22 @@
           ref="menuTreeRef"
           :data="menuTreeData"
           :checked-keys="permissionForm.menuIds"
-          @update:checked-keys="handleMenuCheckedChange"
           :expanded-keys="expandedMenuKeys"
-          @update:expanded-keys="handleMenuExpandedChange"
           checkable
           block-line
           cascade
           key-field="key"
           label-field="label"
+          @update:checked-keys="handleMenuCheckedChange"
+          @update:expanded-keys="handleMenuExpandedChange"
         />
       </div>
       <template #footer>
         <NSpace justify="end">
           <NButton @click="showPermissionModal = false">取消</NButton>
-          <NButton type="primary" :loading="permissionLoading" @click="handleSavePermission">确定</NButton>
+          <NButton type="primary" :loading="permissionLoading" @click="handleSavePermission"
+            >确定</NButton
+          >
         </NSpace>
       </template>
     </NModal>
@@ -152,8 +170,22 @@
 
 <script setup lang="ts">
 import { reactive, ref, h, onMounted, computed, watch } from 'vue'
-import { useMessage, useDialog, type DataTableColumns, type FormInst, type FormRules, type TreeOption } from 'naive-ui'
-import { getRolePageApi, getRoleDetailApi, createRoleApi, updateRoleApi, deleteRoleApi, assignMenusApi } from '@/api/role'
+import {
+  useMessage,
+  useDialog,
+  type DataTableColumns,
+  type FormInst,
+  type FormRules,
+  type TreeOption
+} from 'naive-ui'
+import {
+  getRolePageApi,
+  getRoleDetailApi,
+  createRoleApi,
+  updateRoleApi,
+  deleteRoleApi,
+  assignMenusApi
+} from '@/api/role'
 import { getMenuTreeApi } from '@/api/menu'
 import type { RoleVO, RoleDTO, RoleQuery } from '@/api/role'
 import type { MenuVO } from '@/api/menu'
@@ -167,7 +199,7 @@ const tableData = ref<RoleVO[]>([])
 const selectedRowKeys = ref<number[]>([])
 const queryForm = reactive<RoleQuery>({
   page: 1,
-  size: 10,
+  size: 10
 })
 
 const pagination = reactive({
@@ -187,7 +219,7 @@ const pagination = reactive({
     queryForm.page = 1
     queryForm.size = pageSize
     loadData()
-  },
+  }
 })
 
 // 表格列定义
@@ -201,13 +233,19 @@ const columns: DataTableColumns<RoleVO> = [
     title: '数据范围',
     key: 'dataScope',
     width: 120,
-    render: (row) => ({ 1: '全部数据', 2: '本部门及以下', 3: '本部门', 4: '仅本人' }[row.dataScope] || '未知'),
+    render: (row) =>
+      ({ 1: '全部数据', 2: '本部门及以下', 3: '本部门', 4: '仅本人' })[row.dataScope] || '未知'
   },
   {
     title: '状态',
     key: 'status',
     width: 80,
-    render: (row) => h('span', { style: { color: row.status === 1 ? '#52c41a' : '#ff4d4f' } }, row.status === 1 ? '正常' : '禁用'),
+    render: (row) =>
+      h(
+        'span',
+        { style: { color: row.status === 1 ? '#52c41a' : '#ff4d4f' } },
+        row.status === 1 ? '正常' : '禁用'
+      )
   },
   { title: '创建时间', key: 'createTime', width: 180 },
   {
@@ -215,12 +253,52 @@ const columns: DataTableColumns<RoleVO> = [
     key: 'actions',
     width: 220,
     fixed: 'right',
-    render: (row) => h('div', { style: { display: 'flex', gap: '8px' } }, [
-      h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#1890ff', cursor: 'pointer' }, onClick: () => handleEdit(row) }, '编辑'),
-      h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#52c41a', cursor: 'pointer' }, onClick: () => handlePermission(row) }, '分配权限'),
-      h('button', { style: { padding: '0 8px', background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer' }, onClick: () => handleDelete(row) }, '删除'),
-    ]),
-  },
+    render: (row) =>
+      h('div', { style: { display: 'flex', gap: '8px' } }, [
+        h(
+          'button',
+          {
+            style: {
+              padding: '0 8px',
+              background: 'none',
+              border: 'none',
+              color: '#1890ff',
+              cursor: 'pointer'
+            },
+            onClick: () => handleEdit(row)
+          },
+          '编辑'
+        ),
+        h(
+          'button',
+          {
+            style: {
+              padding: '0 8px',
+              background: 'none',
+              border: 'none',
+              color: '#52c41a',
+              cursor: 'pointer'
+            },
+            onClick: () => handlePermission(row)
+          },
+          '分配权限'
+        ),
+        h(
+          'button',
+          {
+            style: {
+              padding: '0 8px',
+              background: 'none',
+              border: 'none',
+              color: '#ff4d4f',
+              cursor: 'pointer'
+            },
+            onClick: () => handleDelete(row)
+          },
+          '删除'
+        )
+      ])
+  }
 ]
 
 // 新增/编辑弹窗相关
@@ -236,7 +314,7 @@ const formData = reactive<RoleDTO>({
   code: '',
   description: '',
   status: 1,
-  dataScope: 1,
+  dataScope: 1
 })
 
 // 计算生成的编码预览
@@ -245,18 +323,25 @@ const generatedCodePreview = computed(() => {
 })
 
 // 监听角色名称变化，自动生成编码
-watch(() => formData.name, (newName) => {
-  if (autoGenerateCode.value && !isEdit.value && newName) {
-    formData.code = generatedCodePreview.value
+watch(
+  () => formData.name,
+  (newName) => {
+    if (autoGenerateCode.value && !isEdit.value && newName) {
+      formData.code = generatedCodePreview.value
+    }
   }
-})
+)
 
 const formRules: FormRules = {
   name: { required: true, message: '请输入角色名称', trigger: 'blur' },
   code: [
     { required: true, message: '请输入角色编码', trigger: 'blur' },
-    { pattern: /^[a-z][a-z0-9_]*$/, message: '角色编码必须以小写字母开头，只能包含小写字母、数字和下划线', trigger: 'blur' },
-  ],
+    {
+      pattern: /^[a-z][a-z0-9_]*$/,
+      message: '角色编码必须以小写字母开头，只能包含小写字母、数字和下划线',
+      trigger: 'blur'
+    }
+  ]
 }
 
 // 动态表单验证规则（根据是否自动生成编码）
@@ -266,7 +351,7 @@ const currentFormRules = computed<FormRules>(() => {
   }
   // 自动生成时不需要验证 code
   return {
-    name: { required: true, message: '请输入角色名称', trigger: 'blur' },
+    name: { required: true, message: '请输入角色名称', trigger: 'blur' }
   }
 })
 
@@ -281,7 +366,7 @@ const expandedMenuKeys = ref<number[]>([])
 
 const permissionForm = reactive({
   roleId: 0,
-  menuIds: [] as number[],
+  menuIds: [] as number[]
 })
 
 // 加载菜单树
@@ -329,7 +414,7 @@ const convertMenuToTree = (menus: MenuVO[]): TreeOption[] => {
   return menus.map((menu) => ({
     key: menu.id,
     label: menu.name,
-    children: menu.children ? convertMenuToTree(menu.children) : undefined,
+    children: menu.children ? convertMenuToTree(menu.children) : undefined
   }))
 }
 
@@ -355,7 +440,6 @@ const handleUnselectAllMenu = () => {
 
 // 展开全部菜单
 const handleExpandAllMenu = () => {
-  const res = menuTreeData.value
   // 需要从原始菜单数据获取所有有子节点的ID
   getMenuTreeApi().then((data) => {
     expandedMenuKeys.value = getAllMenuKeysForExpand(data as MenuVO[])
@@ -409,7 +493,7 @@ const handleAdd = () => {
     code: '',
     description: '',
     status: 1,
-    dataScope: 1,
+    dataScope: 1
   })
   showModal.value = true
 }
@@ -426,7 +510,7 @@ const handleEdit = async (row: RoleVO) => {
       code: detail.code,
       description: detail.description,
       status: detail.status,
-      dataScope: detail.dataScope,
+      dataScope: detail.dataScope
     })
     showModal.value = true
   } catch (error: any) {
@@ -442,7 +526,7 @@ const handlePermission = async (row: RoleVO) => {
     permissionForm.roleId = detail.id
     permissionForm.menuIds = detail.menuIds || []
     // 展开已选中的菜单
-    expandedMenuKeys.value = getAllMenuKeysForExpand(await getMenuTreeApi() as MenuVO[])
+    expandedMenuKeys.value = getAllMenuKeysForExpand((await getMenuTreeApi()) as MenuVO[])
     showPermissionModal.value = true
   } catch (error: any) {
     message.error(error.message || '获取角色详情失败')
@@ -479,7 +563,7 @@ const handleDelete = (row: RoleVO) => {
       } catch (error: any) {
         message.error(error.message || '删除失败')
       }
-    },
+    }
   })
 }
 
@@ -503,7 +587,7 @@ const handleBatchDelete = () => {
       } catch (error: any) {
         message.error(error.message || '删除失败')
       }
-    },
+    }
   })
 }
 
@@ -534,7 +618,7 @@ const handleSubmit = async () => {
     } finally {
       submitLoading.value = false
     }
-  } catch (errors: any) {
+  } catch {
     // 验证失败
   }
 }

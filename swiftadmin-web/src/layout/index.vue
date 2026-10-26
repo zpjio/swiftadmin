@@ -27,7 +27,7 @@
         @update:expanded-keys="handleExpandKeysChange"
       />
     </NLayoutSider>
-    
+
     <NLayout>
       <NLayoutHeader bordered class="h-16 flex items-center justify-between px-4">
         <div class="flex items-center">
@@ -38,7 +38,11 @@
           </NButton>
         </div>
         <div class="flex items-center gap-2">
-          <NButton quaternary @click="toggleTheme" :title="isDark ? '切换到亮色模式' : '切换到暗色模式'">
+          <NButton
+            quaternary
+            :title="isDark ? '切换到亮色模式' : '切换到暗色模式'"
+            @click="toggleTheme"
+          >
             <template #icon>
               <icon-mdi-white-balance-sunny v-if="isDark" />
               <icon-mdi-weather-night v-else />
@@ -55,19 +59,21 @@
               <NAvatar v-else :size="24" round>
                 {{ avatarText }}
               </NAvatar>
-              <span class="ml-2">{{ userStore.userInfo?.nickname || userStore.userInfo?.username }}</span>
+              <span class="ml-2">{{
+                userStore.userInfo?.nickname || userStore.userInfo?.username
+              }}</span>
             </NButton>
           </NDropdown>
         </div>
       </NLayoutHeader>
-      
+
       <!-- 标签页 -->
       <TagsView />
-      
+
       <NLayoutContent class="p-4 flex-1 overflow-auto">
         <RouterView v-slot="{ Component, route }">
           <KeepAlive :include="cachedViews">
-            <component :is="Component" :key="route.fullPath" v-if="isAlive" />
+            <component :is="Component" v-if="isAlive" :key="route.fullPath" />
           </KeepAlive>
         </RouterView>
       </NLayoutContent>
@@ -77,7 +83,7 @@
 
 <script setup lang="ts">
 import { ref, computed, h, watch, onMounted } from 'vue'
-import { useRouter, useRoute, type RouteRecordRaw } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { useUserStore } from '@/store'
 import { useTagsStore } from '@/store/modules/tags'
@@ -120,11 +126,15 @@ const getAllExpandKeys = (options: MenuOption[]): string[] => {
 }
 
 // 监听菜单选项变化，自动展开所有菜单
-watch(menuOptions, (newOptions) => {
-  if (newOptions.length > 0) {
-    expandedKeys.value = getAllExpandKeys(newOptions)
-  }
-}, { immediate: true })
+watch(
+  menuOptions,
+  (newOptions) => {
+    if (newOptions.length > 0) {
+      expandedKeys.value = getAllExpandKeys(newOptions)
+    }
+  },
+  { immediate: true }
+)
 
 // 用户头像（优先使用用户配置的头像）
 const userAvatar = computed(() => {
@@ -140,28 +150,30 @@ const avatarText = computed(() => {
 // 从菜单树生成菜单选项
 function convertMenuTreeToOptions(menus: any[]): MenuOption[] {
   const options: MenuOption[] = []
-  
+
   menus.forEach((menu) => {
     // 跳过按钮类型（type=3）- 按钮只用于权限控制，不显示在菜单中
     if (menu.type === 3) {
       return
     }
-    
+
     // 跳过禁用的菜单
     if (menu.status === 0) {
       return
     }
-    
+
     // 跳过没有 path 的菜单
     if (!menu.path) {
       return
     }
-    
+
     const option: any = {
       label: menu.name,
       key: getMenuName(menu.path),
-      icon: menu.icon ? () => h(Icon, { icon: normalizeIconName(menu.icon), style: { fontSize: '18px' } }) : undefined,
-      path: menu.path,
+      icon: menu.icon
+        ? () => h(Icon, { icon: normalizeIconName(menu.icon), style: { fontSize: '18px' } })
+        : undefined,
+      path: menu.path
     }
 
     // 处理子菜单（递归过滤掉按钮类型）
@@ -171,10 +183,10 @@ function convertMenuTreeToOptions(menus: any[]): MenuOption[] {
         option.children = childrenOptions
       }
     }
-    
+
     options.push(option)
   })
-  
+
   return options
 }
 
@@ -183,11 +195,11 @@ function getMenuName(path: string): string {
   if (!path) {
     return 'Menu_' + Date.now()
   }
-  
+
   const cleanPath = path.replace(/^\//, '')
   return cleanPath
     .split('/')
-    .filter(segment => segment.length > 0)
+    .filter((segment) => segment.length > 0)
     .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
     .join('')
 }
@@ -207,9 +219,12 @@ const updateMenuOptions = () => {
 }
 
 // 监听路由变化
-watch(() => router.getRoutes().length, () => {
-  updateMenuOptions()
-})
+watch(
+  () => router.getRoutes().length,
+  () => {
+    updateMenuOptions()
+  }
+)
 
 // 监听路由变化，添加标签页
 watch(
@@ -221,7 +236,7 @@ watch(
       fullPath: route.fullPath,
       query: route.query,
       params: route.params,
-      meta: route.meta,
+      meta: route.meta
     })
     tagsStore.setActiveView({
       name: route.name,
@@ -229,7 +244,7 @@ watch(
       fullPath: route.fullPath,
       query: route.query,
       params: route.params,
-      meta: route.meta,
+      meta: route.meta
     })
   },
   { immediate: true }
@@ -251,7 +266,7 @@ onMounted(async () => {
         sex: userInfo.sex,
         phone: userInfo.phone,
         email: userInfo.email,
-        deptName: userInfo.deptName,
+        deptName: userInfo.deptName
       })
     } catch (error) {
       console.error('[Layout] 获取用户信息失败:', error)
@@ -264,63 +279,18 @@ onMounted(async () => {
   }, 300)
 })
 
-/**
- * 将路由转换为菜单选项
- */
-function convertRoutesToMenuOptions(routes: RouteRecordRaw[]): MenuOption[] {
-  const options: MenuOption[] = []
-  
-  routes.forEach((route) => {
-    // 跳过隐藏的菜单
-    if (route.meta?.hidden) {
-      return
-    }
-    
-    const isDirectory = route.meta?.isDirectory as boolean || false
-    
-    const option: any = {
-      label: (route.meta?.title as string) || (route.name as string),
-      key: route.name as string,
-      icon: route.meta?.icon ? () => h(Icon, { icon: normalizeIconName(route.meta?.icon as string), style: { fontSize: '18px' } }) : undefined,
-    }
-    
-    // 如果是目录类型，设置为分组
-    if (isDirectory) {
-      option.type = 'group'
-    }
-    
-    // 处理子菜单
-    if (route.children && route.children.length > 0) {
-      const childrenOptions = convertRoutesToMenuOptions(route.children)
-      if (childrenOptions.length > 0) {
-        if (isDirectory) {
-          // 目录类型的 children 直接作为 group 的 children
-          option.children = childrenOptions
-        } else {
-          // 非目录类型的 children 作为子菜单
-          option.children = childrenOptions
-        }
-      }
-    }
-    
-    options.push(option)
-  })
-  
-  return options
-}
-
 // 用户下拉菜单
 const userDropdownOptions: DropdownOption[] = [
   {
     label: '个人设置',
     key: 'profile',
-    icon: () => h(Icon, { icon: 'mdi:account-settings', style: { fontSize: '18px' } }),
+    icon: () => h(Icon, { icon: 'mdi:account-settings', style: { fontSize: '18px' } })
   },
   {
     label: '退出登录',
     key: 'logout',
-    icon: () => h(Icon, { icon: 'mdi:logout', style: { fontSize: '18px' } }),
-  },
+    icon: () => h(Icon, { icon: 'mdi:logout', style: { fontSize: '18px' } })
+  }
 ]
 
 // 从菜单选项中查找路径

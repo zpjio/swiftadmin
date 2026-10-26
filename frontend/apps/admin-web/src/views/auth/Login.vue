@@ -1,17 +1,14 @@
 <template>
-  <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#667eea] to-[#764ba2]">
+  <div
+    class="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#667eea] to-[#764ba2]"
+  >
     <div class="w-[400px] p-10 bg-white rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.3)]">
       <h1 class="text-center text-3xl font-bold text-blue-500 mb-2">SwiftAdmin</h1>
       <p class="text-center text-gray-400 mb-8">高效、简洁、美观的后台管理系统</p>
 
       <NForm :model="form" :rules="rules" class="flex flex-col gap-5">
         <NFormItem path="username">
-          <NInput
-            v-model:value="form.username"
-            placeholder="请输入用户名"
-            size="large"
-            clearable
-          >
+          <NInput v-model:value="form.username" placeholder="请输入用户名" size="large" clearable>
             <template #prefix>
               <icon-mdi-account />
             </template>
@@ -34,12 +31,11 @@
 
         <NFormItem v-if="captchaEnabled" path="captchaCode">
           <div class="flex gap-3">
-            <NInput
-              v-model:value="form.captchaCode"
-              placeholder="请输入验证码"
-              size="large"
-            />
-            <div class="w-[120px] h-10 border border-gray-300 rounded cursor-pointer flex items-center justify-center bg-gray-100" @click="refreshCaptcha">
+            <NInput v-model:value="form.captchaCode" placeholder="请输入验证码" size="large" />
+            <div
+              class="w-[120px] h-10 border border-gray-300 rounded cursor-pointer flex items-center justify-center bg-gray-100"
+              @click="refreshCaptcha"
+            >
               <img v-if="captchaUrl" :src="captchaUrl" alt="验证码" class="w-full h-full rounded" />
               <span v-else>点击获取</span>
             </div>
@@ -79,20 +75,20 @@ const form = reactive({
   username: '',
   password: '',
   captchaCode: '',
-  remember: false,
+  remember: false
 })
 
 const rules: FormRules = {
   username: {
     required: true,
     message: '请输入用户名',
-    trigger: 'blur',
+    trigger: 'blur'
   },
   password: {
     required: true,
     message: '请输入密码',
-    trigger: 'blur',
-  },
+    trigger: 'blur'
+  }
 }
 
 // 获取验证码（预留功能，默认关闭）
@@ -117,7 +113,7 @@ const handleLogin = async () => {
       username: form.username,
       password: form.password,
       captchaId: captchaEnabled.value ? captchaId.value : undefined,
-      captchaCode: captchaEnabled.value ? form.captchaCode : undefined,
+      captchaCode: captchaEnabled.value ? form.captchaCode : undefined
     })
 
     // 检查是否需要修改密码
@@ -147,7 +143,7 @@ const handleLogin = async () => {
           nickname: loginRes.userInfo.nickname || '',
           avatar: loginRes.userInfo.avatar || '',
           roles: loginRes.userInfo.roles || [],
-          permissions: loginRes.userInfo.permissions || [],
+          permissions: loginRes.userInfo.permissions || []
         })
       }
 
