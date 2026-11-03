@@ -17,6 +17,7 @@ import cn.swiftadmin.system.api.dto.UserQueryDTO;
 import cn.swiftadmin.system.api.entity.SysRole;
 import cn.swiftadmin.system.api.entity.SysUser;
 import cn.swiftadmin.system.api.entity.SysUserRole;
+import cn.swiftadmin.system.api.service.PermissionCacheRefreshService;
 import cn.swiftadmin.system.api.service.UserManageService;
 import cn.swiftadmin.system.api.service.UserService;
 import cn.swiftadmin.system.api.vo.UserVO;
@@ -59,6 +60,7 @@ public class UserManageServiceImpl implements UserManageService {
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final PasswordValidator passwordValidator;
+    private final PermissionCacheRefreshService cacheRefreshService;
 
     @Override
     @Transactional(readOnly = true)
@@ -181,8 +183,11 @@ public class UserManageServiceImpl implements UserManageService {
                 .where(SYS_USER.ID.eq(dto.getId()))
                 .update();
 
-        if (dto.getRoleIds() != null) {
+        boolean rolesChanged = dto.getRoleIds() != null;
+        if (rolesChanged) {
             assignRoles(dto.getId(), dto.getRoleIds());
+        } else if (dto.getStatus() != null) {
+            cacheRefreshService.clearCacheByUserId(dto.getId());
         }
     }
 
@@ -196,6 +201,9 @@ public class UserManageServiceImpl implements UserManageService {
         // 检查是否包含超级管理员
         checkSuperAdminProtection(ids);
 
+        for (Long id : ids) {
+            cacheRefreshService.clearCacheByUserId(id);
+        }
         userService.removeByIds(ids);
         userRoleMapper.deleteByQuery(QueryWrapper.create().where(SYS_USER_ROLE.USER_ID.in(ids)));
     }
@@ -206,11 +214,13 @@ public class UserManageServiceImpl implements UserManageService {
         checkSuperAdminProtection(userId);
 
         userService.updateStatus(userId, status);
+        cacheRefreshService.clearCacheByUserId(userId);
     }
 
     @Override
     public void resetPassword(Long userId, String password) {
         userService.resetPassword(userId, password);
+        cacheRefreshService.clearCacheByUserId(userId);
     }
 
     @Override
@@ -228,6 +238,7 @@ public class UserManageServiceImpl implements UserManageService {
                     .collect(Collectors.toList());
             userRoleMapper.insertBatch(userRoles);
         }
+        cacheRefreshService.clearCacheByUserId(userId);
     }
 
     // ==================== 超级管理员保护 ====================

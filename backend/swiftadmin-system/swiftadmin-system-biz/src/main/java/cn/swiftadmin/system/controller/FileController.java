@@ -147,16 +147,11 @@ public class FileController {
         String encodedFileName = URLEncoder.encode(fileVO.getFileName(), StandardCharsets.UTF_8)
                 .replace("+", "%20");
 
-        // 根据文件类型设置 Content-Type
-        String contentType = fileVO.getFileType();
-        if (contentType == null || contentType.isEmpty()) {
-            contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
-        }
-
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
+                .contentType(MediaType.parseMediaType(safeContentType(fileVO.getFileType())))
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         "attachment; filename*=UTF-8''" + encodedFileName)
+                .header("X-Content-Type-Options", "nosniff")
                 .body(bytes);
     }
 
@@ -174,6 +169,25 @@ public class FileController {
     public R<Void> deleteFiles(@PathVariable List<Long> ids) {
         fileService.deleteFiles(ids);
         return R.ok();
+    }
+
+    /**
+     * 下载响应不回放客户端声称的 HTML/脚本类型。
+     */
+    private String safeContentType(String contentType) {
+        if (contentType == null || contentType.isBlank()) {
+            return MediaType.APPLICATION_OCTET_STREAM_VALUE;
+        }
+        String lower = contentType.toLowerCase();
+        if (lower.contains("html") || lower.contains("xml") || lower.contains("svg")
+                || lower.contains("javascript") || lower.contains("script")) {
+            return MediaType.APPLICATION_OCTET_STREAM_VALUE;
+        }
+        try {
+            return MediaType.parseMediaType(contentType).toString();
+        } catch (Exception ex) {
+            return MediaType.APPLICATION_OCTET_STREAM_VALUE;
+        }
     }
 
     /**
