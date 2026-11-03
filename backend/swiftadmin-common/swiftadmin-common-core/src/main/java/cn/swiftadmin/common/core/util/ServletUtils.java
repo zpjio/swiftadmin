@@ -7,10 +7,8 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -30,22 +28,6 @@ public final class ServletUtils {
     private static final String LOCALHOST_IPV6 = "0:0:0:0:0:0:0:1";
     private static final String SEPARATOR = ",";
 
-    /** IP 代理头优先级列表 */
-    private static final List<String> IP_HEADER_CANDIDATES = Arrays.asList(
-            "X-Forwarded-For",
-            "X-Real-IP",
-            "Proxy-Client-IP",
-            "WL-Proxy-Client-IP",
-            "HTTP_X_FORWARDED_FOR",
-            "HTTP_X_FORWARDED",
-            "HTTP_X_CLUSTER_CLIENT_IP",
-            "HTTP_CLIENT_IP",
-            "HTTP_FORWARDED_FOR",
-            "HTTP_FORWARDED",
-            "HTTP_VIA",
-            "REMOTE_ADDR"
-    );
-
     /** 私有 IP 地址正则 */
     private static final Pattern PRIVATE_IP_PATTERN = Pattern.compile(
             "^(127\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})|" +
@@ -58,7 +40,23 @@ public final class ServletUtils {
     /** IP 缓存（ThreadLocal） */
     private static final ThreadLocal<Map<String, String>> IP_CACHE = ThreadLocal.withInitial(HashMap::new);
 
+    /**
+     * 是否信任反向代理写入的转发头。
+     * <p>默认关闭。开启后只采用 {@code X-Forwarded-For} 最右侧的地址（最近一层代理追加的对端），
+     * 不采用客户端自己放在最左侧的值。</p>
+     */
+    private static volatile boolean trustForwardedHeaders = false;
+
     private ServletUtils() {
+    }
+
+    /**
+     * 设置是否信任转发头。由 {@code ClientIpConfiguration} 在启动时注入。
+     *
+     * @param trust true 时读取代理头
+     */
+    public static void setTrustForwardedHeaders(boolean trust) {
+        trustForwardedHeaders = trust;
     }
 
     /**
@@ -99,26 +97,56 @@ public final class ServletUtils {
             return cachedIp;
         }
 
-        String ip = null;
-        for (String header : IP_HEADER_CANDIDATES) {
-            ip = request.getHeader(header);
-            if (isValidIp(ip)) {
-                break;
-            }
-        }
-
-        if (!isValidIp(ip)) {
-            ip = request.getRemoteAddr();
-        }
-
+        String ip = trustForwardedHeaders ? resolveForwardedIp(request) : request.getRemoteAddr();
         ip = normalizeIp(ip);
-
-        if (ip != null && ip.contains(SEPARATOR)) {
-            ip = ip.split(SEPARATOR)[0].trim();
-        }
 
         IP_CACHE.get().put(cacheKey, ip);
         return ip;
+    }
+
+    /**
+     * 从代理头解析对端地址。
+     * <p>{@code X-Forwarded-For} 取最右侧合法地址；没有时再看 {@code X-Real-IP}。</p>
+     */
+    private static String resolveForwardedIp(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            String[] parts = forwarded.split(SEPARATOR);
+            for (int i = parts.length - 1; i >= 0; i--) {
+                String candidate = parts[i].trim();
+                if (isAcceptableIp(candidate)) {
+                    return candidate;
+                }
+            }
+        }
+        String realIp = request.getHeader("X-Real-IP");
+        if (realIp != null && isAcceptableIp(realIp.trim())) {
+            return realIp.trim();
+        }
+        return request.getRemoteAddr();
+    }
+
+    /**
+     * 只接受看起来像 IP 的字面量，不把主机名交给解析器。
+     */
+    private static boolean isAcceptableIp(String ip) {
+        if (!isValidIp(ip) || ip.length() > 45) {
+            return false;
+        }
+        boolean hasSeparator = false;
+        for (int i = 0; i < ip.length(); i++) {
+            char c = ip.charAt(i);
+            boolean digit = c >= '0' && c <= '9';
+            boolean hex = (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+            if (c == '.' || c == ':') {
+                hasSeparator = true;
+                continue;
+            }
+            if (!digit && !hex) {
+                return false;
+            }
+        }
+        return hasSeparator;
     }
 
     /**
