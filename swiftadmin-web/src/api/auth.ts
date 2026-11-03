@@ -121,12 +121,9 @@ export interface ChangePasswordParams {
  * 修改密码
  */
 export function changePasswordApi(data: ChangePasswordParams) {
-  return post('/auth/password/change', null, {
-    params: {
-      userId: data.userId,
-      oldPassword: data.oldPassword,
-      newPassword: data.newPassword
-    }
+  return post('/auth/password/change', {
+    oldPassword: data.oldPassword,
+    newPassword: data.newPassword
   })
 }
 
@@ -142,10 +139,8 @@ export interface ForceChangePasswordParams {
  * 强制修改密码（使用临时 Token）
  */
 export function forceChangePasswordApi(data: ForceChangePasswordParams) {
-  return post('/auth/password/force-change', null, {
-    params: {
-      tempToken: data.tempToken,
-      newPassword: data.newPassword
-    }
+  return post('/auth/password/force-change', {
+    tempToken: data.tempToken,
+    newPassword: data.newPassword
   })
 }

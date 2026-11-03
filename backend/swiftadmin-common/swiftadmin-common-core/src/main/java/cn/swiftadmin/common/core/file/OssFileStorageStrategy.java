@@ -111,9 +111,11 @@ public class OssFileStorageStrategy implements FileStorageStrategy {
             String extension = getFileExtension(originalFileName);
             String fileName = generateFileName(extension);
 
-            String datePath = getDatePath();
-            String objectKey = path != null ? String.format("%s/%s/%s", pathPrefix, path, fileName)
-                    : String.format("%s/%s/%s", pathPrefix, datePath, fileName);
+            String relativeDir = StoragePaths.sanitizeRelativeDir(path);
+            if (relativeDir == null) {
+                relativeDir = getDatePath();
+            }
+            String objectKey = pathPrefix + "/" + relativeDir + "/" + fileName;
 
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                     .bucket(bucketName)
