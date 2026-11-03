@@ -72,6 +72,10 @@ class AuthApiIntegrationTest extends IntegrationTestBase {
         if (rateKeys != null && !rateKeys.isEmpty()) {
             stringRedisTemplate.delete(rateKeys);
         }
+        Set<String> ipKeys = stringRedisTemplate.keys("auth:ip:*");
+        if (ipKeys != null && !ipKeys.isEmpty()) {
+            stringRedisTemplate.delete(ipKeys);
+        }
         jdbcTemplate.update("""
                 INSERT INTO sys_user (id, username, password, nickname, status, dept_id, is_super,
                                       password_update_time, force_change_password, login_fail_count, deleted)
@@ -216,6 +220,7 @@ class AuthApiIntegrationTest extends IntegrationTestBase {
     void forceChangePasswordAcceptsTempTokenInBody() throws Exception {
         long userId = 900_000_002L;
         String username = "it_force_user";
+        jdbcTemplate.update("DELETE FROM sys_password_history WHERE user_id = ?", userId);
         jdbcTemplate.update("DELETE FROM sys_user_role WHERE user_id = ?", userId);
         jdbcTemplate.update("DELETE FROM sys_user WHERE id = ? OR username = ?", userId, username);
         jdbcTemplate.update("""
@@ -255,8 +260,77 @@ class AuthApiIntegrationTest extends IntegrationTestBase {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.code").value(0));
         } finally {
+            jdbcTemplate.update("DELETE FROM sys_password_history WHERE user_id = ?", userId);
             jdbcTemplate.update("DELETE FROM sys_user_role WHERE user_id = ?", userId);
             jdbcTemplate.update("DELETE FROM sys_user WHERE id = ? OR username = ?", userId, username);
+        }
+    }
+
+    @Test
+    @DisplayName("种子管理员在改密前不能拿到访问令牌")
+    void defaultAdminMustChangePasswordBeforeAccess() throws Exception {
+        jdbcTemplate.update("""
+                UPDATE sys_user
+                SET login_fail_count = 0, lock_time = NULL
+                WHERE username = 'admin'
+                """);
+
+        MvcResult login = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginBody("admin", "admin123")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.data.requirePasswordChange").value(true))
+                .andExpect(jsonPath("$.data.tempToken").isNotEmpty())
+                .andExpect(jsonPath("$.data.accessToken").doesNotExist())
+                .andReturn();
+
+        String tempToken = objectMapper.readTree(login.getResponse().getContentAsString())
+                .path("data").path("tempToken").asText();
+        mockMvc.perform(get("/api/system/user/current")
+                        .header("Authorization", "Bearer " + tempToken))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("运行指标仅超级管理员或授权用户可访问")
+    void metricsEndpointRequiresPermission() throws Exception {
+        mockMvc.perform(get("/actuator/health"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/actuator/metrics"))
+                .andExpect(status().isUnauthorized());
+
+        MvcResult login = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginBody(TEST_USERNAME, TEST_PASSWORD)))
+                .andExpect(status().isOk())
+                .andReturn();
+        mockMvc.perform(get("/actuator/metrics")
+                        .header("Authorization", "Bearer " + readToken(login)))
+                .andExpect(status().isForbidden());
+
+        long superUserId = 900_000_003L;
+        String superUsername = "it_metrics_admin";
+        jdbcTemplate.update("DELETE FROM sys_user_role WHERE user_id = ?", superUserId);
+        jdbcTemplate.update("DELETE FROM sys_user WHERE id = ? OR username = ?", superUserId, superUsername);
+        jdbcTemplate.update("""
+                INSERT INTO sys_user (id, username, password, nickname, status, dept_id, is_super,
+                                      password_update_time, force_change_password, login_fail_count, deleted)
+                VALUES (?, ?, ?, ?, 1, 1, 1, NOW(), 0, 0, 0)
+                """,
+                superUserId, superUsername, passwordEncoder.encode(TEST_PASSWORD), "指标管理员");
+        try {
+            MvcResult superLogin = mockMvc.perform(post("/api/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(loginBody(superUsername, TEST_PASSWORD)))
+                    .andExpect(status().isOk())
+                    .andReturn();
+            mockMvc.perform(get("/actuator/metrics")
+                            .header("Authorization", "Bearer " + readToken(superLogin)))
+                    .andExpect(status().isOk());
+        } finally {
+            jdbcTemplate.update("DELETE FROM sys_user_role WHERE user_id = ?", superUserId);
+            jdbcTemplate.update("DELETE FROM sys_user WHERE id = ? OR username = ?", superUserId, superUsername);
         }
     }
 

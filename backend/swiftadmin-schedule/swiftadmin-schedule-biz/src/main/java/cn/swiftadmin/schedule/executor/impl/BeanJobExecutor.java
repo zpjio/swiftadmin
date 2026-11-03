@@ -1,5 +1,6 @@
 package cn.swiftadmin.schedule.executor.impl;
 
+import cn.swiftadmin.common.core.annotation.ScheduledJobTarget;
 import cn.swiftadmin.schedule.api.entity.ScheduleJob;
 import cn.swiftadmin.schedule.api.enums.JobType;
 import cn.swiftadmin.schedule.executor.JobExecutor;
@@ -30,7 +31,7 @@ public class BeanJobExecutor implements JobExecutor {
     private final ApplicationContext applicationContext;
     private final ObjectMapper objectMapper;
 
-    /** 只允许调用本项目的 Bean，避免调度任务反射到数据源、环境等基础设施 */
+    /** 只允许调用本项目里显式标注 {@link ScheduledJobTarget} 的 Bean */
     private static final String ALLOWED_PACKAGE = "cn.swiftadmin.";
 
     @Override
@@ -118,6 +119,10 @@ public class BeanJobExecutor implements JobExecutor {
                     continue;
                 }
                 if (method.getName().equals(methodName)) {
+                    if (!isScheduledTarget(clazz, method)) {
+                        log.error("拒绝调用未标注 @ScheduledJobTarget 的方法：{}.{}", clazz.getName(), methodName);
+                        return null;
+                    }
                     ReflectionUtils.makeAccessible(method);
                     return method;
                 }
@@ -125,6 +130,19 @@ public class BeanJobExecutor implements JobExecutor {
             current = current.getSuperclass();
         }
         return null;
+    }
+
+    /**
+     * 类或方法上有 {@link ScheduledJobTarget} 才允许被调度。
+     */
+    private boolean isScheduledTarget(Class<?> beanClass, Method method) {
+        if (method.isAnnotationPresent(ScheduledJobTarget.class)) {
+            return true;
+        }
+        if (method.getDeclaringClass().isAnnotationPresent(ScheduledJobTarget.class)) {
+            return true;
+        }
+        return beanClass.isAnnotationPresent(ScheduledJobTarget.class);
     }
 
     /**

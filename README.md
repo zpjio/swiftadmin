@@ -69,7 +69,11 @@ pnpm dev
 | --- | --- |
 | `admin` | `admin123` |
 
-首次部署后请马上修改该密码。密码接口使用 JSON 请求体，不再接受查询参数。
+该账号只要还是种子密码，登录后只会拿到临时令牌，必须先改密才能进入系统。已经改过密码的环境不会被重新要求修改。密码接口使用 JSON 请求体。
+
+定时任务要调用的 Bean 方法必须标注 `@ScheduledJobTarget`（标在类上则该类的 public 方法都可调度）。预置的日志清理和社交 Token 刷新已经标注。
+
+`/actuator/health` 匿名可访问。`/actuator/metrics` 和 `/actuator/prometheus` 需要权限 `monitor:metrics`、角色 `admin`，或超级管理员。
 
 ## 配置
 
