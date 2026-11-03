@@ -94,27 +94,21 @@ export function deleteUserApi(ids: string[]) {
  * 更新用户状态
  */
 export function updateUserStatusApi(userId: string, status: number) {
-  return put('/system/user/status', null, {
-    params: { userId, status }
-  })
+  return put('/system/user/status', { userId, status })
 }
 
 /**
  * 重置用户密码
  */
 export function resetPasswordApi(userId: string, password: string) {
-  return put('/system/user/reset-password', null, {
-    params: { userId, password }
-  })
+  return put('/system/user/reset-password', { userId, password })
 }
 
 /**
  * 为用户分配角色
  */
 export function assignRolesApi(userId: string, roleIds: string[]) {
-  return put('/system/user/role', null, {
-    params: { userId, roleIds }
-  })
+  return put('/system/user/role', { userId, roleIds })
 }
 
 /**

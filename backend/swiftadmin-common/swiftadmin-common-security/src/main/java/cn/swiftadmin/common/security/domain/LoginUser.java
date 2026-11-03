@@ -29,7 +29,8 @@ public class LoginUser implements UserDetails {
     /** 用户名 */
     private String username;
 
-    /** 密码（加密） */
+    /** 密码（加密）。会话和缓存序列化时不写出 */
+    @JsonIgnore
     private String password;
 
     /** 昵称 */
@@ -114,6 +115,7 @@ public class LoginUser implements UserDetails {
     }
 
     @Override
+    @JsonIgnore
     public String getPassword() {
         return this.password;
     }
