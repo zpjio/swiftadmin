@@ -9,7 +9,7 @@
           <NInput
             v-model:value="form.newPassword"
             type="password"
-            placeholder="请输入新密码（至少 6 位）"
+            placeholder="请输入新密码（至少 8 位，含大小写字母和数字）"
             size="large"
             show-password-on="click"
           />
@@ -57,7 +57,7 @@ const form = reactive({
 const rules: FormRules = {
   newPassword: [
     { required: true, message: '请输入新密码', trigger: 'blur' },
-    { min: 6, message: '密码长度至少 6 位', trigger: 'blur' }
+    { min: 8, message: '密码长度至少 8 位', trigger: 'blur' }
   ],
   confirmPassword: [{ required: true, message: '请再次输入密码', trigger: 'blur' }]
 }

@@ -69,7 +69,7 @@
               <NInput
                 v-model:value="securityForm.newPassword"
                 type="password"
-                placeholder="请输入新密码（至少 6 位）"
+                placeholder="请输入新密码（至少 8 位，含大小写字母和数字）"
                 show-password-on="click"
               />
             </NFormItem>
@@ -145,7 +145,7 @@ const securityRules: FormRules = {
   oldPassword: [{ required: true, message: '请输入旧密码', trigger: 'blur' }],
   newPassword: [
     { required: true, message: '请输入新密码', trigger: 'blur' },
-    { min: 6, message: '密码长度至少 6 位', trigger: 'blur' }
+    { min: 8, message: '密码长度至少 8 位', trigger: 'blur' }
   ],
   confirmPassword: [{ required: true, message: '请再次输入密码', trigger: 'blur' }]
 }
