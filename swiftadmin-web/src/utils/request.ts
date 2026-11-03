@@ -12,6 +12,21 @@ export interface ApiResponse<T = any> {
   timestamp?: number
 }
 
+function isAnonymousAuth(url?: string): boolean {
+  if (!url) return false
+  const path = url.split('?')[0] ?? ''
+  return (
+    path.endsWith('/auth/login') ||
+    path.endsWith('/auth/refresh') ||
+    path.includes('/auth/sms/') ||
+    path.includes('/auth/captcha') ||
+    path.endsWith('/auth/password/force-change') ||
+    path.includes('/auth/social/url/') ||
+    path.includes('/auth/social/callback/') ||
+    path.includes('/auth/login-config')
+  )
+}
+
 const service: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api',
   timeout: 15000,
@@ -25,15 +40,11 @@ const service: AxiosInstance = axios.create({
 // 请求拦截器
 service.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token')
-    console.log(
-      '[Request] URL:',
-      config.url,
-      'Token:',
-      token ? token.substring(0, 20) + '...' : 'null'
-    )
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+    if (!isAnonymousAuth(config.url)) {
+      const token = localStorage.getItem('token')
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`
+      }
     }
     return config
   },
@@ -52,15 +63,6 @@ service.interceptors.response.use(
     }
 
     const res = response.data
-
-    console.log(
-      '[Response] URL:',
-      response.config.url,
-      'Code:',
-      res.code,
-      'Data:',
-      res.data ? 'has data' : 'null'
-    )
 
     // 后端成功码为 0
     if (res.code !== 0) {

@@ -4,6 +4,7 @@ import com.mybatisflex.core.paginate.Page;
 import cn.swiftadmin.common.core.result.R;
 import cn.swiftadmin.common.security.annotation.OperationLog;
 import cn.swiftadmin.common.security.annotation.RequiresPermission;
+import cn.swiftadmin.common.security.util.SecurityUtils;
 import cn.swiftadmin.system.api.dto.ConfigDTO;
 import cn.swiftadmin.system.api.dto.ConfigQueryDTO;
 import cn.swiftadmin.system.api.service.ConfigService;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * 系统配置控制器
@@ -31,6 +33,10 @@ import java.util.List;
 public class ConfigController {
 
     private final ConfigService configService;
+
+    /** 登录后任意用户可读的展示项。其余键（含邮件、短信等）需要配置查询权限 */
+    private static final Set<String> PUBLIC_CONFIG_KEYS = Set.of(
+            "system.name", "system.version", "system.copyright", "system.logo");
 
     /**
      * 分页查询配置列表
@@ -89,15 +95,18 @@ public class ConfigController {
     }
 
     /**
-     * 获取配置值（公开接口）
-     * <p>无需权限即可访问，用于前端直接获取配置值</p>
+     * 获取配置值
+     * <p>系统名称、版本、版权、Logo 登录后即可读取；其他键需要 system:config:query</p>
      *
      * @param configKey 配置键
      * @return 配置值
      */
-    @Operation(summary = "获取配置值", description = "无需权限即可访问，用于前端直接获取配置值")
+    @Operation(summary = "获取配置值", description = "系统展示项登录后可读，其余配置需要 system:config:query")
     @GetMapping("/value/{configKey}")
     public R<String> getValue(@PathVariable String configKey) {
+        if (!PUBLIC_CONFIG_KEYS.contains(configKey)) {
+            SecurityUtils.requirePermission("system:config:query");
+        }
         return R.ok(configService.getValue(configKey, ""));
     }
 
