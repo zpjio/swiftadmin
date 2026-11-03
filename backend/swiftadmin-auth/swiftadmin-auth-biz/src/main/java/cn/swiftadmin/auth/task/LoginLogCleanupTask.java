@@ -1,5 +1,6 @@
 package cn.swiftadmin.auth.task;
 
+import cn.swiftadmin.common.core.annotation.ScheduledJobTarget;
 import cn.swiftadmin.auth.api.service.LoginLogService;
 import cn.swiftadmin.system.api.util.ConfigUtils;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
  */
 @Slf4j
 @Component("loginLogCleanupTask")
+@ScheduledJobTarget
 @RequiredArgsConstructor
 public class LoginLogCleanupTask {
 

@@ -1,5 +1,6 @@
 package cn.swiftadmin.auth.task;
 
+import cn.swiftadmin.common.core.annotation.ScheduledJobTarget;
 import cn.swiftadmin.auth.api.entity.SysSocialBind;
 import cn.swiftadmin.auth.api.service.SocialBindService;
 import cn.swiftadmin.auth.strategy.social.SocialAuthHandler;
@@ -23,6 +24,7 @@ import java.util.Map;
  */
 @Slf4j
 @Component
+@ScheduledJobTarget
 @RequiredArgsConstructor
 public class SocialTokenRefreshTask {
 
