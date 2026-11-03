@@ -9,7 +9,6 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -65,12 +64,10 @@ public class FileUploadService {
         // 禁止的扩展名
         String forbidden = fileStorageProperties.getForbiddenExtensions();
         if (StringUtils.hasText(forbidden)) {
-            forbiddenExtensions = new HashSet<>(
-                    Arrays.asList(forbidden.toLowerCase().split(","))
-            );
+            forbiddenExtensions = splitExtensions(forbidden);
         } else {
             // 默认禁止的可执行文件类型
-            forbiddenExtensions = new HashSet<>(Arrays.asList(
+            forbiddenExtensions = new HashSet<>(Set.of(
                     "exe", "bat", "sh", "cmd", "com", "scr", "vbs", "js", "reg"
             ));
         }
@@ -78,10 +75,19 @@ public class FileUploadService {
         // 允许的扩展名
         String allowed = fileStorageProperties.getAllowedExtensions();
         if (StringUtils.hasText(allowed)) {
-            allowedExtensions = new HashSet<>(
-                    Arrays.asList(allowed.toLowerCase().split(","))
-            );
+            allowedExtensions = splitExtensions(allowed);
         }
+    }
+
+    private static Set<String> splitExtensions(String raw) {
+        Set<String> values = new HashSet<>();
+        for (String part : raw.toLowerCase().split(",")) {
+            String ext = part.trim();
+            if (!ext.isEmpty()) {
+                values.add(ext);
+            }
+        }
+        return values;
     }
 
     /**

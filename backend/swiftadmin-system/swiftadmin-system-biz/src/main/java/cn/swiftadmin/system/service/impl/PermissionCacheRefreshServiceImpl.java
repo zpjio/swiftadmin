@@ -192,7 +192,7 @@ public class PermissionCacheRefreshServiceImpl implements PermissionCacheRefresh
             actualUsername = user != null ? user.getUsername() : null;
         }
         if (actualUsername != null) {
-            String userInfoKey = RedisKeyConstants.USER_INFO + actualUsername;
+            String userInfoKey = RedisKeyConstants.userInfoByUsername(actualUsername);
             Boolean deleted = redisTemplate.delete(userInfoKey);
             log.debug("已清除用户信息缓存: {}, 删除结果: {}", userInfoKey, deleted);
         }
