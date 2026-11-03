@@ -248,7 +248,8 @@ function filterParams(params?: Record<string, unknown>): Record<string, unknown>
  */
 
 export function get<T = unknown>(url: string, params?: any, config?: RequestOptions): Promise<T> {
-  return service.get(url, { params: filterParams(params), ...config })
+  // 响应拦截器把 AxiosResponse 解包成 data，axios 1.21 的声明跟不上这个变换。
+  return service.get(url, { params: filterParams(params), ...config }) as Promise<T>
 }
 
 /**
@@ -259,14 +260,14 @@ export function post<T = unknown>(
   data?: unknown,
   config?: RequestOptions
 ): Promise<T> {
-  return service.post(url, data, config)
+  return service.post(url, data, config) as Promise<T>
 }
 
 /**
  * PUT 请求
  */
 export function put<T = unknown>(url: string, data?: unknown, config?: RequestOptions): Promise<T> {
-  return service.put(url, data, config)
+  return service.put(url, data, config) as Promise<T>
 }
 
 /**
@@ -277,7 +278,7 @@ export function del<T = unknown>(
   params?: Record<string, unknown>,
   config?: RequestOptions
 ): Promise<T> {
-  return service.delete(url, { params: filterParams(params), ...config })
+  return service.delete(url, { params: filterParams(params), ...config }) as Promise<T>
 }
 
 /**
