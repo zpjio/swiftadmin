@@ -75,27 +75,26 @@ public class LocalFileStorageStrategy implements FileStorageStrategy {
             String originalFileName = file.getOriginalFilename();
             String extension = getFileExtension(originalFileName);
             String fileName = generateFileName(extension);
-            
-            String datePath = getDatePath();
-            String savePath = path != null ? Paths.get(basePath, path).toString() 
-                                           : Paths.get(basePath, datePath).toString();
-            
-            Path saveDir = Paths.get(savePath);
-            if (!Files.exists(saveDir)) {
-                Files.createDirectories(saveDir);
+
+            String relativeDir = StoragePaths.sanitizeRelativeDir(path);
+            if (relativeDir == null) {
+                relativeDir = getDatePath();
             }
 
-            Path filePath = Paths.get(savePath, fileName);
+            Path baseDir = Paths.get(basePath).toAbsolutePath().normalize();
+            Path saveDir = StoragePaths.resolveInside(baseDir, relativeDir);
+            Files.createDirectories(saveDir);
+
+            Path filePath = StoragePaths.resolveInside(saveDir, fileName);
             try (InputStream inputStream = file.getInputStream()) {
                 Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
             }
 
-            String relativePath = path != null ? Paths.get(path, fileName).toString()
-                                               : Paths.get(datePath, fileName).toString();
-            String url = accessUrl + "/" + relativePath.replace("\\", "/");
+            String relativePath = relativeDir + "/" + fileName;
+            String url = accessUrl + "/" + relativePath;
 
             return FileInfo.builder()
-                    .fileId(fileName)
+                    .fileId(relativePath)
                     .fileName(fileName)
                     .originalFileName(originalFileName)
                     .url(url)
@@ -116,7 +115,7 @@ public class LocalFileStorageStrategy implements FileStorageStrategy {
     @Override
     public void delete(String fileId) throws FileStorageException {
         try {
-            Path filePath = Paths.get(basePath, fileId);
+            Path filePath = resolveStoredFile(fileId);
             if (Files.exists(filePath)) {
                 Files.delete(filePath);
                 log.info("删除本地文件：{}", fileId);
@@ -133,7 +132,7 @@ public class LocalFileStorageStrategy implements FileStorageStrategy {
     @Override
     public boolean exists(String fileId) throws FileStorageException {
         try {
-            Path filePath = Paths.get(basePath, fileId);
+            Path filePath = resolveStoredFile(fileId);
             return Files.exists(filePath);
         } catch (Exception e) {
             log.error("检查文件存在失败：{}", fileId, e);
@@ -152,7 +151,7 @@ public class LocalFileStorageStrategy implements FileStorageStrategy {
     @Override
     public byte[] getBytes(String fileId) throws FileStorageException {
         try {
-            Path filePath = Paths.get(basePath, fileId);
+            Path filePath = resolveStoredFile(fileId);
             if (!Files.exists(filePath)) {
                 throw new FileStorageException(ErrorCode.FILE_NOT_FOUND, "文件不存在：" + fileId);
             }
@@ -161,6 +160,14 @@ public class LocalFileStorageStrategy implements FileStorageStrategy {
             log.error("读取文件失败：{}", fileId, e);
             throw new FileStorageException("读取文件失败", e);
         }
+    }
+
+    /**
+     * 把存储键解析到根目录之内。
+     */
+    private Path resolveStoredFile(String fileId) {
+        Path baseDir = Paths.get(basePath).toAbsolutePath().normalize();
+        return StoragePaths.resolveInside(baseDir, fileId);
     }
 
     /**

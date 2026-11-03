@@ -66,8 +66,8 @@ const captchaUrl = ref('')
 const captchaId = ref('')
 
 const form = reactive({
-  username: 'admin',
-  password: 'admin123',
+  username: '',
+  password: '',
   captchaCode: '',
   remember: false
 })
