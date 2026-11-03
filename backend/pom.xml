@@ -231,6 +231,13 @@
                     </configuration>
                 </plugin>
 
+                <!-- JUnit 5。未指定时 Maven 自带的 Surefire 2.12 不会执行 Jupiter 测试 -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.5.4</version>
+                </plugin>
+
                 <!-- Spring Boot Maven Plugin -->
                 <plugin>
                     <groupId>org.springframework.boot</groupId>
