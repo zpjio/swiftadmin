@@ -22,16 +22,18 @@ public class FileStorageProperties {
     private String type = "local";
 
     /**
-     * 允许上传的文件扩展名（逗号分隔，如 "jpg,jpeg,png,gif,pdf,doc,docx"）
-     * 为空表示不限制
+     * 允许上传的文件扩展名（逗号分隔）。
+     * <p>默认是常见办公/图片/压缩包。设为空字符串表示不按白名单限制（仍受禁止列表约束）。</p>
      */
-    private String allowedExtensions;
+    private String allowedExtensions = "jpg,jpeg,png,gif,webp,bmp,pdf,txt,csv,doc,docx,xls,xlsx,ppt,pptx,zip,rar,7z";
 
     /**
-     * 禁止上传的文件扩展名（逗号分隔，如 "exe,bat,sh,cmd"）
-     * 优先级高于允许列表
+     * 禁止上传的文件扩展名（逗号分隔）。优先级高于允许列表。
+     * <p>包含可执行文件和可在浏览器中执行的页面/脚本，避免上传后被同源打开</p>
      */
-    private String forbiddenExtensions = "exe,bat,sh,cmd,com,scr,vbs,js,reg,bat,cmd";
+    private String forbiddenExtensions = "exe,bat,cmd,com,scr,vbs,js,mjs,cjs,reg,sh,ps1,psm1,"
+            + "html,htm,xhtml,shtml,svg,xml,xsl,jsp,jspx,php,asp,aspx,cer,cgi,"
+            + "jar,war,ear,class,msi,dll,so,dylib,wasm,lnk";
 
     /**
      * 本地存储配置

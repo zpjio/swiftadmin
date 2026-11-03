@@ -6,12 +6,14 @@ import cn.swiftadmin.schedule.executor.JobExecutor;
 import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.aop.support.AopUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 
 /**
  * Bean 方式任务执行器
@@ -27,6 +29,9 @@ public class BeanJobExecutor implements JobExecutor {
 
     private final ApplicationContext applicationContext;
     private final ObjectMapper objectMapper;
+
+    /** 只允许调用本项目的 Bean，避免调度任务反射到数据源、环境等基础设施 */
+    private static final String ALLOWED_PACKAGE = "cn.swiftadmin.";
 
     @Override
     public JobType getType() {
@@ -45,8 +50,8 @@ public class BeanJobExecutor implements JobExecutor {
             throw new IllegalArgumentException("Bean not found: " + beanName);
         }
 
-        // 获取方法
-        Method method = findMethod(bean.getClass(), methodName);
+        // 获取方法（仅本项目类型上声明的 public 方法）
+        Method method = findMethod(bean, methodName);
         if (method == null) {
             throw new IllegalArgumentException("Method not found: " + methodName);
         }
@@ -76,7 +81,7 @@ public class BeanJobExecutor implements JobExecutor {
                 return false;
             }
 
-            Method method = findMethod(bean.getClass(), job.getMethodName());
+            Method method = findMethod(bean, job.getMethodName());
             if (method == null) {
                 log.error("Method not found: {} for job: {}", job.getMethodName(), job.getJobName());
                 return false;
@@ -92,18 +97,32 @@ public class BeanJobExecutor implements JobExecutor {
     }
 
     /**
-     * 查找方法
+     * 查找本项目类型上声明的 public 方法。
+     * <p>不接受 {@code java.*}、Spring 基础设施或 JDK 代理上继承来的方法</p>
      *
-     * @param clazz 类
+     * @param bean Spring Bean
      * @param methodName 方法名
-     * @return 方法
+     * @return 方法，不允许时返回 null
      */
-    private Method findMethod(Class<?> clazz, String methodName) {
-        Method[] methods = clazz.getMethods();
-        for (Method method : methods) {
-            if (method.getName().equals(methodName)) {
-                return method;
+    private Method findMethod(Object bean, String methodName) {
+        Class<?> clazz = AopUtils.getTargetClass(bean);
+        if (clazz == null || !clazz.getName().startsWith(ALLOWED_PACKAGE)) {
+            log.error("拒绝调用非业务 Bean：{}", clazz == null ? "null" : clazz.getName());
+            return null;
+        }
+
+        Class<?> current = clazz;
+        while (current != null && current.getName().startsWith(ALLOWED_PACKAGE)) {
+            for (Method method : current.getDeclaredMethods()) {
+                if (method.isSynthetic() || method.isBridge() || !Modifier.isPublic(method.getModifiers())) {
+                    continue;
+                }
+                if (method.getName().equals(methodName)) {
+                    ReflectionUtils.makeAccessible(method);
+                    return method;
+                }
             }
+            current = current.getSuperclass();
         }
         return null;
     }

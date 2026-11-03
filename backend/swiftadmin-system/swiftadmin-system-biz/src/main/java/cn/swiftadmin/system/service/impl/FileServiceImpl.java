@@ -132,7 +132,7 @@ public class FileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impleme
         }
 
         try {
-            byte[] bytes = fileUploadService.getBytes(file.getStorageName(), file.getStorageType());
+            byte[] bytes = fileUploadService.getBytes(storageKey(file), file.getStorageType());
 
             // 更新下载次数
             mapper.updateByQuery(
@@ -159,7 +159,7 @@ public class FileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impleme
             if (file != null) {
                 try {
                     // 删除物理文件
-                    fileUploadService.delete(file.getStorageName(), file.getStorageType());
+                    fileUploadService.delete(storageKey(file), file.getStorageType());
                     // 删除数据库记录
                     removeById(id);
                     log.info("文件删除成功：id={}", id);
@@ -174,6 +174,16 @@ public class FileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impleme
     @Override
     public List<String> getAvailableStorageTypes() {
         return fileUploadService.getAvailableStorageTypes();
+    }
+
+    /**
+     * 物理文件定位键。优先使用相对路径，兼容早期只保存了文件名的记录。
+     */
+    private String storageKey(SysFile file) {
+        if (StringUtils.hasText(file.getFilePath())) {
+            return file.getFilePath();
+        }
+        return file.getStorageName();
     }
 
     /**

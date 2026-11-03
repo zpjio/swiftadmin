@@ -51,7 +51,8 @@ public class PasswordAuthStrategy implements AuthStrategy {
     @Override
     public LoginVO authenticate(LoginDTO dto) {
         String username = dto.getUsername();
-        String ip = dto.getIp() != null ? dto.getIp() : ServletUtils.getClientIp();
+        // 客户端请求体里的 ip / userAgent 可伪造，限流和审计只使用服务端观察到的值
+        String ip = ServletUtils.getClientIp();
         String userAgent = ServletUtils.getUserAgent();
 
         // 构建登录上下文
