@@ -1,5 +1,6 @@
 package cn.swiftadmin.system.task;
 
+import cn.swiftadmin.common.core.annotation.ScheduledJobTarget;
 import cn.swiftadmin.system.api.service.OperLogService;
 import cn.swiftadmin.system.api.util.ConfigUtils;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
  */
 @Slf4j
 @Component("operLogCleanupTask")
+@ScheduledJobTarget
 @RequiredArgsConstructor
 public class OperLogCleanupTask {
 

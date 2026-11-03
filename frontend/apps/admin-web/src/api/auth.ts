@@ -26,24 +26,6 @@ export interface LoginParams {
 }
 
 /**
- * 用户信息
- */
-export interface UserInfo {
-  id: number
-  username: string
-  nickname: string
-  avatar: string
-  roles: string[]
-  permissions: string[]
-  deptId?: number
-  deptName?: string
-  email?: string
-  phone?: string
-  sex?: number
-  status?: number
-}
-
-/**
  * 登录响应
  */
 export interface LoginResult {
@@ -102,13 +84,6 @@ export function refreshTokenApi(refreshToken: string) {
       'Refresh-Token': refreshToken
     }
   })
-}
-
-/**
- * 获取当前用户信息
- */
-export function getCurrentUserApi() {
-  return post<UserInfo>('/auth/userinfo')
 }
 
 /**

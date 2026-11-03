@@ -1,5 +1,6 @@
 package cn.swiftadmin;
 
+import cn.swiftadmin.common.core.annotation.ScheduledJobTarget;
 import cn.swiftadmin.common.core.file.FileInfo;
 import cn.swiftadmin.common.core.file.FileStorageException;
 import cn.swiftadmin.common.core.file.FileUploadService;
@@ -117,6 +118,13 @@ class SecurityFixesTest {
         assertThat(executor.validate(allowed)).isTrue();
         assertThat(executor.execute(allowed)).isEqualTo("pong");
 
+        ScheduleJob unmarked = ScheduleJob.builder()
+                .jobName("unmarked")
+                .beanName("sample")
+                .methodName("leak")
+                .build();
+        assertThat(executor.validate(unmarked)).isFalse();
+
         ScheduleJob denied = ScheduleJob.builder()
                 .jobName("bad")
                 .beanName("env")
@@ -126,10 +134,15 @@ class SecurityFixesTest {
         assertThat(executor.validate(denied)).isFalse();
     }
 
-    /** 位于业务包内，允许被调度任务调用 */
+    /** 只有标注过的方法能被调度 */
     public static class SampleJob {
+        @ScheduledJobTarget
         public String ping() {
             return "pong";
+        }
+
+        public String leak() {
+            return "no";
         }
     }
 }
