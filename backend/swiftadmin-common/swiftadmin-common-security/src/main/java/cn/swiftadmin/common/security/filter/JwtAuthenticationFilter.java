@@ -1,6 +1,5 @@
 package cn.swiftadmin.common.security.filter;
 
-import cn.swiftadmin.common.core.util.ErrorResponseWriter;
 import cn.swiftadmin.common.security.domain.LoginUser;
 import cn.swiftadmin.common.security.jwt.JwtTokenProvider;
 import cn.swiftadmin.common.security.service.UserDetailsService;
@@ -11,7 +10,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -38,7 +36,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenProvider tokenProvider;
     private final UserDetailsService userDetailsService;
     private final UserSessionService userSessionService;
-    private final ErrorResponseWriter errorResponseWriter;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
@@ -46,44 +43,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
         String token = getTokenFromRequest(request);
 
-        if (StringUtils.hasText(token)) {
-            // 1. 验证 Token 格式和签名
-            if (!tokenProvider.validateToken(token)) {
-                log.debug("Token 验证失败：{}", request.getRequestURI());
-                errorResponseWriter.writeError(response, HttpStatus.UNAUTHORIZED.value(), "Token 无效或已过期");
-                return;
-            }
-
-            // 2. 检查 Token 是否在黑名单中
-            if (tokenProvider.isTokenBlacklisted(token)) {
-                log.debug("Token 已在黑名单中：{}", request.getRequestURI());
-                errorResponseWriter.writeError(response, HttpStatus.UNAUTHORIZED.value(), "Token 已失效，请重新登录");
-                return;
-            }
-
-            // 3. 检查会话是否存在（强制下线检查）
+        // 只把访问令牌写入安全上下文。刷新令牌、临时令牌和无效令牌都不在这里直接 401，
+        // 否则登录、刷新、强制改密等匿名接口会因为浏览器还带着旧 Authorization 而被拦截。
+        // 受保护接口没有有效身份时，由 Spring Security 统一返回 401。
+        if (StringUtils.hasText(token)
+                && tokenProvider.validateToken(token)
+                && tokenProvider.isAccessToken(token)
+                && !tokenProvider.isTokenBlacklisted(token)) {
             String sessionId = tokenProvider.getJtiFromToken(token);
             LoginUser sessionUser = userSessionService.getSession(sessionId);
             if (sessionUser == null) {
                 log.debug("会话不存在或已被强制下线：sessionId={}, uri={}", sessionId, request.getRequestURI());
-                errorResponseWriter.writeError(response, HttpStatus.UNAUTHORIZED.value(), "会话已失效，请重新登录");
-                return;
-            }
-
-            // 4. 加载用户信息
-            String username = tokenProvider.getUsernameFromToken(token);
-            LoginUser loginUser = userDetailsService.loadUserByUsername(username);
-
-            if (loginUser != null) {
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(loginUser, null, loginUser.getAuthorities());
-                authentication.setDetails(loginUser);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-                log.debug("用户认证成功：{}", username);
             } else {
-                log.warn("用户不存在：{}", username);
-                errorResponseWriter.writeError(response, HttpStatus.UNAUTHORIZED.value(), "用户不存在");
-                return;
+                String username = tokenProvider.getUsernameFromToken(token);
+                LoginUser loginUser = userDetailsService.loadUserByUsername(username);
+                if (loginUser != null && loginUser.isEnabled()) {
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(loginUser, null, loginUser.getAuthorities());
+                    authentication.setDetails(loginUser);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    log.debug("用户认证成功：{}", username);
+                } else if (loginUser == null) {
+                    log.warn("用户不存在：{}", username);
+                } else {
+                    log.info("拒绝已禁用用户的访问：{}", username);
+                }
             }
         }
 

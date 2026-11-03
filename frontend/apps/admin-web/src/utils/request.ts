@@ -64,6 +64,24 @@ export interface RequestOptions extends AxiosRequestConfig {
   successMessage?: string
 }
 
+/**
+ * 这些接口允许未登录访问。路径用后缀匹配，避免 /auth/login 误伤 /auth/loginlog。
+ */
+function isAnonymousAuth(url?: string): boolean {
+  if (!url) return false
+  const path = url.split('?')[0] ?? ''
+  return (
+    path.endsWith('/auth/login') ||
+    path.endsWith('/auth/refresh') ||
+    path.includes('/auth/sms/') ||
+    path.includes('/auth/captcha') ||
+    path.endsWith('/auth/password/force-change') ||
+    path.includes('/auth/social/url/') ||
+    path.includes('/auth/social/callback/') ||
+    path.includes('/auth/login-config')
+  )
+}
+
 const service: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api',
   timeout: 15000,
@@ -76,10 +94,12 @@ const service: AxiosInstance = axios.create({
 // 请求拦截器
 service.interceptors.request.use(
   (config) => {
-    // 优先使用 token，其次使用 tempToken（修改密码场景）
-    const token = localStorage.getItem('token') || localStorage.getItem('tempToken')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+    // 匿名认证接口不附带本地令牌。过期的访问令牌或临时令牌不应挡住登录、刷新和强制改密。
+    if (!isAnonymousAuth(config.url)) {
+      const token = localStorage.getItem('token')
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`
+      }
     }
     return config
   },

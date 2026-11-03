@@ -9,11 +9,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+
+import java.util.Set;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.instanceOf;
@@ -56,12 +59,19 @@ class AuthApiIntegrationTest extends IntegrationTestBase {
     @Autowired
     private DataSource dataSource;
 
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+
     private JdbcTemplate jdbcTemplate;
 
     @BeforeEach
     void setUpTestUser() {
         jdbcTemplate = new JdbcTemplate(dataSource);
         cleanUpTestUser();
+        Set<String> rateKeys = stringRedisTemplate.keys("rate_limit:*");
+        if (rateKeys != null && !rateKeys.isEmpty()) {
+            stringRedisTemplate.delete(rateKeys);
+        }
         jdbcTemplate.update("""
                 INSERT INTO sys_user (id, username, password, nickname, status, dept_id, is_super,
                                       password_update_time, force_change_password, login_fail_count, deleted)
@@ -170,6 +180,84 @@ class AuthApiIntegrationTest extends IntegrationTestBase {
         mockMvc.perform(get("/api/system/user/page")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("匿名登录不因失效的 Authorization 被拒绝")
+    void loginSucceedsWithStaleAuthorizationHeader() throws Exception {
+        mockMvc.perform(post("/api/auth/login")
+                        .header("Authorization", "Bearer not-a-valid-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginBody(TEST_USERNAME, TEST_PASSWORD)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.data.accessToken").isNotEmpty());
+    }
+
+    @Test
+    @DisplayName("刷新令牌不能当作访问令牌使用")
+    void refreshTokenCannotCallProtectedApi() throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginBody(TEST_USERNAME, TEST_PASSWORD)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String refreshToken = objectMapper.readTree(result.getResponse().getContentAsString())
+                .path("data").path("refreshToken").asText();
+
+        mockMvc.perform(get("/api/system/user/page")
+                        .header("Authorization", "Bearer " + refreshToken))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("临时令牌放在 Authorization 时仍可强制改密")
+    void forceChangePasswordAcceptsTempTokenInBody() throws Exception {
+        long userId = 900_000_002L;
+        String username = "it_force_user";
+        jdbcTemplate.update("DELETE FROM sys_user_role WHERE user_id = ?", userId);
+        jdbcTemplate.update("DELETE FROM sys_user WHERE id = ? OR username = ?", userId, username);
+        jdbcTemplate.update("""
+                INSERT INTO sys_user (id, username, password, nickname, status, dept_id, is_super,
+                                      password_update_time, force_change_password, login_fail_count, deleted)
+                VALUES (?, ?, ?, ?, 1, 1, 0, NOW(), 1, 0, 0)
+                """,
+                userId, username, passwordEncoder.encode("OldPassw0rd"), "强制改密用户");
+
+        try {
+            MvcResult login = mockMvc.perform(post("/api/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(loginBody(username, "OldPassw0rd")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.code").value(0))
+                    .andExpect(jsonPath("$.data.tempToken").isNotEmpty())
+                    .andReturn();
+
+            String tempToken = objectMapper.readTree(login.getResponse().getContentAsString())
+                    .path("data").path("tempToken").asText();
+
+            MvcResult changed = mockMvc.perform(post("/api/auth/password/force-change")
+                            .header("Authorization", "Bearer " + tempToken)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"tempToken":"%s","newPassword":"Zx9mQ2kLp7"}
+                                    """.formatted(tempToken)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.code").value(0))
+                    .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
+                    .andReturn();
+
+            String accessToken = objectMapper.readTree(changed.getResponse().getContentAsString())
+                    .path("data").path("accessToken").asText();
+            mockMvc.perform(get("/api/system/user/current")
+                            .header("Authorization", "Bearer " + accessToken))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.code").value(0));
+        } finally {
+            jdbcTemplate.update("DELETE FROM sys_user_role WHERE user_id = ?", userId);
+            jdbcTemplate.update("DELETE FROM sys_user WHERE id = ? OR username = ?", userId, username);
+        }
     }
 
     private String loginBody(String username, String password) {

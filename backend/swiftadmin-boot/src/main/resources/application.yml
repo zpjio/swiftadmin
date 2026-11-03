@@ -68,6 +68,11 @@ mybatis-flex:
 
 # 雪花ID生成器配置
 swiftadmin:
+  security:
+    # 默认不信任 X-Forwarded-For / X-Real-IP，避免客户端伪造来源绕过登录和短信限流。
+    # 仅当前面有反向代理，且代理会覆盖（而不是拼接客户端传入的）转发头时设为 true。
+    # 开启后取 X-Forwarded-For 最右侧地址。Docker Compose 部署已默认打开。
+    trust-forwarded-headers: ${TRUST_FORWARDED_HEADERS:false}
   id-generator:
     enabled: true                       # 是否启用雪花ID生成器
     # worker-id: 0                      # 工作机器ID (0-31)，分布式环境需唯一，不配置则自动生成

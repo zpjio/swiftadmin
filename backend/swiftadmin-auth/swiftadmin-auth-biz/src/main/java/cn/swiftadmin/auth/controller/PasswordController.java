@@ -1,5 +1,7 @@
 package cn.swiftadmin.auth.controller;
 
+import cn.swiftadmin.auth.api.dto.ChangePasswordDTO;
+import cn.swiftadmin.auth.api.dto.ForceChangePasswordDTO;
 import cn.swiftadmin.auth.api.vo.LoginVO;
 import cn.swiftadmin.auth.context.LoginContext;
 import cn.swiftadmin.auth.service.LoginSessionService;
@@ -14,10 +16,11 @@ import cn.swiftadmin.system.api.entity.SysUser;
 import cn.swiftadmin.system.api.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -51,16 +54,15 @@ public class PasswordController {
      * @param newPassword 新密码
      * @return 修改结果
      */
-    @Operation(summary = "修改密码", description = "用户自主修改密码，需要验证旧密码")
+    @Operation(summary = "修改密码", description = "用户自主修改密码，需要验证旧密码。密码放在 JSON 请求体中")
     @PostMapping("/password/change")
-    public R<Void> changePassword(@RequestParam String oldPassword,
-                                   @RequestParam String newPassword) {
+    public R<Void> changePassword(@Valid @RequestBody ChangePasswordDTO dto) {
         Long userId = SecurityUtils.getCurrentUserId();
         if (userId == null) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
 
-        userService.changePassword(userId, oldPassword, newPassword);
+        userService.changePassword(userId, dto.getOldPassword(), dto.getNewPassword());
 
         // 密码已变更，使该用户所有会话失效，强制重新登录
         List<String> sessionIds = userSessionService.getUserSessionIds(userId);
@@ -80,10 +82,10 @@ public class PasswordController {
      * @return 修改结果（包含新的 Token 信息）
      * @throws BusinessException 当 Token 无效或已被使用时抛出异常
      */
-    @Operation(summary = "强制修改密码", description = "使用临时 Token 强制修改密码，用于管理员重置密码后首次登录")
+    @Operation(summary = "强制修改密码", description = "使用临时 Token 强制修改密码，用于管理员重置密码后首次登录。令牌和密码放在 JSON 请求体中")
     @PostMapping("/password/force-change")
-    public R<LoginVO> forceChangePassword(@RequestParam String tempToken,
-                                           @RequestParam String newPassword) {
+    public R<LoginVO> forceChangePassword(@Valid @RequestBody ForceChangePasswordDTO dto) {
+        String tempToken = dto.getTempToken();
         // 验证 Token 有效性
         if (!tokenProvider.validateToken(tempToken)) {
             throw new BusinessException(ErrorCode.TOKEN_INVALID);
@@ -106,7 +108,7 @@ public class PasswordController {
         }
 
         // 强制修改密码
-        userService.forceChangePassword(user.getId(), newPassword);
+        userService.forceChangePassword(user.getId(), dto.getNewPassword());
         // 将临时 Token 加入黑名单
         tokenProvider.addToBlacklist(tempToken);
 
