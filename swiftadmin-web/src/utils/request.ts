@@ -103,19 +103,20 @@ function filterParams(params?: any): any {
 
 // 封装请求方法
 export function get<T = any>(url: string, params?: any, config?: AxiosRequestConfig): Promise<T> {
-  return service.get(url, { params: filterParams(params), ...config })
+  // 响应拦截器把 AxiosResponse 解包成 data，axios 1.21 的声明跟不上这个变换。
+  return service.get(url, { params: filterParams(params), ...config }) as Promise<T>
 }
 
 export function post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-  return service.post(url, data, config)
+  return service.post(url, data, config) as Promise<T>
 }
 
 export function put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-  return service.put(url, data, config)
+  return service.put(url, data, config) as Promise<T>
 }
 
 export function del<T = any>(url: string, params?: any, config?: AxiosRequestConfig): Promise<T> {
-  return service.delete(url, { params, ...config })
+  return service.delete(url, { params, ...config }) as Promise<T>
 }
 
 export default service
