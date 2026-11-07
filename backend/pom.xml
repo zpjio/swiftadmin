@@ -33,14 +33,14 @@
         <lombok.version>1.18.48</lombok.version>
         <jjwt.version>0.13.0</jjwt.version>
         <swagger-annotations.version>2.2.55</swagger-annotations.version>
-        <aws-sdk.version>2.57.5</aws-sdk.version>
+        <aws-sdk.version>2.57.8</aws-sdk.version>
 
         <!-- 短信 SDK -->
         <aliyun-dysmsapi.version>4.6.0</aliyun-dysmsapi.version>
         <tencentcloud-sdk.version>3.2.18</tencentcloud-sdk.version>
 
         <!-- GraalVM Native Build Tools -->
-        <graalvm-native.version>1.1.17</graalvm-native.version>
+        <graalvm-native.version>1.1.18</graalvm-native.version>
 
         <!-- Testcontainers -->
         <testcontainers.version>2.0.5</testcontainers.version>
@@ -235,7 +235,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>3.5.4</version>
+                    <version>3.6.1</version>
                 </plugin>
 
                 <!-- Spring Boot Maven Plugin -->
