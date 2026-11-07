@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@iconify/vue": "^5.0.4",
-    "@vueuse/core": "^14.2.1",
+    "@vueuse/core": "^15.0.0",
     "axios": "^1.21.0",
     "echarts": "^6.1.0",
     "naive-ui": "^2.45.3",
